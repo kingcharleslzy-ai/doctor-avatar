@@ -6,7 +6,7 @@
 
 1. `OpenAI` 问答层
 2. `本地知识库` 检索层
-3. `HeyGen / LiveAvatar` 会话接口层
+3. `HeyGen / LiveAvatar + LiveKit` 会话接口层
 
 目标不是一步做到真人级视频通话，而是先把“像你爸说话、守住医疗边界、能逐步接入视频分身”的骨架跑起来。
 
@@ -84,6 +84,25 @@ uvicorn app.main:app --reload
 ### `POST /api/liveavatar/session`
 
 用于用 `session_token` 启动一条 LiveAvatar session。当前版本主要先打通后端接口，后续再接真正的视频前端。
+
+### `GET /api/liveavatar/sessions`
+
+列出当前账号下的 session。
+
+### `POST /api/liveavatar/keepalive`
+
+用 `session_token` 延长当前 session 生命周期。
+
+## 当前前端能力
+
+首页现在已经可以：
+
+- 创建 LiveAvatar token
+- 启动 session
+- 用返回的 `livekit_url` 和 `livekit_client_token` 直接连接 LiveKit
+- 自动请求麦克风并订阅远端音视频
+- 显示 session 信息和事件日志
+- 单独调试 OpenAI 问答层
 
 ## 下一步建议
 

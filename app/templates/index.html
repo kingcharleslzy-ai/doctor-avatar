@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>医生虚拟人 MVP</title>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
       --bg: #f4efe5;
@@ -11,6 +12,7 @@
       --ink: #22201c;
       --accent: #126a6a;
       --line: #d8cfbf;
+      --soft: #efe7d8;
     }
     * { box-sizing: border-box; }
     body {
@@ -40,11 +42,15 @@
     .hero p { margin: 0; line-height: 1.7; }
     .grid {
       display: grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1.1fr .9fr;
       gap: 20px;
     }
     .panel {
       padding: 20px;
+    }
+    .stack {
+      display: grid;
+      gap: 14px;
     }
     textarea, input {
       width: 100%;
@@ -55,6 +61,12 @@
       background: #fff;
     }
     textarea { min-height: 140px; resize: vertical; }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #6d665b;
+    }
     button {
       border: 0;
       border-radius: 999px;
@@ -70,6 +82,48 @@
       line-height: 1.7;
     }
     .muted { color: #6d665b; }
+    .video-stage {
+      min-height: 320px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #1a1d1e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .placeholder {
+      color: #d6dddf;
+      padding: 16px;
+      text-align: center;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .toolbar button + button {
+      margin-left: 0;
+    }
+    .kv {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--soft);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+    }
+    .checkbox-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #6d665b;
+    }
+    .checkbox-line input {
+      width: auto;
+    }
     @media (max-width: 800px) {
       .grid { grid-template-columns: 1fr; }
       .hero h1 { font-size: 26px; }
@@ -85,96 +139,77 @@
 
     <section class="grid">
       <div class="panel">
-        <h2>问答调试</h2>
-        <p class="muted">先用这里验证“像不像你爸说话”。</p>
+        <h2>视频会话控制台</h2>
+        <div class="stack">
+          <div class="video-stage" id="videoStage">
+            <div class="placeholder">远端视频将在这里出现</div>
+          </div>
+          <div class="kv">
+            <strong>LiveKit 连接状态</strong>
+            <span id="connectionState">未连接</span>
+          </div>
+          <div>
+            <label for="avatarId">Avatar ID</label>
+            <input id="avatarId" placeholder="Sandbox 可先留空，生产环境填真实 avatar_id" />
+          </div>
+          <div>
+            <label for="voiceId">Voice ID</label>
+            <input id="voiceId" placeholder="可选" />
+          </div>
+          <div>
+            <label for="contextId">Context ID</label>
+            <input id="contextId" placeholder="可选" />
+          </div>
+          <div>
+            <label for="language">语言</label>
+            <input id="language" value="zh" />
+          </div>
+          <div class="checkbox-line">
+            <input id="sandboxMode" type="checkbox" checked />
+            <span>启用 Sandbox 模式</span>
+          </div>
+          <div class="checkbox-line">
+            <input id="pushToTalk" type="checkbox" />
+            <span>启用 Push-to-Talk 模式</span>
+          </div>
+          <div>
+            <label for="sessionToken">Session Token</label>
+            <input id="sessionToken" placeholder="创建 token 后会自动填入" />
+          </div>
+          <div class="toolbar">
+            <button id="createTokenBtn">创建 Token</button>
+            <button id="startSessionBtn">启动 Session</button>
+            <button id="keepAliveBtn">Keep Alive</button>
+            <button id="listSessionsBtn">列出 Sessions</button>
+            <button id="disconnectBtn">断开房间</button>
+          </div>
+          <div>
+            <h3>Session 信息</h3>
+            <div id="sessionInfo" class="output muted">还没有启动 session。</div>
+          </div>
+          <div>
+            <h3>事件日志</h3>
+            <div id="eventLog" class="output muted">等待操作。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>对话层调试</h2>
+        <p class="muted">这里先验证后端问答、知识库和医生风格壳子。</p>
         <textarea id="message" placeholder="例如：最近总是胸闷，需要马上去医院吗？"></textarea>
         <div style="margin-top: 14px;">
-          <button id="sendBtn">发送</button>
+          <button id="sendBtn">发送问答</button>
         </div>
         <h3>回答</h3>
         <div id="answer" class="output muted">还没有回答。</div>
         <h3>命中知识片段</h3>
         <div id="context" class="output muted">还没有检索。</div>
-      </div>
-
-      <div class="panel">
-        <h2>HeyGen / LiveAvatar</h2>
-        <p class="muted">按新版 LiveAvatar 流程，先创建 token，再用 session token 启动。</p>
-        <input id="avatarId" placeholder="avatar_id（可选，Sandbox 可先留空）" />
-        <input id="voiceId" placeholder="voice_id（可选）" style="margin-top: 10px;" />
-        <input id="contextId" placeholder="context_id（可选）" style="margin-top: 10px;" />
-        <input id="sessionToken" placeholder="session_token（创建 token 后可粘贴）" style="margin-top: 10px;" />
-        <div style="margin-top: 14px;">
-          <button id="tokenBtn">创建 Token</button>
-          <button id="sessionBtn">启动 Session</button>
-        </div>
         <h3>接口返回</h3>
-        <div id="liveavatarResult" class="output muted">还没有请求。</div>
+        <div id="apiResult" class="output muted">还没有请求。</div>
       </div>
     </section>
   </main>
-
-  <script>
-    async function postJson(url, body) {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || JSON.stringify(data));
-      }
-      return data;
-    }
-
-    document.getElementById("sendBtn").addEventListener("click", async () => {
-      const message = document.getElementById("message").value.trim();
-      if (!message) return;
-
-      document.getElementById("answer").textContent = "生成中...";
-      try {
-        const data = await postJson("/api/chat", { message, conversation: [] });
-        document.getElementById("answer").textContent = data.answer;
-        document.getElementById("context").textContent = data.context_snippets.join("\n\n") || "没有命中知识片段。";
-      } catch (error) {
-        document.getElementById("answer").textContent = error.message;
-      }
-    });
-
-    document.getElementById("tokenBtn").addEventListener("click", async () => {
-        const output = document.getElementById("liveavatarResult");
-        output.textContent = "请求中...";
-      try {
-        const data = await postJson("/api/liveavatar/token", {
-          mode: "FULL",
-          avatar_id: document.getElementById("avatarId").value.trim() || null,
-          voice_id: document.getElementById("voiceId").value.trim() || null,
-          context_id: document.getElementById("contextId").value.trim() || null,
-          language: "zh",
-          is_sandbox: true
-        });
-        output.textContent = JSON.stringify(data, null, 2);
-        if (data.data && data.data.session_token) {
-          document.getElementById("sessionToken").value = data.data.session_token;
-        }
-      } catch (error) {
-        output.textContent = error.message;
-      }
-    });
-
-    document.getElementById("sessionBtn").addEventListener("click", async () => {
-      const output = document.getElementById("liveavatarResult");
-      output.textContent = "请求中...";
-      try {
-        const data = await postJson("/api/liveavatar/session", {
-          session_token: document.getElementById("sessionToken").value.trim()
-        });
-        output.textContent = JSON.stringify(data, null, 2);
-      } catch (error) {
-        output.textContent = error.message;
-      }
-    });
-  </script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

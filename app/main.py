@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .models import (
@@ -18,6 +19,7 @@ from .services import ChatService, HeyGenService
 
 app = FastAPI(title="Doctor Avatar MVP", version="0.1.0")
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
 
@@ -72,6 +74,24 @@ async def liveavatar_token(payload: LiveAvatarSessionRequest) -> LiveAvatarToken
 async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
     try:
         result = await heygen_service.start_liveavatar_session(payload.session_token)
+    except Exception as exc:  # pragma: no cover - runtime integration fallback
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return LiveAvatarTokenResponse(data=result)
+
+
+@app.get("/api/liveavatar/sessions", response_model=LiveAvatarTokenResponse)
+async def liveavatar_sessions() -> LiveAvatarTokenResponse:
+    try:
+        result = await heygen_service.list_sessions()
+    except Exception as exc:  # pragma: no cover - runtime integration fallback
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    return LiveAvatarTokenResponse(data=result)
+
+
+@app.post("/api/liveavatar/keepalive", response_model=LiveAvatarTokenResponse)
+async def liveavatar_keepalive(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
+    try:
+        result = await heygen_service.keep_alive(payload.session_token)
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)

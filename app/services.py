@@ -70,3 +70,23 @@ class HeyGenService:
             )
             response.raise_for_status()
             return response.json()
+
+    async def list_sessions(self) -> dict[str, Any]:
+        url = f"{settings.liveavatar_api_base.rstrip('/')}/v1/sessions"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url, headers=self._headers())
+            response.raise_for_status()
+            return response.json()
+
+    async def keep_alive(self, session_token: str) -> dict[str, Any]:
+        url = f"{settings.liveavatar_api_base.rstrip('/')}/v1/sessions/keep-alive"
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                url,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {session_token}",
+                },
+            )
+            response.raise_for_status()
+            return response.json()
