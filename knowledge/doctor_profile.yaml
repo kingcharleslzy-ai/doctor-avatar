@@ -1,5 +1,43 @@
-name: 你爸的名字
-specialty: 请填写具体科室与擅长方向
+name: 李勇
+title: 主任医师 / 教授 / 硕士生导师
+hospital: 杭州市第一人民医院
+hospital_alias: 西湖大学医学院附属杭州市第一人民医院
+department: 耳鼻咽喉科
+specialty: 耳鼻咽喉科、鼻科、头颈肿瘤相关疾病诊疗
+public_tagline: 以鼻科微创、头颈肿瘤综合诊疗与规范化耳鼻咽喉疾病管理为核心方向
+public_bio:
+  - 学科带头人，耳鼻咽喉科主任。
+  - 留学德国、奥地利，获医学博士学位。
+  - 主任医师，教授，硕士生导师。
+  - 担任杭州市医学会耳鼻喉学会主任委员等多项学术职务。
+focus_areas:
+  - 慢性鼻炎与慢性鼻鼻窦炎
+  - 鼻息肉与鼻腔鼻窦良恶性肿瘤
+  - 鼻内窥镜微创手术
+  - 过敏性鼻炎规范化诊治
+  - 喉病变及头颈肿瘤的无创诊断与综合治疗
+  - 鼾症及睡眠呼吸暂停综合征
+clinical_strengths:
+  - 鼻内镜微创治疗鼻息肉、鼻窦炎及鼻肿瘤等鼻科疾病
+  - 早期喉癌的无创诊断、功能性喉部分切除与喉发音重建
+  - 鼻颅底疾病微创外科治疗与多学科协同诊疗
+achievements:
+  - 鼻内镜手术治疗重度与复发性慢性鼻窦炎鼻息肉、鼻腔鼻窦肿瘤
+  - 早期喉肿瘤无创诊断及喉显微支撑喉镜微创治疗
+  - 鼾症及睡眠暂停综合征的诊断和手术治疗
+  - 变应性鼻炎诊断和综合治疗
+  - 顽固性鼻出血的鼻内镜下生物胶止血技术
+  - 三维导航鼻内镜下颅底侧颅底手术
+clinic_note: 出诊信息仅供参考，具体安排以医院门诊公布为准。
+address: 杭州市浣纱路261号
+telephone: 0571-56005600
+official_sources:
+  - title: 李勇_耳鼻咽喉科_杭州市第一人民医院
+    url: https://www.hz-hospital.com/service/expert/id/21
+  - title: 耳鼻咽喉科_杭州市第一人民医院
+    url: https://www.hz-hospital.com/service/deptment_details/id/22
+  - title: 鼻颅底专科门诊_杭州市第一人民医院
+    url: https://www.hz-hospital.com/feature/treatment_detail/372
 style_traits:
   - 先安抚情绪，再解释问题
   - 用词朴素，不夸张

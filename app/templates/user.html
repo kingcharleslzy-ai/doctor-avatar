@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>李勇医生虚拟人</title>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --surface: rgba(255,255,255,.76);
+      --surface-strong: rgba(255,255,255,.92);
+      --line: rgba(50, 78, 98, .12);
+      --text: #18222c;
+      --muted: #667786;
+      --accent: #0f6b6b;
+      --gold: #c1a57a;
+      --shadow: 0 18px 60px rgba(21, 41, 59, .1);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; background: radial-gradient(circle at top left, rgba(15,107,107,.10), transparent 24%), radial-gradient(circle at 85% 10%, rgba(193,165,122,.12), transparent 18%), linear-gradient(180deg, #f8f5ef 0%, #f2eee5 44%, #efe9de 100%); }
+    main { max-width: 1340px; margin: 0 auto; padding: 24px; }
+    .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 16px 20px; border: 1px solid var(--line); border-radius: 24px; background: rgba(255,255,255,.58); backdrop-filter: blur(16px); box-shadow: var(--shadow); }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-mark { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent) 0%, #174f73 100%); color: #fff; font-weight: 700; }
+    .brand h1 { margin: 0; font-size: 18px; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .nav-tag { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.78); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; margin-bottom: 22px; }
+    .card { border: 1px solid var(--line); border-radius: 28px; background: var(--surface); backdrop-filter: blur(18px); box-shadow: var(--shadow); }
+    .hero-copy { padding: 30px; position: relative; overflow: hidden; }
+    .hero-copy::after { content: ""; position: absolute; right: -80px; bottom: -110px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(15,107,107,.12), transparent 70%); border-radius: 999px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: rgba(15,107,107,.08); border: 1px solid rgba(15,107,107,.12); color: var(--accent); padding: 7px 12px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .hero-copy h2 { margin: 16px 0 12px; font-size: 42px; line-height: 1.08; letter-spacing: -.04em; max-width: 760px; }
+    .hero-copy p { margin: 0; color: var(--muted); line-height: 1.85; font-size: 15px; max-width: 780px; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .chip { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.66); border: 1px solid var(--line); font-size: 13px; color: #324454; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
+    .stat { padding: 18px; border-radius: 22px; background: var(--surface-strong); border: 1px solid var(--line); }
+    .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .value { margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: -.03em; }
+    .desc { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; }
+    .panel { padding: 24px; }
+    .panel h3 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
+    .panel p.lead { margin: 10px 0 0; color: var(--muted); line-height: 1.8; }
+    .video-shell { min-height: 460px; border-radius: 24px; margin-top: 18px; overflow: hidden; background: linear-gradient(180deg, #153040 0%, #0e1f2b 100%); position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,.12); }
+    .video-shell::after { content: ""; position: absolute; inset: 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; pointer-events: none; }
+    .video-placeholder { color: rgba(239,247,249,.88); text-align: center; padding: 24px; max-width: 360px; line-height: 1.8; }
+    .video-placeholder strong { display: block; font-size: 20px; margin-bottom: 10px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+    button { border: 0; border-radius: 999px; padding: 13px 18px; font: inherit; cursor: pointer; transition: transform .18s ease, opacity .18s ease; }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .6; cursor: wait; transform: none; }
+    .primary { background: linear-gradient(135deg, var(--accent) 0%, #17517a 100%); color: #fff; }
+    .secondary { background: rgba(255,255,255,.8); color: var(--text); border: 1px solid var(--line); }
+    .danger { background: rgba(144,70,70,.10); color: #833c3c; border: 1px solid rgba(144,70,70,.12); }
+    .status-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .status-pill { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.8); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .notice { margin-top: 18px; padding: 16px 18px; border-radius: 20px; background: #fff7ec; border: 1px solid rgba(193,165,122,.25); color: #6b5638; line-height: 1.8; font-size: 14px; }
+    .stack { display: grid; gap: 18px; }
+    .subcard { padding: 20px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface-strong); }
+    .subcard h4 { margin: 0 0 10px; font-size: 17px; }
+    .subcard p { margin: 0; line-height: 1.8; color: var(--muted); }
+    .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.9; }
+    .qa-box { width: 100%; min-height: 132px; padding: 15px 16px; border-radius: 18px; resize: vertical; border: 1px solid var(--line); background: rgba(255,255,255,.76); font: inherit; color: var(--text); }
+    .output { white-space: pre-wrap; color: var(--text); line-height: 1.85; font-size: 14px; }
+    .muted { color: var(--muted); }
+    .links { display: grid; gap: 10px; margin-top: 12px; }
+    .links a { color: var(--accent); text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+    @media (max-width: 1120px) { .hero, .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) { main { padding: 16px; } .hero-copy h2 { font-size: 32px; } .stats { grid-template-columns: 1fr; } .video-shell { min-height: 320px; } .nav { flex-direction: column; align-items: flex-start; gap: 14px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="nav">
+      <div class="brand">
+        <div class="brand-mark">LY</div>
+        <div>
+          <h1>李勇医生虚拟人</h1>
+          <p id="brandSubtitle">公开资料驱动的耳鼻咽喉科 AI 分身</p>
+        </div>
+      </div>
+      <div class="nav-tag">仅供健康科普与就医参考，不替代面诊</div>
+    </header>
+
+    <section class="hero">
+      <div class="card hero-copy">
+        <div class="eyebrow">Clinical Digital Human</div>
+        <h2 id="heroTitle">让专科信息触达更自然，也更可信。</h2>
+        <p id="heroDescription">该虚拟人基于李勇医生的公开职业信息构建，面向耳鼻咽喉科常见问题解答、专科方向介绍与初步就医建议说明。正式诊断、检查决策与个体化治疗仍需以医院线下评估为准。</p>
+        <div class="tag-row" id="focusTags">
+          <span class="chip">慢性鼻炎</span>
+          <span class="chip">鼻窦炎</span>
+          <span class="chip">鼻息肉</span>
+          <span class="chip">过敏性鼻炎</span>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="card stat">
+          <div class="label">Hospital</div>
+          <div class="value" id="hospitalValue">杭州市第一人民医院</div>
+          <div class="desc">以医院公开专家资料为依据展示职业背景与专科方向。</div>
+        </div>
+        <div class="card stat">
+          <div class="label">Department</div>
+          <div class="value" id="departmentValue">耳鼻咽喉科</div>
+          <div class="desc">聚焦鼻科、喉部病变、头颈肿瘤与睡眠呼吸相关问题。</div>
+        </div>
+        <div class="card stat">
+          <div class="label">Mode</div>
+          <div class="value">Video Conversation</div>
+          <div class="desc">后端统一拉起数字分身视频会话，前端不暴露内部运行参数。</div>
+        </div>
+        <div class="card stat">
+          <div class="label">Safety</div>
+          <div class="value">Guardrailed</div>
+          <div class="desc">仅做健康科普、就医建议与专科方向说明，不替代线下问诊。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="card panel">
+        <h3>开始视频咨询</h3>
+        <p class="lead">点击后将由后台自动创建会话并连接数字分身视频。界面不展示内部参数，仅保留用户需要的操作与状态。</p>
+
+        <div class="video-shell" id="videoStage">
+          <div class="video-placeholder">
+            <strong>等待接入李勇医生虚拟人</strong>
+            点击“开始视频咨询”后，远端视频会在这里加载。请在浏览器弹出权限时允许麦克风访问。
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button id="startConsultBtn" class="primary">开始视频咨询</button>
+          <button id="keepAliveBtn" class="secondary">保持会话</button>
+          <button id="disconnectBtn" class="danger">结束会话</button>
+        </div>
+
+        <div class="status-bar">
+          <div class="status-pill">会话状态：<span id="connectionState">未连接</span></div>
+          <div class="status-pill">医生：<span id="doctorState">李勇</span></div>
+          <div class="status-pill">科室：<span id="deptState">耳鼻咽喉科</span></div>
+        </div>
+
+        <div class="notice" id="clinicNote">提醒：本页面仅提供健康科普、专科方向说明与就医参考，不提供正式诊断和处方。</div>
+      </div>
+
+      <div class="stack">
+        <div class="card subcard">
+          <h4>公开职业信息</h4>
+          <div id="doctorBio" class="output muted">读取中...</div>
+        </div>
+
+        <div class="card subcard">
+          <h4>专科方向</h4>
+          <ul id="focusList" class="list"></ul>
+        </div>
+
+        <div class="card subcard">
+          <h4>在线提问预览</h4>
+          <p>你也可以先用文本方式快速查看回答风格，再决定是否进入视频会话。</p>
+          <textarea id="message" class="qa-box" placeholder="例如：过敏性鼻炎反复发作，需要尽快线下检查吗？"></textarea>
+          <div class="toolbar">
+            <button id="askBtn" class="primary">提交问题</button>
+          </div>
+          <div style="margin-top: 14px;">
+            <div class="output" id="answer">尚未生成回答。</div>
+          </div>
+        </div>
+
+        <div class="card subcard">
+          <h4>官方来源</h4>
+          <div id="officialSources" class="links"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/static/user.js"></script>
+</body>
+</html>

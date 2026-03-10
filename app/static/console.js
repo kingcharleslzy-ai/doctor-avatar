@@ -219,7 +219,7 @@ async function disconnectRoom() {
     state.room = null;
   }
   $("connectionState").textContent = "未连接";
-  $("videoStage").innerHTML = "<div class=\"placeholder\">远端视频将在这里出现</div>";
+  $("videoStage").innerHTML = "<div class=\"placeholder\"><strong>等待视频会话启动</strong>完成会话令牌创建与实时会话启动后，李勇医生虚拟人的远端视频将显示在此区域。</div>";
   log("已断开 LiveKit 房间。");
 }
 
@@ -227,7 +227,11 @@ async function loadAppConfig() {
   try {
     const data = await getJson("/api/app-config");
     const liveavatar = data.liveavatar || {};
+    const doctor = data.doctor || {};
     $("backendConfig").textContent = [
+      `医生：${doctor.name || "-"} ${doctor.title ? ` / ${doctor.title}` : ""}`,
+      `医院：${doctor.hospital || "-"}`,
+      `科室：${doctor.department || "-"}`,
       `OpenAI 已配置：${data.openai_configured ? "是" : "否"}`,
       `HeyGen 已配置：${data.heygen_configured ? "是" : "否"}`,
       `模式：${liveavatar.mode || "-"}`,

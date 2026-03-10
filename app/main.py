@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .config import settings
+from .knowledge import load_doctor_profile
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -23,6 +24,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
+doctor_profile = load_doctor_profile()
 
 
 @app.get("/health")
@@ -35,6 +37,12 @@ def app_config() -> dict[str, object]:
     return {
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
+        "doctor": {
+            "name": doctor_profile.get("name"),
+            "title": doctor_profile.get("title"),
+            "hospital": doctor_profile.get("hospital"),
+            "department": doctor_profile.get("department"),
+        },
         "liveavatar": {
             "mode": settings.heygen_mode,
             "language": settings.heygen_language,
@@ -47,9 +55,35 @@ def app_config() -> dict[str, object]:
     }
 
 
+@app.get("/api/doctor-profile")
+def public_doctor_profile() -> dict[str, object]:
+    return {
+        "name": doctor_profile.get("name"),
+        "title": doctor_profile.get("title"),
+        "hospital": doctor_profile.get("hospital"),
+        "hospital_alias": doctor_profile.get("hospital_alias"),
+        "department": doctor_profile.get("department"),
+        "specialty": doctor_profile.get("specialty"),
+        "public_tagline": doctor_profile.get("public_tagline"),
+        "public_bio": doctor_profile.get("public_bio", []),
+        "focus_areas": doctor_profile.get("focus_areas", []),
+        "clinical_strengths": doctor_profile.get("clinical_strengths", []),
+        "achievements": doctor_profile.get("achievements", []),
+        "clinic_note": doctor_profile.get("clinic_note"),
+        "address": doctor_profile.get("address"),
+        "telephone": doctor_profile.get("telephone"),
+        "official_sources": doctor_profile.get("official_sources", []),
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("user.html", {"request": request})
+
+
+@app.get("/console", response_class=HTMLResponse)
+def console(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("console.html", {"request": request})
 
 
 @app.post("/api/chat", response_model=ChatResponse)
