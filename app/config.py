@@ -1,0 +1,27 @@
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+KNOWLEDGE_DIR = BASE_DIR / "knowledge"
+
+
+class Settings(BaseSettings):
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
+    heygen_api_key: str | None = Field(default=None, alias="HEYGEN_API_KEY")
+    heygen_api_base: str = Field(default="https://api.heygen.com", alias="HEYGEN_API_BASE")
+    liveavatar_api_base: str = Field(default="https://api.liveavatar.com", alias="LIVEAVATAR_API_BASE")
+    app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
+    app_port: int = Field(default=8000, alias="APP_PORT")
+
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+settings = Settings()

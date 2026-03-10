@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>医生虚拟人 MVP</title>
+  <style>
+    :root {
+      --bg: #f4efe5;
+      --panel: #fffaf2;
+      --ink: #22201c;
+      --accent: #126a6a;
+      --line: #d8cfbf;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei UI", "PingFang SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(18,106,106,.12), transparent 25%),
+        linear-gradient(180deg, #f8f3ea 0%, var(--bg) 100%);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    .hero, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 18px 40px rgba(42, 37, 27, 0.06);
+    }
+    .hero {
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .hero h1 { margin: 0 0 12px; font-size: 32px; }
+    .hero p { margin: 0; line-height: 1.7; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 20px;
+    }
+    .panel {
+      padding: 20px;
+    }
+    textarea, input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      background: #fff;
+    }
+    textarea { min-height: 140px; resize: vertical; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    button + button { margin-left: 10px; }
+    .output, .muted {
+      white-space: pre-wrap;
+      line-height: 1.7;
+    }
+    .muted { color: #6d665b; }
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <h1>医生虚拟人 MVP</h1>
+      <p>这个版本先把 3 层搭起来：本地知识库、OpenAI 问答、HeyGen/LiveAvatar 会话接口。你可以先用文本方式调医生人格，再接入 HeyGen 视频分身。</p>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>问答调试</h2>
+        <p class="muted">先用这里验证“像不像你爸说话”。</p>
+        <textarea id="message" placeholder="例如：最近总是胸闷，需要马上去医院吗？"></textarea>
+        <div style="margin-top: 14px;">
+          <button id="sendBtn">发送</button>
+        </div>
+        <h3>回答</h3>
+        <div id="answer" class="output muted">还没有回答。</div>
+        <h3>命中知识片段</h3>
+        <div id="context" class="output muted">还没有检索。</div>
+      </div>
+
+      <div class="panel">
+        <h2>HeyGen / LiveAvatar</h2>
+        <p class="muted">先拿 session token，后面你接前端视频 SDK 时会用到。</p>
+        <input id="avatarName" placeholder="avatar_name（可选）" />
+        <input id="voiceId" placeholder="voice_id（可选）" style="margin-top: 10px;" />
+        <input id="knowledgeId" placeholder="knowledge_base_id（可选）" style="margin-top: 10px;" />
+        <div style="margin-top: 14px;">
+          <button id="tokenBtn">创建 Token</button>
+          <button id="sessionBtn">启动 Session</button>
+        </div>
+        <h3>接口返回</h3>
+        <div id="liveavatarResult" class="output muted">还没有请求。</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    async function postJson(url, body) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || JSON.stringify(data));
+      }
+      return data;
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+      const message = document.getElementById("message").value.trim();
+      if (!message) return;
+
+      document.getElementById("answer").textContent = "生成中...";
+      try {
+        const data = await postJson("/api/chat", { message, conversation: [] });
+        document.getElementById("answer").textContent = data.answer;
+        document.getElementById("context").textContent = data.context_snippets.join("\n\n") || "没有命中知识片段。";
+      } catch (error) {
+        document.getElementById("answer").textContent = error.message;
+      }
+    });
+
+    document.getElementById("tokenBtn").addEventListener("click", async () => {
+      const output = document.getElementById("liveavatarResult");
+      output.textContent = "请求中...";
+      try {
+        const data = await postJson("/api/liveavatar/token", {});
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        output.textContent = error.message;
+      }
+    });
+
+    document.getElementById("sessionBtn").addEventListener("click", async () => {
+      const output = document.getElementById("liveavatarResult");
+      output.textContent = "请求中...";
+      try {
+        const data = await postJson("/api/liveavatar/session", {
+          avatar_name: document.getElementById("avatarName").value.trim() || null,
+          voice_id: document.getElementById("voiceId").value.trim() || null,
+          knowledge_id: document.getElementById("knowledgeId").value.trim() || null
+        });
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        output.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
