@@ -27,6 +27,31 @@ heygen_service = HeyGenService()
 doctor_profile = load_doctor_profile()
 
 
+MOBILE_MARKERS = (
+    "iphone",
+    "android",
+    "mobile",
+    "ipad",
+    "ipod",
+    "windows phone",
+    "blackberry",
+    "opera mini",
+)
+
+
+def resolve_user_template(request: Request) -> str:
+    view = request.query_params.get("view")
+    if view == "mobile":
+        return "user_mobile.html"
+    if view == "desktop":
+        return "user_desktop.html"
+
+    user_agent = request.headers.get("user-agent", "").lower()
+    if any(marker in user_agent for marker in MOBILE_MARKERS):
+        return "user_mobile.html"
+    return "user_desktop.html"
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -78,7 +103,17 @@ def public_doctor_profile() -> dict[str, object]:
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("user.html", {"request": request})
+    return templates.TemplateResponse(resolve_user_template(request), {"request": request})
+
+
+@app.get("/desktop", response_class=HTMLResponse)
+def desktop(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("user_desktop.html", {"request": request})
+
+
+@app.get("/mobile", response_class=HTMLResponse)
+def mobile(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("user_mobile.html", {"request": request})
 
 
 @app.get("/console", response_class=HTMLResponse)

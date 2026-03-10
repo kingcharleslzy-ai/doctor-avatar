@@ -30,6 +30,8 @@ uvicorn app.main:app --reload
 打开 [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 - 用户端：`/`
+- 用户端桌面版：`/desktop`
+- 用户端手机版：`/mobile`
 - 控制台：`/console`
 
 ## 需要填写的内容
@@ -106,6 +108,7 @@ uvicorn app.main:app --reload
 用户端现在已经可以：
 
 - 展示李勇医生公开职业资料与专科方向
+- 按设备自动切换桌面版和手机版
 - 由后端自动发起 LiveAvatar 视频会话
 - 在不暴露内部参数的情况下连接远端视频
 - 提供一个面向用户的文本提问入口
@@ -119,6 +122,19 @@ uvicorn app.main:app --reload
 - 显示 session 信息和事件日志
 - 显示后端当前采用的 LiveAvatar 预设配置
 - 单独调试 OpenAI 问答层
+
+## 云端部署
+
+项目现在已经补齐可上云的生产部署骨架：
+
+- `Dockerfile`
+- `docker-compose.prod.yml`
+- `deploy/nginx/default.conf`
+- `deploy/ALIYUN_ECS.md`
+
+如果你要部署到阿里云 ECS，直接参考：
+
+- [deploy/ALIYUN_ECS.md](D:\charles\Documents\doctor-avatar\deploy\ALIYUN_ECS.md)
 
 ## 下一步建议
 

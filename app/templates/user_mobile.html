@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>李勇医生虚拟人</title>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f1e9;
+      --surface: rgba(255,255,255,.86);
+      --surface-strong: rgba(255,255,255,.96);
+      --line: rgba(32, 71, 92, .12);
+      --text: #1b2730;
+      --muted: #6b7a86;
+      --accent: #10696a;
+      --accent-2: #184c76;
+      --warning: #8a6332;
+      --shadow: 0 18px 44px rgba(20, 34, 46, .08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--text); font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; background: linear-gradient(180deg, #faf7f0 0%, var(--bg) 100%); }
+    main { padding: 14px 14px 24px; display: grid; gap: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+    .topbar { padding: 16px; display: flex; align-items: center; gap: 12px; }
+    .logo { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: #fff; font-weight: 700; }
+    .topbar h1 { margin: 0; font-size: 18px; }
+    .topbar p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .hero { padding: 18px; }
+    .eyebrow { display: inline-flex; padding: 6px 10px; border-radius: 999px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: rgba(16,105,106,.08); border: 1px solid rgba(16,105,106,.12); }
+    .hero h2 { margin: 14px 0 10px; font-size: 28px; line-height: 1.15; letter-spacing: -.04em; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.8; font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.74); font-size: 12px; color: #31424e; }
+    .video-card { padding: 16px; }
+    .video-shell { min-height: 300px; border-radius: 20px; background: linear-gradient(180deg, #153040 0%, #0e1f2b 100%); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+    .video-shell::after { content: ""; position: absolute; inset: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); pointer-events: none; }
+    .video-placeholder { color: rgba(240,247,249,.9); text-align: center; padding: 22px; line-height: 1.8; font-size: 14px; }
+    .video-placeholder strong { display: block; margin-bottom: 8px; font-size: 18px; }
+    .toolbar { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+    button { border: 0; border-radius: 999px; padding: 14px 16px; font: inherit; cursor: pointer; }
+    .primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: #fff; }
+    .secondary { background: rgba(255,255,255,.86); color: var(--text); border: 1px solid var(--line); }
+    .danger { background: rgba(146,77,77,.10); color: #8a4444; border: 1px solid rgba(146,77,77,.12); }
+    .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .status-pill { padding: 12px; border-radius: 18px; background: var(--surface-strong); border: 1px solid var(--line); font-size: 12px; color: var(--muted); line-height: 1.7; }
+    .notice { margin-top: 14px; padding: 14px; border-radius: 18px; background: #fff8ee; border: 1px solid rgba(193,165,122,.24); color: var(--warning); line-height: 1.8; font-size: 13px; }
+    .info-card, .qa-card { padding: 16px; }
+    .section-title { margin: 0 0 8px; font-size: 18px; letter-spacing: -.02em; }
+    .muted { color: var(--muted); }
+    .output { white-space: pre-wrap; line-height: 1.85; font-size: 14px; }
+    .list { margin: 10px 0 0; padding-left: 18px; color: var(--muted); line-height: 1.8; font-size: 14px; }
+    .qa-box { width: 100%; min-height: 120px; border-radius: 18px; border: 1px solid var(--line); padding: 14px; font: inherit; resize: vertical; background: rgba(255,255,255,.9); color: var(--text); }
+    .links { display: grid; gap: 8px; margin-top: 10px; }
+    .links a { color: var(--accent); text-decoration: none; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card topbar">
+      <div class="logo">LY</div>
+      <div>
+        <h1>李勇医生虚拟人</h1>
+        <p id="brandSubtitle">杭州市第一人民医院 · 耳鼻咽喉科</p>
+      </div>
+    </section>
+
+    <section class="card hero">
+      <div class="eyebrow">Mobile Experience</div>
+      <h2 id="heroTitle">移动端视频咨询入口</h2>
+      <p id="heroDescription">在手机上快速发起视频咨询，先了解专科方向和公开资料，再决定是否继续线下就诊。</p>
+      <div class="chips" id="focusTags"></div>
+    </section>
+
+    <section class="card video-card">
+      <div class="video-shell" id="videoStage">
+        <div class="video-placeholder">
+          <strong>等待接入虚拟人</strong>
+          点击下方按钮后，远端视频会出现在这里。
+        </div>
+      </div>
+      <div class="toolbar">
+        <button id="startConsultBtn" class="primary">开始视频咨询</button>
+        <button id="keepAliveBtn" class="secondary">保持会话</button>
+        <button id="disconnectBtn" class="danger">结束会话</button>
+      </div>
+      <div class="status-grid">
+        <div class="status-pill">会话状态<br /><strong id="connectionState">未连接</strong></div>
+        <div class="status-pill">医生 / 科室<br /><strong><span id="doctorState">李勇</span> · <span id="deptState">耳鼻咽喉科</span></strong></div>
+      </div>
+      <div class="notice" id="clinicNote">提醒：仅供健康科普与就医参考，不替代面诊和处方。</div>
+    </section>
+
+    <section class="card info-card">
+      <h3 class="section-title">公开职业信息</h3>
+      <div id="doctorBio" class="output muted">读取中...</div>
+      <ul id="focusList" class="list"></ul>
+    </section>
+
+    <section class="card qa-card">
+      <h3 class="section-title">先问一个问题</h3>
+      <p class="muted">如果你暂时不想打开视频，也可以先用文本方式快速了解回答风格。</p>
+      <textarea id="message" class="qa-box" placeholder="例如：鼻窦炎反复发作，需要尽快去医院吗？"></textarea>
+      <div class="toolbar">
+        <button id="askBtn" class="primary">提交问题</button>
+      </div>
+      <div id="answer" class="output" style="margin-top: 12px;">尚未生成回答。</div>
+    </section>
+
+    <section class="card info-card">
+      <h3 class="section-title">官方来源</h3>
+      <div id="officialSources" class="links"></div>
+    </section>
+  </main>
+  <script src="/static/user.js"></script>
+</body>
+</html>
