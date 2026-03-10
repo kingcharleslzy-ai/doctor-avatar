@@ -15,15 +15,18 @@ class ChatResponse(BaseModel):
 
 
 class LiveAvatarSessionRequest(BaseModel):
-    avatar_name: str | None = None
+    mode: str = "FULL"
+    avatar_id: str | None = None
     voice_id: str | None = None
-    knowledge_id: str | None = None
-    version: str | None = "v2"
-    quality: str | None = "medium"
-    video_encoding: str | None = "H264"
-    source: str | None = "local"
+    context_id: str | None = None
+    language: str | None = "zh"
+    is_sandbox: bool = False
     extra: dict[str, Any] = Field(default_factory=dict)
 
 
 class LiveAvatarTokenResponse(BaseModel):
     data: dict[str, Any]
+
+
+class LiveAvatarStartRequest(BaseModel):
+    session_token: str = Field(min_length=1)

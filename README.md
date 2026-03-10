@@ -72,11 +72,18 @@ uvicorn app.main:app --reload
 
 ### `POST /api/liveavatar/token`
 
-用于向 HeyGen LiveAvatar 申请 session token。
+用于向 HeyGen LiveAvatar 申请 session token。当前实现按官方新版流程组织，请求体支持：
+
+- `mode`
+- `avatar_id`
+- `voice_id`
+- `context_id`
+- `language`
+- `is_sandbox`
 
 ### `POST /api/liveavatar/session`
 
-用于启动一条 LiveAvatar session。当前版本主要先打通后端接口，后续再接真正的视频前端。
+用于用 `session_token` 启动一条 LiveAvatar session。当前版本主要先打通后端接口，后续再接真正的视频前端。
 
 ## 下一步建议
 

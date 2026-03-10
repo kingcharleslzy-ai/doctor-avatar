@@ -46,21 +46,27 @@ class HeyGenService:
         if not self.api_key:
             raise RuntimeError("HEYGEN_API_KEY 未配置。")
         return {
-            "X-Api-Key": self.api_key,
+            "X-API-KEY": self.api_key,
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
 
-    async def create_liveavatar_token(self) -> dict[str, Any]:
+    async def create_liveavatar_token(self, payload: dict[str, Any]) -> dict[str, Any]:
         url = f"{settings.liveavatar_api_base.rstrip('/')}/v1/sessions/token"
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=self._headers(), json={})
+            response = await client.post(url, headers=self._headers(), json=payload)
             response.raise_for_status()
             return response.json()
 
-    async def start_liveavatar_session(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def start_liveavatar_session(self, session_token: str) -> dict[str, Any]:
         url = f"{settings.liveavatar_api_base.rstrip('/')}/v1/sessions/start"
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=self._headers(), json=payload)
+            response = await client.post(
+                url,
+                headers={
+                    "Accept": "application/json",
+                    "Authorization": f"Bearer {session_token}",
+                },
+            )
             response.raise_for_status()
             return response.json()

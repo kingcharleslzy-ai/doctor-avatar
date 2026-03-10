@@ -6,7 +6,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from .models import ChatRequest, ChatResponse, LiveAvatarSessionRequest, LiveAvatarTokenResponse
+from .models import (
+    ChatRequest,
+    ChatResponse,
+    LiveAvatarSessionRequest,
+    LiveAvatarStartRequest,
+    LiveAvatarTokenResponse,
+)
 from .services import ChatService, HeyGenService
 
 
@@ -36,30 +42,36 @@ def chat(payload: ChatRequest) -> ChatResponse:
 
 
 @app.post("/api/liveavatar/token", response_model=LiveAvatarTokenResponse)
-async def liveavatar_token() -> LiveAvatarTokenResponse:
+async def liveavatar_token(payload: LiveAvatarSessionRequest) -> LiveAvatarTokenResponse:
+    request_payload = {
+        "mode": payload.mode,
+        "avatar_id": payload.avatar_id,
+        "is_sandbox": payload.is_sandbox,
+        "avatar_persona": {
+            "voice_id": payload.voice_id,
+            "context_id": payload.context_id,
+            "language": payload.language,
+        },
+        **payload.extra,
+    }
+    avatar_persona = {key: value for key, value in request_payload["avatar_persona"].items() if value is not None}
+    if avatar_persona:
+        request_payload["avatar_persona"] = avatar_persona
+    else:
+        request_payload.pop("avatar_persona")
+    request_payload = {key: value for key, value in request_payload.items() if value is not None}
+
     try:
-        result = await heygen_service.create_liveavatar_token()
+        result = await heygen_service.create_liveavatar_token(request_payload)
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)
 
 
 @app.post("/api/liveavatar/session", response_model=LiveAvatarTokenResponse)
-async def liveavatar_session(payload: LiveAvatarSessionRequest) -> LiveAvatarTokenResponse:
-    request_payload = {
-        "version": payload.version,
-        "avatar_name": payload.avatar_name,
-        "voice": {"voice_id": payload.voice_id} if payload.voice_id else None,
-        "knowledge_base_id": payload.knowledge_id,
-        "video_encoding": payload.video_encoding,
-        "quality": payload.quality,
-        "source": payload.source,
-        **payload.extra,
-    }
-    request_payload = {key: value for key, value in request_payload.items() if value is not None}
-
+async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
     try:
-        result = await heygen_service.start_liveavatar_session(request_payload)
+        result = await heygen_service.start_liveavatar_session(payload.session_token)
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)

@@ -99,10 +99,11 @@
 
       <div class="panel">
         <h2>HeyGen / LiveAvatar</h2>
-        <p class="muted">先拿 session token，后面你接前端视频 SDK 时会用到。</p>
-        <input id="avatarName" placeholder="avatar_name（可选）" />
+        <p class="muted">按新版 LiveAvatar 流程，先创建 token，再用 session token 启动。</p>
+        <input id="avatarId" placeholder="avatar_id（可选，Sandbox 可先留空）" />
         <input id="voiceId" placeholder="voice_id（可选）" style="margin-top: 10px;" />
-        <input id="knowledgeId" placeholder="knowledge_base_id（可选）" style="margin-top: 10px;" />
+        <input id="contextId" placeholder="context_id（可选）" style="margin-top: 10px;" />
+        <input id="sessionToken" placeholder="session_token（创建 token 后可粘贴）" style="margin-top: 10px;" />
         <div style="margin-top: 14px;">
           <button id="tokenBtn">创建 Token</button>
           <button id="sessionBtn">启动 Session</button>
@@ -142,11 +143,21 @@
     });
 
     document.getElementById("tokenBtn").addEventListener("click", async () => {
-      const output = document.getElementById("liveavatarResult");
-      output.textContent = "请求中...";
+        const output = document.getElementById("liveavatarResult");
+        output.textContent = "请求中...";
       try {
-        const data = await postJson("/api/liveavatar/token", {});
+        const data = await postJson("/api/liveavatar/token", {
+          mode: "FULL",
+          avatar_id: document.getElementById("avatarId").value.trim() || null,
+          voice_id: document.getElementById("voiceId").value.trim() || null,
+          context_id: document.getElementById("contextId").value.trim() || null,
+          language: "zh",
+          is_sandbox: true
+        });
         output.textContent = JSON.stringify(data, null, 2);
+        if (data.data && data.data.session_token) {
+          document.getElementById("sessionToken").value = data.data.session_token;
+        }
       } catch (error) {
         output.textContent = error.message;
       }
@@ -157,9 +168,7 @@
       output.textContent = "请求中...";
       try {
         const data = await postJson("/api/liveavatar/session", {
-          avatar_name: document.getElementById("avatarName").value.trim() || null,
-          voice_id: document.getElementById("voiceId").value.trim() || null,
-          knowledge_id: document.getElementById("knowledgeId").value.trim() || null
+          session_token: document.getElementById("sessionToken").value.trim()
         });
         output.textContent = JSON.stringify(data, null, 2);
       } catch (error) {
