@@ -149,32 +149,12 @@
             <span id="connectionState">未连接</span>
           </div>
           <div>
-            <label for="avatarId">Avatar ID</label>
-            <input id="avatarId" placeholder="Sandbox 可先留空，生产环境填真实 avatar_id" />
-          </div>
-          <div>
-            <label for="voiceId">Voice ID</label>
-            <input id="voiceId" placeholder="可选" />
-          </div>
-          <div>
-            <label for="contextId">Context ID</label>
-            <input id="contextId" placeholder="可选" />
-          </div>
-          <div>
-            <label for="language">语言</label>
-            <input id="language" value="zh" />
-          </div>
-          <div class="checkbox-line">
-            <input id="sandboxMode" type="checkbox" checked />
-            <span>启用 Sandbox 模式</span>
-          </div>
-          <div class="checkbox-line">
-            <input id="pushToTalk" type="checkbox" />
-            <span>启用 Push-to-Talk 模式</span>
+            <h3>后端预设</h3>
+            <div id="backendConfig" class="output muted">读取中...</div>
           </div>
           <div>
             <label for="sessionToken">Session Token</label>
-            <input id="sessionToken" placeholder="创建 token 后会自动填入" />
+            <input id="sessionToken" placeholder="由后端创建后自动填入，一般无需手动修改" />
           </div>
           <div class="toolbar">
             <button id="createTokenBtn">创建 Token</button>

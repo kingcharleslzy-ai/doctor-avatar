@@ -15,12 +15,12 @@ class ChatResponse(BaseModel):
 
 
 class LiveAvatarSessionRequest(BaseModel):
-    mode: str = "FULL"
+    mode: str | None = None
     avatar_id: str | None = None
     voice_id: str | None = None
     context_id: str | None = None
-    language: str | None = "zh"
-    is_sandbox: bool = False
+    language: str | None = None
+    is_sandbox: bool | None = None
     extra: dict[str, Any] = Field(default_factory=dict)
 
 

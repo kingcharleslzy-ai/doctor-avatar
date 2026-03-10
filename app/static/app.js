@@ -121,15 +121,7 @@ async function connectLiveKit(startData) {
 async function createToken() {
   setBusy("createTokenBtn", true);
   try {
-    const data = await postJson("/api/liveavatar/token", {
-      mode: "FULL",
-      avatar_id: $("avatarId").value.trim() || null,
-      voice_id: $("voiceId").value.trim() || null,
-      context_id: $("contextId").value.trim() || null,
-      language: $("language").value.trim() || "zh",
-      is_sandbox: $("sandboxMode").checked,
-      extra: $("pushToTalk").checked ? { interactivity_type: "PUSH_TO_TALK" } : {},
-    });
+    const data = await postJson("/api/liveavatar/token", {});
 
     state.sessionToken = data.data.session_token || "";
     $("sessionToken").value = state.sessionToken;
@@ -231,6 +223,27 @@ async function disconnectRoom() {
   log("已断开 LiveKit 房间。");
 }
 
+async function loadAppConfig() {
+  try {
+    const data = await getJson("/api/app-config");
+    const liveavatar = data.liveavatar || {};
+    $("backendConfig").textContent = [
+      `OpenAI 已配置：${data.openai_configured ? "是" : "否"}`,
+      `HeyGen 已配置：${data.heygen_configured ? "是" : "否"}`,
+      `模式：${liveavatar.mode || "-"}`,
+      `语言：${liveavatar.language || "-"}`,
+      `Sandbox：${liveavatar.sandbox ? "开启" : "关闭"}`,
+      `Push-to-Talk：${liveavatar.push_to_talk ? "开启" : "关闭"}`,
+      `Avatar 已配置：${liveavatar.avatar_configured ? "是" : "否"}`,
+      `Voice 已配置：${liveavatar.voice_configured ? "是" : "否"}`,
+      `Context 已配置：${liveavatar.context_configured ? "是" : "否"}`,
+    ].join("\n");
+  } catch (error) {
+    $("backendConfig").textContent = error.message;
+    log(`读取后端配置失败：${error.message}`);
+  }
+}
+
 function wireUi() {
   $("createTokenBtn").addEventListener("click", createToken);
   $("startSessionBtn").addEventListener("click", startSession);
@@ -241,3 +254,4 @@ function wireUi() {
 }
 
 wireUi();
+loadAppConfig();

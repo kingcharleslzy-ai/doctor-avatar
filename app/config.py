@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     heygen_api_key: str | None = Field(default=None, alias="HEYGEN_API_KEY")
     heygen_api_base: str = Field(default="https://api.heygen.com", alias="HEYGEN_API_BASE")
     liveavatar_api_base: str = Field(default="https://api.liveavatar.com", alias="LIVEAVATAR_API_BASE")
+    heygen_mode: str = Field(default="FULL", alias="HEYGEN_MODE")
+    heygen_avatar_id: str | None = Field(default=None, alias="HEYGEN_AVATAR_ID")
+    heygen_voice_id: str | None = Field(default=None, alias="HEYGEN_VOICE_ID")
+    heygen_context_id: str | None = Field(default=None, alias="HEYGEN_CONTEXT_ID")
+    heygen_language: str = Field(default="zh", alias="HEYGEN_LANGUAGE")
+    heygen_use_sandbox: bool = Field(default=True, alias="HEYGEN_USE_SANDBOX")
+    heygen_push_to_talk: bool = Field(default=False, alias="HEYGEN_PUSH_TO_TALK")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
 

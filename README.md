@@ -35,6 +35,11 @@ uvicorn app.main:app --reload
 
 - `OPENAI_API_KEY`
 - `HEYGEN_API_KEY`
+- `HEYGEN_AVATAR_ID`
+- `HEYGEN_VOICE_ID`
+- `HEYGEN_CONTEXT_ID`
+
+这些 HeyGen 参数现在默认走后端配置，前端和调试页都不再要求手填。
 
 ### 2. `knowledge/doctor_profile.yaml`
 
@@ -102,6 +107,7 @@ uvicorn app.main:app --reload
 - 用返回的 `livekit_url` 和 `livekit_client_token` 直接连接 LiveKit
 - 自动请求麦克风并订阅远端音视频
 - 显示 session 信息和事件日志
+- 显示后端当前采用的 LiveAvatar 预设配置
 - 单独调试 OpenAI 问答层
 
 ## 下一步建议
