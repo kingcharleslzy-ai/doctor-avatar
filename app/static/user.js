@@ -146,10 +146,12 @@ async function disconnectRoom() {
 }
 
 async function askQuestion() {
-  const message = $("message").value.trim();
+  const input = $("message");
+  const message = input.value.trim();
   if (!message) {
     return;
   }
+  input.value = "";
   $("answer").textContent = "生成中...";
   try {
     const data = await postJson("/api/chat", {
@@ -159,6 +161,10 @@ async function askQuestion() {
     $("answer").textContent = data.answer;
     state.conversation.push({ role: "user", content: message });
     state.conversation.push({ role: "assistant", content: data.answer });
+    // 只保留最近 10 轮对话，避免超出 token 上限
+    if (state.conversation.length > 20) {
+      state.conversation = state.conversation.slice(-20);
+    }
   } catch (error) {
     $("answer").textContent = error.message;
   }
@@ -326,6 +332,13 @@ function wireUi() {
   $("voiceInputBtn").addEventListener("click", startVoiceInput);
   $("speakAnswerBtn").addEventListener("click", speakAnswer);
   $("stopSpeechBtn").addEventListener("click", stopSpeech);
+  // Ctrl+Enter 或 Cmd+Enter 提交问题
+  $("message").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      askQuestion();
+    }
+  });
 }
 
 wireUi();
