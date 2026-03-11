@@ -33,10 +33,14 @@
     .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.74); font-size: 12px; color: #31424e; }
     .video-card { padding: 16px; }
-    .video-shell { min-height: 300px; border-radius: 20px; background: linear-gradient(180deg, #153040 0%, #0e1f2b 100%); overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative; }
+    .video-shell { min-height: 300px; border-radius: 20px; background: linear-gradient(180deg, #153040 0%, #0e1f2b 100%); overflow: hidden; display: grid; position: relative; }
     .video-shell::after { content: ""; position: absolute; inset: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,.08); pointer-events: none; }
-    .video-placeholder { color: rgba(240,247,249,.9); text-align: center; padding: 22px; line-height: 1.8; font-size: 14px; }
-    .video-placeholder strong { display: block; margin-bottom: 8px; font-size: 18px; }
+    .video-placeholder { padding: 18px; display: grid; gap: 14px; color: rgba(240,247,249,.92); }
+    .portrait-mobile { border-radius: 18px; padding: 18px; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 1px solid rgba(255,255,255,.08); }
+    .portrait-mobile .badge { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: rgba(16,105,106,.22); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .portrait-mobile .name { margin-top: 12px; font-size: 28px; font-weight: 700; letter-spacing: -.04em; }
+    .portrait-mobile .meta { margin-top: 6px; line-height: 1.7; color: rgba(240,247,249,.76); font-size: 13px; }
+    .portrait-mobile .note { padding: 14px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); line-height: 1.8; font-size: 13px; }
     .toolbar { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
     button { border: 0; border-radius: 999px; padding: 14px 16px; font: inherit; cursor: pointer; }
     .primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); color: #fff; }
@@ -75,12 +79,16 @@
     <section class="card video-card">
       <div class="video-shell" id="videoStage">
         <div class="video-placeholder">
-          <strong>等待接入虚拟人</strong>
-          点击下方按钮后，远端视频会出现在这里。
+          <div class="portrait-mobile">
+            <div class="badge">Doctor Profile Visual</div>
+            <div class="name">李勇</div>
+            <div class="meta">主任医师 / 教授 / 硕士生导师<br />杭州市第一人民医院 耳鼻咽喉科</div>
+          </div>
+          <div class="note">当前使用医生主视觉卡片代替视频位，先以文字问答和产品主流程为主。后续接回视频分身时，这里会直接切换成实时画面。</div>
         </div>
       </div>
       <div class="toolbar">
-        <button id="startConsultBtn" class="primary">开始视频咨询</button>
+        <button id="startConsultBtn" class="primary">视频分身即将开放</button>
         <button id="keepAliveBtn" class="secondary">保持会话</button>
         <button id="disconnectBtn" class="danger">结束会话</button>
       </div>

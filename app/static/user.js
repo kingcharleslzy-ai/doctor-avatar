@@ -3,6 +3,7 @@ const state = {
   sessionToken: "",
   conversation: [],
   doctorProfile: null,
+  appConfig: null,
 };
 
 function $(id) {
@@ -89,6 +90,10 @@ async function connectLiveKit(startData) {
 }
 
 async function startConsultation() {
+  if (!state.appConfig || !state.appConfig.video_avatar_enabled) {
+    $("answer").textContent = "视频分身能力当前未启用，现阶段请先使用文本问答。相关接口已保留，后续可随时接回。";
+    return;
+  }
   const startBtn = $("startConsultBtn");
   startBtn.disabled = true;
   startBtn.textContent = "连接中...";
@@ -110,6 +115,9 @@ async function startConsultation() {
 }
 
 async function keepAlive() {
+  if (!state.appConfig || !state.appConfig.video_avatar_enabled) {
+    return;
+  }
   if (!state.sessionToken) {
     return;
   }
@@ -128,7 +136,11 @@ async function disconnectRoom() {
     state.room = null;
   }
   $("connectionState").textContent = "未连接";
-  $("videoStage").innerHTML = `<div class="video-placeholder"><strong>等待接入李勇医生虚拟人</strong>点击“开始视频咨询”后，远端视频会在这里加载。请在浏览器弹出权限时允许麦克风访问。</div>`;
+  if (window.innerWidth <= 720) {
+    $("videoStage").innerHTML = `<div class="video-placeholder"><div class="portrait-mobile"><div class="badge">Doctor Profile Visual</div><div class="name">李勇</div><div class="meta">主任医师 / 教授 / 硕士生导师<br />杭州市第一人民医院 耳鼻咽喉科</div></div><div class="note">当前使用医生主视觉卡片代替视频位，先以文字问答和产品主流程为主。后续接回视频分身时，这里会直接切换成实时画面。</div></div>`;
+    return;
+  }
+  $("videoStage").innerHTML = `<div class="portrait-side"><div class="portrait-card"><div class="portrait-placeholder"><div class="portrait-badge">Doctor Profile Visual</div><div class="portrait-name">李勇</div><div class="portrait-title">主任医师 / 教授 / 硕士生导师<br />杭州市第一人民医院 耳鼻咽喉科</div><div class="portrait-note">当前使用医生主视觉卡片代替实时视频位。后续接入分身能力后，可直接替换为真人或虚拟人画面。</div></div></div></div><div class="briefing-side"><div class="briefing-card"><h4>Clinical Briefing</h4><h5>数字分身接口保留，当前先以图文问答为主</h5><p>现阶段重点先完成可上线、可访问、可持续迭代的医生 AI 助手主流程。视频分身接口和会话链路已经保留，后续可以在不推翻现有产品框架的前提下接回。</p><div class="briefing-list"><div class="briefing-item">当前适合做常见问题答疑、专科方向说明、就医建议与内容展示。</div><div class="briefing-item">后续可替换为医生照片、品牌海报，或实时虚拟人视频窗口。</div><div class="briefing-item">若启用视频分身，只需开启后端配置并补齐对应参数。</div></div></div></div>`;
 }
 
 async function askQuestion() {
@@ -203,6 +215,21 @@ async function loadProfile() {
   renderSources(profile.official_sources || []);
 }
 
+async function loadAppConfig() {
+  const config = await getJson("/api/app-config");
+  state.appConfig = config;
+  const enabled = Boolean(config.video_avatar_enabled);
+  const startBtn = $("startConsultBtn");
+  const keepAliveBtn = $("keepAliveBtn");
+
+  if (!enabled) {
+    startBtn.textContent = "视频分身即将开放";
+    keepAliveBtn.disabled = true;
+    $("connectionState").textContent = "未启用";
+    disconnectRoom();
+  }
+}
+
 function wireUi() {
   $("startConsultBtn").addEventListener("click", startConsultation);
   $("keepAliveBtn").addEventListener("click", keepAlive);
@@ -211,6 +238,9 @@ function wireUi() {
 }
 
 wireUi();
+loadAppConfig().catch((error) => {
+  $("answer").textContent = error.message;
+});
 loadProfile().catch((error) => {
   $("doctorBio").textContent = error.message;
 });

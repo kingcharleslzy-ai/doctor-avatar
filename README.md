@@ -109,9 +109,8 @@ uvicorn app.main:app --reload
 
 - 展示李勇医生公开职业资料与专科方向
 - 按设备自动切换桌面版和手机版
-- 由后端自动发起 LiveAvatar 视频会话
-- 在不暴露内部参数的情况下连接远端视频
 - 提供一个面向用户的文本提问入口
+- 保留视频分身入口与接口，但当前默认不启用高成本的实时视频链路
 
 控制台现在已经可以：
 
@@ -135,6 +134,15 @@ uvicorn app.main:app --reload
 如果你要部署到阿里云 ECS，直接参考：
 
 - [deploy/ALIYUN_ECS.md](D:\charles\Documents\doctor-avatar\deploy\ALIYUN_ECS.md)
+
+## 视频分身策略
+
+当前项目策略是：
+
+- `HeyGen / LiveAvatar` 接口全部保留
+- 默认 `ENABLE_VIDEO_AVATAR=false`
+- 先完成低成本的主流程上线
+- 后续如果要重新接入视频分身，只需补齐 HeyGen 参数并把 `ENABLE_VIDEO_AVATAR=true`
 
 ## 下一步建议
 

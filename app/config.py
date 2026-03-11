@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     heygen_language: str = Field(default="zh", alias="HEYGEN_LANGUAGE")
     heygen_use_sandbox: bool = Field(default=True, alias="HEYGEN_USE_SANDBOX")
     heygen_push_to_talk: bool = Field(default=False, alias="HEYGEN_PUSH_TO_TALK")
+    enable_video_avatar: bool = Field(default=False, alias="ENABLE_VIDEO_AVATAR")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
 

@@ -62,6 +62,7 @@ def app_config() -> dict[str, object]:
     return {
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
+        "video_avatar_enabled": settings.enable_video_avatar,
         "doctor": {
             "name": doctor_profile.get("name"),
             "title": doctor_profile.get("title"),
@@ -132,6 +133,8 @@ def chat(payload: ChatRequest) -> ChatResponse:
 
 @app.post("/api/liveavatar/token", response_model=LiveAvatarTokenResponse)
 async def liveavatar_token(payload: LiveAvatarSessionRequest | None = None) -> LiveAvatarTokenResponse:
+    if not settings.enable_video_avatar:
+        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     payload = payload or LiveAvatarSessionRequest()
     request_payload = {
         "mode": payload.mode or settings.heygen_mode,
@@ -164,6 +167,8 @@ async def liveavatar_token(payload: LiveAvatarSessionRequest | None = None) -> L
 
 @app.post("/api/liveavatar/session", response_model=LiveAvatarTokenResponse)
 async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
+    if not settings.enable_video_avatar:
+        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
         result = await heygen_service.start_liveavatar_session(payload.session_token)
     except Exception as exc:  # pragma: no cover - runtime integration fallback
@@ -173,6 +178,8 @@ async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarToken
 
 @app.get("/api/liveavatar/sessions", response_model=LiveAvatarTokenResponse)
 async def liveavatar_sessions() -> LiveAvatarTokenResponse:
+    if not settings.enable_video_avatar:
+        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
         result = await heygen_service.list_sessions()
     except Exception as exc:  # pragma: no cover - runtime integration fallback
@@ -182,6 +189,8 @@ async def liveavatar_sessions() -> LiveAvatarTokenResponse:
 
 @app.post("/api/liveavatar/keepalive", response_model=LiveAvatarTokenResponse)
 async def liveavatar_keepalive(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
+    if not settings.enable_video_avatar:
+        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
         result = await heygen_service.keep_alive(payload.session_token)
     except Exception as exc:  # pragma: no cover - runtime integration fallback
