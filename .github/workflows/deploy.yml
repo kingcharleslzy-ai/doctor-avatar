@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   deploy:
-    # 需要 self-hosted runner 以 root 或具备 docker 组权限的用户安装
+    # runner 必须以 root 安装（部署目录在 /root/doctor-avatar）
     # 安装方式参见 README > 自动部署
     runs-on: self-hosted
     steps:

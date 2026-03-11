@@ -192,7 +192,7 @@ uvicorn app.main:app --reload
 - 新增 `.github/workflows/deploy.yml`：push main 时在服务器本机执行部署，不依赖入站 SSH 或公网 webhook 接口
 - 用 `git fetch + reset --hard origin/main` 替代 `git pull`，保证始终对齐目标提交（Codex P2）
 - `cancel-in-progress: false` 确保部署不被打断，避免 docker compose 中途被杀留烂摊子（Codex）
-- 注：runner 需以 root 或具备 docker 组权限的用户安装（Codex P1）
+- 注：runner 必须以 root 安装，部署目录 `/root/doctor-avatar` 非 root 用户无法访问（Codex P1）
 
 **安装 Runner（服务器执行一次）：**
 ```bash
