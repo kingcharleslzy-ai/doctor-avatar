@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import hashlib
-import hmac
 import secrets
-import subprocess
 from pathlib import Path
 
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -79,36 +76,6 @@ def require_console_auth(credentials: HTTPBasicCredentials = Depends(console_aut
         detail="控制台认证失败。",
         headers={"WWW-Authenticate": "Basic"},
     )
-
-
-def _run_deploy() -> None:
-    subprocess.run(
-        "cd /root/doctor-avatar && git pull origin main && "
-        "docker compose -f docker-compose.prod.yml up -d --build",
-        shell=True,
-    )
-
-
-@app.post("/webhook/github")
-async def github_webhook(request: Request, background_tasks: BackgroundTasks) -> JSONResponse:
-    body = await request.body()
-    secret = settings.github_webhook_secret
-    if secret:
-        sig = request.headers.get("X-Hub-Signature-256", "")
-        expected = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(sig, expected):
-            raise HTTPException(status_code=403, detail="Invalid signature")
-
-    try:
-        payload = __import__("json").loads(body)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-
-    if payload.get("ref") != "refs/heads/main":
-        return JSONResponse({"status": "skipped", "reason": "not main branch"})
-
-    background_tasks.add_task(_run_deploy)
-    return JSONResponse({"status": "deploying"})
 
 
 @app.get("/health")
