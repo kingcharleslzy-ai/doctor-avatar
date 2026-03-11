@@ -21,9 +21,16 @@ services:
       - "443:443"
     volumes:
       - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./deploy/nginx/certs:/etc/nginx/certs:ro
+      - ./data/certbot/www:/var/www/certbot:ro
+      - ./data/certbot/conf:/etc/letsencrypt:ro
     networks:
       - doctor_avatar_net
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
 
 networks:
   doctor_avatar_net:
