@@ -99,24 +99,28 @@ def search_knowledge(query: str, top_k: int = 3) -> list[KnowledgeHit]:
     if not settings.openai_api_key:
         return _token_search(query, top_k)
 
-    from openai import OpenAI
-    client = OpenAI(api_key=settings.openai_api_key)
+    try:
+        from openai import OpenAI
 
-    index = _get_index(client)
-    if index is None:
+        client = OpenAI(api_key=settings.openai_api_key)
+        index = _get_index(client)
+        if index is None:
+            return _token_search(query, top_k)
+
+        query_emb = _embed([query], client)[0]
+        hits = [
+            KnowledgeHit(
+                source=entry["source"],
+                snippet=re.sub(r"\s+", " ", entry["text"])[:280],
+                score=_cosine(query_emb, entry["embedding"]),
+            )
+            for entry in index
+        ]
+        hits.sort(key=lambda h: h.score, reverse=True)
+        return hits[:top_k]
+    except Exception:
+        # Embedding 接口偶发失败时，退回关键词检索，避免直接把问答打成 500。
         return _token_search(query, top_k)
-
-    query_emb = _embed([query], client)[0]
-    hits = [
-        KnowledgeHit(
-            source=entry["source"],
-            snippet=re.sub(r"\s+", " ", entry["text"])[:280],
-            score=_cosine(query_emb, entry["embedding"]),
-        )
-        for entry in index
-    ]
-    hits.sort(key=lambda h: h.score, reverse=True)
-    return hits[:top_k]
 
 
 def _token_search(query: str, top_k: int) -> list[KnowledgeHit]:

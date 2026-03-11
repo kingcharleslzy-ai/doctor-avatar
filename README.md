@@ -171,6 +171,13 @@ uvicorn app.main:app --reload
 
 ## CHANGELOG
 
+### 2026-03-11（三）
+
+**Embedding 检索失败自动降级修复**（by codex）
+
+- `app/knowledge.py`：补上 embedding 查询与索引构建异常时的自动回退，避免 OpenAI 向量接口抖动直接把 `/api/chat` 打成 500
+- `.gitignore`：新增 `knowledge/.embed_cache.json`，避免本地磁盘缓存被误提交
+
 ### 2026-03-11（二）
 
 **GitHub Webhook 自动部署**（by windows-claude）
