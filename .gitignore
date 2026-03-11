@@ -5,3 +5,4 @@ __pycache__/
 .env
 *.pyc
 knowledge/.embed_cache.json
+app/build_meta.json

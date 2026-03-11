@@ -228,6 +228,15 @@ async function loadAppConfig() {
     const data = await getJson("/api/app-config");
     const liveavatar = data.liveavatar || {};
     const doctor = data.doctor || {};
+    const runtime = data.runtime || {};
+    $("runtimeInfo").textContent = [
+      `应用版本：${runtime.version || "-"}`,
+      `线上提交：${runtime.git_short_sha || "-"}`,
+      `完整 SHA：${runtime.git_sha || "-"}`,
+      `部署分支：${runtime.ref_name || "-"}`,
+      `部署时间：${runtime.deployed_at || "-"}`,
+      `部署来源：${runtime.source || "-"}`,
+    ].join("\n");
     $("backendConfig").textContent = [
       `医生：${doctor.name || "-"} ${doctor.title ? ` / ${doctor.title}` : ""}`,
       `医院：${doctor.hospital || "-"}`,
@@ -244,6 +253,7 @@ async function loadAppConfig() {
     ].join("\n");
   } catch (error) {
     $("backendConfig").textContent = error.message;
+    $("runtimeInfo").textContent = error.message;
     log(`读取后端配置失败：${error.message}`);
   }
 }

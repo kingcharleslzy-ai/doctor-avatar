@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import secrets
 from pathlib import Path
 
@@ -28,6 +29,7 @@ chat_service = ChatService()
 heygen_service = HeyGenService()
 doctor_profile = load_doctor_profile()
 console_auth = HTTPBasic()
+BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
 
 
 MOBILE_MARKERS = (
@@ -78,6 +80,29 @@ def require_console_auth(credentials: HTTPBasicCredentials = Depends(console_aut
     )
 
 
+def load_build_meta() -> dict[str, str]:
+    defaults = {
+        "version": app.version,
+        "git_sha": "unknown",
+        "git_short_sha": "unknown",
+        "ref_name": "local",
+        "deployed_at": "unknown",
+        "source": "local-dev",
+    }
+    if not BUILD_META_PATH.exists():
+        return defaults
+
+    try:
+        payload = json.loads(BUILD_META_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return defaults
+
+    return {
+        **defaults,
+        **{key: value for key, value in payload.items() if isinstance(value, str) and value},
+    }
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -85,10 +110,12 @@ def health() -> dict[str, str]:
 
 @app.get("/api/app-config")
 def app_config() -> dict[str, object]:
+    build_meta = load_build_meta()
     return {
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
         "video_avatar_enabled": settings.enable_video_avatar,
+        "runtime": build_meta,
         "doctor": {
             "name": doctor_profile.get("name"),
             "title": doctor_profile.get("title"),

@@ -173,6 +173,15 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**控制台新增线上版本信息**（by codex）
+
+- `/api/app-config`：新增 `runtime` 字段，返回当前线上版本、部署提交、部署分支与部署时间
+- `/console`：新增“线上版本信息”区块，便于直接核对当前公网环境正在运行的提交
+- `.github/workflows/deploy.yml`：自动部署时写入 `app/build_meta.json`，让容器内能读取本次部署元信息
+- `.gitignore`：忽略 `app/build_meta.json`，避免部署期生成的元数据被误提交
+
+### 2026-03-11（四-2）
+
 **自动部署文档同步 + 并发保护**（by codex）
 
 - `.github/workflows/deploy.yml`：新增 `concurrency`，避免连续 push 时重复部署互相打架
