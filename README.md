@@ -199,6 +199,13 @@ uvicorn app.main:app --reload
 - `app/templates/user_desktop.html`：补上内嵌 favicon，消除浏览器 404 小报错，减少细节上的 demo 感
 - `app/static/user.js`：桌面占位结构改为真实职业照版本，视频未接入时也保持正式产品视觉
 
+**桌面端七次回修：参考 Apple / OpenAI Health / One Medical / Ada Health 后继续做减法**（by codex）
+
+- `app/templates/user_desktop.html`：继续压缩顶部与右侧信息密度，把舞台上方状态卡、右侧提问舱和舞台信息层都缩到更接近产品页而不是管理台
+- `app/templates/user_desktop.html`：把舞台右侧四宫格小卡片改成一组更轻的胶囊状态，减少 dashboard 感
+- `app/templates/user_desktop.html`：新增“快速提问”胶囊，让右侧提问舱在首屏更像真实入口，而不是一块空白聊天面板
+- `app/static/user.js`：接入快速提问交互，点击后直接填充并发送问题，提升首屏可用性
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗

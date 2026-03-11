@@ -428,6 +428,7 @@ async function loadProfile() {
     `当前主舞台优先保留给医生形象与后续视频会话，图文与语音交互全部收进右侧提问舱。`
   );
   setText("heroSummary", `${profile.public_tagline}。`);
+  setText("identityNote", "当前优先保留主舞台和低干扰会话布局，后续视频分身、字幕和实时状态会直接叠加在这里。");
   setText("hospitalValue", profile.hospital || "-");
   setText("doctorState", profile.name || "-");
   setText("deptState", profile.department || "-");
@@ -495,6 +496,17 @@ function wireUi() {
   $("voiceInputBtn")?.addEventListener("click", startVoiceInput);
   $("speakAnswerBtn")?.addEventListener("click", speakAnswer);
   $("stopSpeechBtn")?.addEventListener("click", stopSpeech);
+  document.querySelectorAll("#quickPrompts .prompt-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const question = btn.dataset.question || btn.textContent || "";
+      const msgEl = $("message");
+      if (!msgEl) return;
+      msgEl.value = question.trim();
+      msgEl.style.height = "auto";
+      msgEl.style.height = Math.min(msgEl.scrollHeight, 120) + "px";
+      askQuestion();
+    });
+  });
   const msgEl = $("message");
   if (msgEl) {
     msgEl.addEventListener("keydown", (event) => {
