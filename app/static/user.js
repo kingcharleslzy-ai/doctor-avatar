@@ -96,20 +96,28 @@ async function postJson(url, body) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.detail || JSON.stringify(data));
+    let detail = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      detail = err.detail || JSON.stringify(err);
+    } catch (_) {}
+    throw new Error(detail);
   }
-  return data;
+  return response.json();
 }
 
 async function getJson(url) {
   const response = await fetch(url);
-  const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.detail || JSON.stringify(data));
+    let detail = `HTTP ${response.status}`;
+    try {
+      const err = await response.json();
+      detail = err.detail || JSON.stringify(err);
+    } catch (_) {}
+    throw new Error(detail);
   }
-  return data;
+  return response.json();
 }
 
 function renderRemoteTrack(track) {
@@ -450,7 +458,11 @@ function wireUi() {
       askQuestion();
     }
   });
-  window.addEventListener("resize", renderVideoPlaceholder);
+  let resizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(renderVideoPlaceholder, 150);
+  });
 }
 
 wireUi();
