@@ -173,6 +173,15 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**HTTPS 上线骨架准备**（by codex）
+
+- `docker-compose.prod.yml`：预留 `443:443` 端口和证书目录挂载
+- `deploy/nginx/default.https.conf.example`：新增 HTTPS 版 Nginx 配置示例
+- `deploy/nginx/certs/.gitkeep`：预留证书目录
+- `deploy/HTTPS_SETUP.md`：新增 HTTPS 切换说明，方便服务器上直接落地
+
+### 2026-03-11（四-3）
+
 **控制台新增线上版本信息**（by codex）
 
 - `/api/app-config`：新增 `runtime` 字段，返回当前线上版本、部署提交、部署分支与部署时间

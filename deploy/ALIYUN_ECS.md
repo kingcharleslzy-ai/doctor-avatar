@@ -130,6 +130,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 - Nginx `server_name` 改成你的域名
 - 再接证书
 
+当前仓库已经提供 HTTPS 准备文件：
+
+- [deploy/HTTPS_SETUP.md](D:\charles\Documents\doctor-avatar\deploy\HTTPS_SETUP.md)
+- [default.https.conf.example](D:\charles\Documents\doctor-avatar\deploy\nginx\default.https.conf.example)
+
+拿到证书后，可以直接按上面的说明切换到 HTTPS 版 Nginx 配置。
+
 ## 当前项目的设备分流
 
 项目现在支持：
