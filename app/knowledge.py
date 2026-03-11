@@ -10,7 +10,6 @@ from .config import KNOWLEDGE_DIR, settings
 
 
 WORD_RE = re.compile(r"[\w\u4e00-\u9fff]+")
-_CACHE_FILE = KNOWLEDGE_DIR / ".embed_cache.json"
 
 # 进程内索引缓存，只在首次查询时构建一次
 _index: list[dict] | None = None
@@ -57,6 +56,16 @@ def _embed(texts: list[str], client) -> list[list[float]]:
     return [item.embedding for item in resp.data]
 
 
+def _cache_file() -> Path:
+    """返回缓存文件路径。生产环境通过 EMBED_CACHE_DIR 指向持久卷，本地开发默认存在 knowledge/ 内。"""
+    cache_dir = settings.embed_cache_dir
+    if cache_dir:
+        p = Path(cache_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        return p / "embed_cache.json"
+    return KNOWLEDGE_DIR / ".embed_cache.json"
+
+
 def _get_index(client) -> list[dict] | None:
     global _index, _index_ready
     if _index_ready:
@@ -68,11 +77,12 @@ def _get_index(client) -> list[dict] | None:
         return None
 
     chunk_texts = [c["text"] for c in chunks]
+    cache_file = _cache_file()
 
     # 优先读磁盘缓存（知识库未变动时跳过 API 调用）
-    if _CACHE_FILE.exists():
+    if cache_file.exists():
         try:
-            cache = json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
+            cache = json.loads(cache_file.read_text(encoding="utf-8"))
             if cache.get("texts") == chunk_texts:
                 _index = cache["entries"]
                 _index_ready = True
@@ -86,7 +96,7 @@ def _get_index(client) -> list[dict] | None:
         {"source": c["source"], "text": c["text"], "embedding": emb}
         for c, emb in zip(chunks, embeddings)
     ]
-    _CACHE_FILE.write_text(
+    cache_file.write_text(
         json.dumps({"texts": chunk_texts, "entries": _index}, ensure_ascii=False),
         encoding="utf-8",
     )

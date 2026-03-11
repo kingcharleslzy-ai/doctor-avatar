@@ -6,6 +6,10 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - EMBED_CACHE_DIR=/app_cache
+    volumes:
+      - embed_cache:/app_cache
     expose:
       - "8000"
     networks:
@@ -35,3 +39,6 @@ services:
 networks:
   doctor_avatar_net:
     driver: bridge
+
+volumes:
+  embed_cache:
