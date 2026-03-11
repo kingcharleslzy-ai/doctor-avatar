@@ -168,3 +168,14 @@ uvicorn app.main:app --reload
 2. 用真实 `HEYGEN_AVATAR_ID` 和 `HEYGEN_VOICE_ID` 联调视频效果
 3. 连续测试 30 到 50 个高频耳鼻咽喉科问题
 4. 再补用户端字幕、会话摘要和隐私提示细节
+
+## CHANGELOG
+
+### 2026-03-11
+
+**知识库检索升级：token 匹配 → OpenAI Embedding 语义检索**（by windows-claude）
+
+- `app/knowledge.py`：用 `text-embedding-3-small` 替换原有 token 重叠计数
+- 进程内 + 磁盘双层缓存（`knowledge/.embed_cache.json`），知识库未变动时不重复调用 API
+- 无 OpenAI key 时自动降级为原 token 搜索，不影响本地开发
+- `KnowledgeHit.score` 类型从 `int` 改为 `float`（余弦相似度 0~1）
