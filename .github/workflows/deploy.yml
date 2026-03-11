@@ -4,18 +4,23 @@ on:
   push:
     branches: [main]
 
+# 同一时间只运行一个部署，不打断进行中的任务（docker compose 中途取消会留烂摊子）
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
   deploy:
+    # 需要 self-hosted runner 以 root 或具备 docker 组权限的用户安装
+    # 安装方式参见 README > 自动部署
     runs-on: self-hosted
     steps:
-      - name: Pull latest code
+      - name: Sync to latest commit
         run: |
           cd /root/doctor-avatar
-          git pull origin main
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
 
       - name: Rebuild and restart containers
         run: |

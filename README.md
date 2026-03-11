@@ -187,20 +187,22 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（二）
 
-**GitHub Webhook 自动部署**（by windows-claude，已被后续 self-hosted runner 方案取代）
+**自动部署：GitHub Actions self-hosted runner**（by windows-claude + macos-codex）
 
-- `app/main.py`：新增 `POST /webhook/github` 端点，收到 GitHub push 事件后自动执行 `git pull + docker compose up`
-- `app/config.py`：新增 `GITHUB_WEBHOOK_SECRET` 配置项（用于验证请求来自 GitHub）
-- `.env.example`：同步新增 `GITHUB_WEBHOOK_SECRET=`
-- 配置方式：在 GitHub 仓库 Settings → Webhooks → Add webhook，填入 `http://47.250.168.45/webhook/github`，设置相同 secret
+- 新增 `.github/workflows/deploy.yml`：push main 时在服务器本机执行部署，不依赖入站 SSH 或公网 webhook 接口
+- 用 `git fetch + reset --hard origin/main` 替代 `git pull`，保证始终对齐目标提交（Codex P2）
+- `cancel-in-progress: false` 确保部署不被打断，避免 docker compose 中途被杀留烂摊子（Codex）
+- 注：runner 需以 root 或具备 docker 组权限的用户安装（Codex P1）
 
-### 2026-03-11（二-2）
-
-**自动部署改为 GitHub Actions self-hosted runner**（by windows-claude）
-
-- `.github/workflows/deploy.yml`：新增 self-hosted runner 自动部署 workflow
-- 部署触发改为 `push -> main` 后在服务器本机执行 `git pull + docker compose up`
-- 不再依赖公网 webhook 接口或外网 SSH 入站
+**安装 Runner（服务器执行一次）：**
+```bash
+mkdir -p /root/actions-runner && cd /root/actions-runner
+curl -o runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-x64-2.322.0.tar.gz
+tar xzf runner.tar.gz
+# token 从 GitHub repo Settings → Actions → Runners → New self-hosted runner 获取
+./config.sh --url https://github.com/kingcharleslzy-ai/doctor-avatar --token <TOKEN>
+./svc.sh install && ./svc.sh start
+```
 
 ### 2026-03-11（一）
 
