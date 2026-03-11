@@ -192,6 +192,13 @@ uvicorn app.main:app --reload
 - `app/templates/user_desktop.html`：把发送动作收进底部输入壳，辅助按钮收成次级操作，整体更像正式产品而不是后台
 - `app/static/user.js`：桌面端聊天模式下也同步写入隐藏 `answer`，保证朗读回答与现有逻辑继续可用
 
+**桌面端六次回修：接入李勇医生公开职业照，主舞台从 demo 占位改成真实终端视觉**（by codex）
+
+- `app/static/doctor-liyong-official.jpg`：接入杭州市第一人民医院公开专家页职业照，用于桌面主舞台承载真实医生形象
+- `app/templates/user_desktop.html`：主舞台改成“真实职业照 + 右侧终端信息层”，移除残留英文标签，进一步减少说明型文案
+- `app/templates/user_desktop.html`：补上内嵌 favicon，消除浏览器 404 小报错，减少细节上的 demo 感
+- `app/static/user.js`：桌面占位结构改为真实职业照版本，视频未接入时也保持正式产品视觉
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗

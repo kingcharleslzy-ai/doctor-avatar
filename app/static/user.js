@@ -85,12 +85,10 @@ function desktopPlaceholderMarkup() {
     <div class="desktop-placeholder">
       <div class="portrait-panel">
         <div class="portrait-frame">
-          <div class="portrait-signal">Video Channel Standby</div>
-          <div class="portrait-copy">
-            <span>Doctor Visual</span>
-            <h3>${profileName()}</h3>
-            <p>${profileTitle()}<br />${profileHospital()} · ${profileDepartment()}</p>
+          <div class="portrait-photo-shell">
+            <img class="portrait-photo" src="/static/doctor-liyong-official.jpg" alt="${profileName()}医生公开职业照" />
           </div>
+          <div class="portrait-signal">视频通道待机</div>
         </div>
       </div>
     </div>
@@ -423,15 +421,18 @@ async function loadProfile() {
   state.doctorProfile = profile;
 
   setText("brandSubtitle", `${profile.hospital} · ${profile.department}`);
-  setText("heroTitle", `${profile.name}医生 · AI 临床会话视窗`);
+  setText("brandMeta", `${profile.hospital} · ${profile.department}`);
+  setText("heroTitle", `${profile.name}医生`);
   setText(
     "heroDescription",
-    `${profile.public_tagline}。当前主窗口已预留视频分身与实时对话区域，右侧提问舱负责图文与语音问答。`
+    `当前主舞台优先保留给医生形象与后续视频会话，图文与语音交互全部收进右侧提问舱。`
   );
+  setText("heroSummary", `${profile.public_tagline}。`);
   setText("hospitalValue", profile.hospital || "-");
   setText("doctorState", profile.name || "-");
   setText("deptState", profile.department || "-");
   setText("focusPrimary", (profile.focus_areas || [])[0] || profile.specialty || "耳鼻咽喉科");
+  setText("focusPrimaryCard", (profile.focus_areas || [])[0] || profile.specialty || "耳鼻咽喉科");
   setText(
     "clinicNote",
     `提醒：${profile.clinic_note || "本页面仅供健康科普与就医参考，不替代面诊。"}${profile.telephone ? ` 医院电话：${profile.telephone}。` : ""}`
