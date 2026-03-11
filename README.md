@@ -46,6 +46,11 @@ uvicorn app.main:app --reload
 
 这些 HeyGen 参数现在默认走后端配置，前端和调试页都不再要求手填。
 
+- `CONSOLE_USERNAME`
+- `CONSOLE_PASSWORD`
+
+如果你要保护公网控制台，这两个必须填写。
+
 ### 2. `knowledge/doctor_profile.yaml`
 
 把你爸的：
@@ -143,6 +148,19 @@ uvicorn app.main:app --reload
 - 默认 `ENABLE_VIDEO_AVATAR=false`
 - 先完成低成本的主流程上线
 - 后续如果要重新接入视频分身，只需补齐 HeyGen 参数并把 `ENABLE_VIDEO_AVATAR=true`
+
+## 控制台保护
+
+当前默认启用控制台 Basic Auth：
+
+- `CONSOLE_AUTH_MODE=basic`
+- `CONSOLE_USERNAME`
+- `CONSOLE_PASSWORD`
+
+保护范围包括：
+
+- `/console`
+- `/api/liveavatar/*`
 
 ## 下一步建议
 

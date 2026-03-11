@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,6 +23,9 @@ class Settings(BaseSettings):
     heygen_use_sandbox: bool = Field(default=True, alias="HEYGEN_USE_SANDBOX")
     heygen_push_to_talk: bool = Field(default=False, alias="HEYGEN_PUSH_TO_TALK")
     enable_video_avatar: bool = Field(default=False, alias="ENABLE_VIDEO_AVATAR")
+    console_auth_mode: Literal["off", "basic"] = Field(default="basic", alias="CONSOLE_AUTH_MODE")
+    console_username: str | None = Field(default=None, alias="CONSOLE_USERNAME")
+    console_password: str | None = Field(default=None, alias="CONSOLE_PASSWORD")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
 

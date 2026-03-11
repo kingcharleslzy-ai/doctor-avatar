@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import secrets
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,6 +27,7 @@ app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
 doctor_profile = load_doctor_profile()
+console_auth = HTTPBasic()
 
 
 MOBILE_MARKERS = (
@@ -50,6 +53,29 @@ def resolve_user_template(request: Request) -> str:
     if any(marker in user_agent for marker in MOBILE_MARKERS):
         return "user_mobile.html"
     return "user_desktop.html"
+
+
+def require_console_auth(credentials: HTTPBasicCredentials = Depends(console_auth)) -> str:
+    if settings.console_auth_mode == "off":
+        return "console-auth-disabled"
+
+    if not settings.console_username or not settings.console_password:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="控制台认证已启用，但尚未配置 CONSOLE_USERNAME / CONSOLE_PASSWORD。",
+        )
+
+    username_ok = secrets.compare_digest(credentials.username, settings.console_username)
+    password_ok = secrets.compare_digest(credentials.password, settings.console_password)
+
+    if username_ok and password_ok:
+        return credentials.username
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="控制台认证失败。",
+        headers={"WWW-Authenticate": "Basic"},
+    )
 
 
 @app.get("/health")
@@ -118,7 +144,7 @@ def mobile(request: Request) -> HTMLResponse:
 
 
 @app.get("/console", response_class=HTMLResponse)
-def console(request: Request) -> HTMLResponse:
+def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLResponse:
     return templates.TemplateResponse("console.html", {"request": request})
 
 
@@ -132,7 +158,10 @@ def chat(payload: ChatRequest) -> ChatResponse:
 
 
 @app.post("/api/liveavatar/token", response_model=LiveAvatarTokenResponse)
-async def liveavatar_token(payload: LiveAvatarSessionRequest | None = None) -> LiveAvatarTokenResponse:
+async def liveavatar_token(
+    payload: LiveAvatarSessionRequest | None = None,
+    _: str = Depends(require_console_auth),
+) -> LiveAvatarTokenResponse:
     if not settings.enable_video_avatar:
         raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     payload = payload or LiveAvatarSessionRequest()
@@ -166,7 +195,10 @@ async def liveavatar_token(payload: LiveAvatarSessionRequest | None = None) -> L
 
 
 @app.post("/api/liveavatar/session", response_model=LiveAvatarTokenResponse)
-async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
+async def liveavatar_session(
+    payload: LiveAvatarStartRequest,
+    _: str = Depends(require_console_auth),
+) -> LiveAvatarTokenResponse:
     if not settings.enable_video_avatar:
         raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
@@ -177,7 +209,7 @@ async def liveavatar_session(payload: LiveAvatarStartRequest) -> LiveAvatarToken
 
 
 @app.get("/api/liveavatar/sessions", response_model=LiveAvatarTokenResponse)
-async def liveavatar_sessions() -> LiveAvatarTokenResponse:
+async def liveavatar_sessions(_: str = Depends(require_console_auth)) -> LiveAvatarTokenResponse:
     if not settings.enable_video_avatar:
         raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
@@ -188,7 +220,10 @@ async def liveavatar_sessions() -> LiveAvatarTokenResponse:
 
 
 @app.post("/api/liveavatar/keepalive", response_model=LiveAvatarTokenResponse)
-async def liveavatar_keepalive(payload: LiveAvatarStartRequest) -> LiveAvatarTokenResponse:
+async def liveavatar_keepalive(
+    payload: LiveAvatarStartRequest,
+    _: str = Depends(require_console_auth),
+) -> LiveAvatarTokenResponse:
     if not settings.enable_video_avatar:
         raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
     try:
