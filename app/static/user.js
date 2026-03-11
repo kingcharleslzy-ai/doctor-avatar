@@ -48,35 +48,12 @@ function desktopPlaceholderMarkup() {
     <div class="desktop-placeholder">
       <div class="portrait-panel">
         <div class="portrait-frame">
+          <div class="portrait-signal">Video Channel Standby</div>
           <div class="portrait-copy">
             <span>Doctor Visual</span>
             <h3>${profileName()}</h3>
             <p>${profileTitle()}<br />${profileHospital()} · ${profileDepartment()}</p>
           </div>
-        </div>
-      </div>
-      <div class="brief-panel">
-        <div class="label">AI Medical Core</div>
-        <h3>当前以图文与语音问答在线，视频分身接口保持待命。</h3>
-        <p>这一版把大部分空间都留给主视窗，让未来的视频分身、字幕与实时会话能自然落位；右侧只保留提问、回答和必要资料，不再把首页切成一堆信息块。</p>
-        <div class="brief-stats">
-          <div class="brief-stat">
-            <span>当前形态</span>
-            <strong>主视窗待机</strong>
-          </div>
-          <div class="brief-stat">
-            <span>语音能力</span>
-            <strong>浏览器原生</strong>
-          </div>
-          <div class="brief-stat">
-            <span>后续升级</span>
-            <strong>实时分身接入</strong>
-          </div>
-        </div>
-        <div class="brief-points">
-          <div>核心能力优先放在常见问题答疑、专科方向说明与线下就医建议。</div>
-          <div>接回视频分身后，当前主区域会直接切换为实时画面，不需要重做整体页面。</div>
-          <div>所有高风险情形仍以医院线下评估、急诊与正式检查为准。</div>
         </div>
       </div>
     </div>
@@ -447,10 +424,15 @@ async function loadAppConfig() {
   const keepAliveBtn = $("keepAliveBtn");
 
   if (startBtn && !enabled) {
-    startBtn.textContent = "视频分身即将开放";
+    startBtn.textContent = "视频分身";
   }
   if (keepAliveBtn) {
     keepAliveBtn.disabled = !enabled;
+    keepAliveBtn.style.display = enabled ? "" : "none";
+  }
+  const disconnectBtn = $("disconnectBtn");
+  if (disconnectBtn) {
+    disconnectBtn.style.display = enabled ? "" : "none";
   }
 
   setText("connectionState", enabled ? "未连接" : "未启用");

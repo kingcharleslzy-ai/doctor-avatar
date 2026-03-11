@@ -173,6 +173,13 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**桌面端三次重构：去掉舞台内第二块大卡片，按真实截图回修断点**（by codex）
+
+- `app/templates/user_desktop.html`：桌面端把主舞台恢复成单一视觉主体，不再在舞台中间并排塞第二块大说明卡
+- `app/templates/user_desktop.html`：桌面断点从 `1260px` 下调到 `1180px`，避免常见桌面宽度下过早塌成单列
+- `app/templates/user_desktop.html`：右侧提问舱收窄并简化按钮密度，减少“控制台感”
+- `app/static/user.js`：同步调整桌面占位结构，并在视频未启用时隐藏无意义的保持会话 / 结束会话按钮
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗

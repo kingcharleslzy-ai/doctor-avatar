@@ -138,7 +138,7 @@
       border-radius: 32px;
       padding: 12px;
       display: grid;
-      grid-template-columns: minmax(0, 1.68fr) minmax(370px, 0.72fr);
+      grid-template-columns: minmax(0, 1.9fr) 400px;
       gap: 12px;
       min-height: 0;
       overflow: hidden;
@@ -208,21 +208,21 @@
     }
 
     .stage-copy {
-      max-width: 440px;
+      max-width: 360px;
     }
 
     .stage-copy h2 {
       margin: 12px 0 8px;
-      font-size: 32px;
+      font-size: 26px;
       letter-spacing: -0.06em;
-      line-height: 1.03;
+      line-height: 1.06;
     }
 
     .stage-copy p {
       margin: 0;
       color: rgba(237, 244, 255, 0.7);
-      font-size: 13px;
-      line-height: 1.68;
+      font-size: 12px;
+      line-height: 1.62;
     }
 
     .hud {
@@ -268,22 +268,15 @@
     .desktop-placeholder {
       position: absolute;
       inset: 0;
-      display: grid;
-      grid-template-columns: minmax(0, 1.08fr) minmax(310px, 0.92fr);
-      gap: 16px;
       padding: 86px 18px 18px;
-      align-items: stretch;
     }
 
-    .portrait-panel,
-    .brief-panel {
+    .portrait-panel {
+      height: 100%;
       border-radius: 26px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       overflow: hidden;
       position: relative;
-    }
-
-    .portrait-panel {
       background:
         radial-gradient(circle at 40% 8%, rgba(255, 255, 255, 0.14), transparent 22%),
         linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
@@ -336,6 +329,46 @@
       opacity: 0.9;
     }
 
+    .portrait-signal {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 16, 24, 0.58);
+      color: rgba(237, 244, 255, 0.84);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      backdrop-filter: blur(18px);
+    }
+
+    .portrait-signal::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(124, 224, 215, 0.8);
+      animation: signalPulse 1.8s ease-in-out infinite;
+    }
+
+    .portrait-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto 34px 34px auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(75, 124, 255, 0.18), transparent 68%);
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
     .portrait-copy {
       width: 100%;
       padding: 20px 22px 22px;
@@ -368,69 +401,58 @@
       line-height: 1.8;
     }
 
-    .brief-panel {
+    .stage-side-panel {
+      position: absolute;
+      top: 126px;
+      right: 28px;
+      width: 320px;
       padding: 18px;
-      display: grid;
-      gap: 12px;
-      align-content: start;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       background:
-        radial-gradient(circle at 100% 0%, rgba(75, 124, 255, 0.16), transparent 30%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-      color: rgba(241, 247, 251, 0.94);
+        linear-gradient(180deg, rgba(19, 29, 45, 0.92), rgba(10, 15, 24, 0.76)),
+        radial-gradient(circle at 100% 0%, rgba(75, 124, 255, 0.18), transparent 42%);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      z-index: 2;
     }
 
-    .brief-panel .label {
+    .stage-side-panel .label {
       color: var(--accent-3);
       font-size: 11px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
     }
 
-    .brief-panel h3 {
-      margin: 0;
-      font-size: 30px;
-      line-height: 1.02;
+    .stage-side-panel h3 {
+      margin: 14px 0 10px;
+      font-size: 28px;
+      line-height: 1.04;
       letter-spacing: -0.06em;
     }
 
-    .brief-panel p {
+    .stage-side-panel p {
       margin: 0;
       color: rgba(236, 243, 248, 0.74);
-      font-size: 14px;
-      line-height: 1.76;
-    }
-
-    .brief-points {
-      display: grid;
-      gap: 8px;
-      margin-top: 2px;
-    }
-
-    .brief-points div {
-      padding: 12px 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(241, 247, 251, 0.84);
       font-size: 13px;
-      line-height: 1.76;
+      line-height: 1.72;
     }
 
-    .brief-stats {
+    .stage-stats {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 2px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
     }
 
-    .brief-stat {
+    .stage-stat {
       padding: 12px 12px 13px;
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.04);
     }
 
-    .brief-stat span {
+    .stage-stat span {
       display: block;
       color: var(--muted);
       font-size: 10px;
@@ -438,7 +460,7 @@
       text-transform: uppercase;
     }
 
-    .brief-stat strong {
+    .stage-stat strong {
       display: block;
       margin-top: 6px;
       font-size: 14px;
@@ -512,10 +534,10 @@
       min-height: 0;
       height: 100%;
       border-radius: var(--radius-xl);
-      padding: 16px;
+      padding: 15px;
       display: grid;
       grid-template-rows: auto auto auto minmax(0, 1fr);
-      gap: 12px;
+      gap: 10px;
       background: linear-gradient(180deg, rgba(11, 16, 26, 0.84), rgba(8, 12, 20, 0.94));
     }
 
@@ -540,8 +562,8 @@
     }
 
     .chat-badge {
-      min-width: 124px;
-      padding: 9px 11px;
+      min-width: 108px;
+      padding: 8px 10px;
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.04);
@@ -559,7 +581,7 @@
 
     textarea {
       width: 100%;
-      min-height: 108px;
+      min-height: 96px;
       resize: none;
       border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -579,8 +601,8 @@
     }
 
     .actions {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
     }
 
@@ -589,7 +611,7 @@
       border-radius: 999px;
       padding: 11px 14px;
       font: inherit;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
     }
@@ -617,15 +639,15 @@
 
     .voice-status {
       color: var(--muted);
-      font-size: 12px;
-      line-height: 1.66;
+      font-size: 11px;
+      line-height: 1.55;
     }
 
     .response-stack {
       min-height: 0;
       display: grid;
       grid-template-rows: auto auto auto;
-      gap: 12px;
+      gap: 10px;
       overflow: auto;
       padding-right: 4px;
     }
@@ -747,12 +769,21 @@
       50% { transform: scale(1.03); opacity: 1; }
     }
 
-    @media (max-width: 1260px) {
+    @keyframes signalPulse {
+      0%, 100% { opacity: 0.65; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    @media (max-width: 1180px) {
       .workspace {
         grid-template-columns: 1fr;
+        overflow: auto;
       }
       .chat-card {
         min-height: 780px;
+      }
+      .stage-side-panel {
+        width: 300px;
       }
     }
 
@@ -765,11 +796,18 @@
         justify-content: flex-start;
       }
       .desktop-placeholder {
-        grid-template-columns: 1fr;
         padding-top: 136px;
       }
       .stage-header {
         flex-direction: column;
+      }
+      .stage-side-panel {
+        position: absolute;
+        top: auto;
+        right: 18px;
+        left: 18px;
+        bottom: 150px;
+        width: auto;
       }
       .hud {
         justify-items: start;
@@ -780,6 +818,9 @@
       }
       .data-row {
         justify-content: flex-start;
+      }
+      .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
@@ -817,6 +858,30 @@
 
         <div class="video-stage" id="videoStage"></div>
 
+        <div class="stage-side-panel">
+          <div class="label">AI Medical Core</div>
+          <h3>图文与语音问答在线，视频分身接口保持待命。</h3>
+          <p>把主舞台尽量留给未来的实时画面与字幕层，右侧只承载提问和回答。当前阶段先让内容表达、医患沟通与产品气质站住。</p>
+          <div class="stage-stats">
+            <div class="stage-stat">
+              <span>当前形态</span>
+              <strong>主视窗待机</strong>
+            </div>
+            <div class="stage-stat">
+              <span>语音能力</span>
+              <strong>浏览器原生</strong>
+            </div>
+            <div class="stage-stat">
+              <span>后续升级</span>
+              <strong>实时分身</strong>
+            </div>
+            <div class="stage-stat">
+              <span>问答边界</span>
+              <strong>就医参考</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="stage-footer">
           <div class="doctor-chip">
             <strong id="doctorState">李勇</strong>
@@ -845,9 +910,9 @@
           <button id="voiceInputBtn" class="secondary">语音输入</button>
           <button id="speakAnswerBtn" class="secondary">朗读回答</button>
           <button id="stopSpeechBtn" class="secondary">停止朗读</button>
-          <button id="startConsultBtn" class="secondary">视频分身即将开放</button>
+          <button id="startConsultBtn" class="secondary">视频分身</button>
           <button id="keepAliveBtn" class="secondary">保持会话</button>
-          <button id="disconnectBtn" class="danger">结束会话</button>
+          <button id="disconnectBtn" class="danger">结束</button>
         </div>
 
         <div class="voice-status" id="voiceStatus">当前优先使用浏览器原生语音能力，适合作为现阶段的低成本过渡方案。</div>
