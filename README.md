@@ -171,6 +171,13 @@ uvicorn app.main:app --reload
 
 ## CHANGELOG
 
+### 2026-03-11（四）
+
+**自动部署文档同步 + 并发保护**（by codex）
+
+- `.github/workflows/deploy.yml`：新增 `concurrency`，避免连续 push 时重复部署互相打架
+- `README.md`：更新自动部署记录，标明 webhook 方案已被 self-hosted runner 方案取代，避免文档继续误导
+
 ### 2026-03-11（三）
 
 **Embedding 检索失败自动降级修复**（by codex）
@@ -180,12 +187,20 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（二）
 
-**GitHub Webhook 自动部署**（by windows-claude）
+**GitHub Webhook 自动部署**（by windows-claude，已被后续 self-hosted runner 方案取代）
 
 - `app/main.py`：新增 `POST /webhook/github` 端点，收到 GitHub push 事件后自动执行 `git pull + docker compose up`
 - `app/config.py`：新增 `GITHUB_WEBHOOK_SECRET` 配置项（用于验证请求来自 GitHub）
 - `.env.example`：同步新增 `GITHUB_WEBHOOK_SECRET=`
 - 配置方式：在 GitHub 仓库 Settings → Webhooks → Add webhook，填入 `http://47.250.168.45/webhook/github`，设置相同 secret
+
+### 2026-03-11（二-2）
+
+**自动部署改为 GitHub Actions self-hosted runner**（by windows-claude）
+
+- `.github/workflows/deploy.yml`：新增 self-hosted runner 自动部署 workflow
+- 部署触发改为 `push -> main` 后在服务器本机执行 `git pull + docker compose up`
+- 不再依赖公网 webhook 接口或外网 SSH 入站
 
 ### 2026-03-11（一）
 
