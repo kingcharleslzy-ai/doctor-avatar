@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     console_password: str | None = Field(default=None, alias="CONSOLE_PASSWORD")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
+    github_webhook_secret: str | None = Field(default=None, alias="GITHUB_WEBHOOK_SECRET")
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

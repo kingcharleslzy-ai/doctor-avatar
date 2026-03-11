@@ -171,7 +171,16 @@ uvicorn app.main:app --reload
 
 ## CHANGELOG
 
-### 2026-03-11
+### 2026-03-11（二）
+
+**GitHub Webhook 自动部署**（by windows-claude）
+
+- `app/main.py`：新增 `POST /webhook/github` 端点，收到 GitHub push 事件后自动执行 `git pull + docker compose up`
+- `app/config.py`：新增 `GITHUB_WEBHOOK_SECRET` 配置项（用于验证请求来自 GitHub）
+- `.env.example`：同步新增 `GITHUB_WEBHOOK_SECRET=`
+- 配置方式：在 GitHub 仓库 Settings → Webhooks → Add webhook，填入 `http://47.250.168.45/webhook/github`，设置相同 secret
+
+### 2026-03-11（一）
 
 **知识库检索升级：token 匹配 → OpenAI Embedding 语义检索**（by windows-claude）
 
