@@ -81,6 +81,7 @@
     .links { display: grid; gap: 10px; margin-top: 12px; }
     .links a { color: var(--accent); text-decoration: none; }
     .links a:hover { text-decoration: underline; }
+    .voice-status { margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
     @media (max-width: 1120px) { .hero, .layout { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -191,7 +192,11 @@
           <textarea id="message" class="qa-box" placeholder="例如：过敏性鼻炎反复发作，需要尽快线下检查吗？"></textarea>
           <div class="toolbar">
             <button id="askBtn" class="primary">提交问题</button>
+            <button id="voiceInputBtn" class="secondary">语音输入</button>
+            <button id="speakAnswerBtn" class="secondary">朗读回答</button>
+            <button id="stopSpeechBtn" class="secondary">停止朗读</button>
           </div>
+          <div id="voiceStatus" class="voice-status">语音功能默认使用浏览器原生能力，适合作为当前低成本版本的过渡方案。</div>
           <div style="margin-top: 14px;">
             <div class="output" id="answer">尚未生成回答。</div>
           </div>

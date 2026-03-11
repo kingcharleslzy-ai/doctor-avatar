@@ -57,6 +57,7 @@
     .qa-box { width: 100%; min-height: 120px; border-radius: 18px; border: 1px solid var(--line); padding: 14px; font: inherit; resize: vertical; background: rgba(255,255,255,.9); color: var(--text); }
     .links { display: grid; gap: 8px; margin-top: 10px; }
     .links a { color: var(--accent); text-decoration: none; font-size: 14px; }
+    .voice-status { margin-top: 10px; color: var(--muted); line-height: 1.8; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -111,7 +112,11 @@
       <textarea id="message" class="qa-box" placeholder="例如：鼻窦炎反复发作，需要尽快去医院吗？"></textarea>
       <div class="toolbar">
         <button id="askBtn" class="primary">提交问题</button>
+        <button id="voiceInputBtn" class="secondary">语音输入</button>
+        <button id="speakAnswerBtn" class="secondary">朗读回答</button>
+        <button id="stopSpeechBtn" class="secondary">停止朗读</button>
       </div>
+      <div id="voiceStatus" class="voice-status">当前优先使用浏览器自带语音能力，后续可替换为更正式的语音方案。</div>
       <div id="answer" class="output" style="margin-top: 12px;">尚未生成回答。</div>
     </section>
 

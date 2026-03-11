@@ -4,6 +4,8 @@ const state = {
   conversation: [],
   doctorProfile: null,
   appConfig: null,
+  recognition: null,
+  recognitionAvailable: false,
 };
 
 function $(id) {
@@ -162,6 +164,92 @@ async function askQuestion() {
   }
 }
 
+function setVoiceStatus(message) {
+  const el = $("voiceStatus");
+  if (el) {
+    el.textContent = message;
+  }
+}
+
+function initRecognition() {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Recognition) {
+    setVoiceStatus("当前浏览器不支持原生语音输入，请改用手动输入。");
+    return;
+  }
+
+  const recognition = new Recognition();
+  recognition.lang = "zh-CN";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    setVoiceStatus("正在听你说话，请开始讲话。");
+    $("voiceInputBtn").textContent = "正在录音...";
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results?.[0]?.[0]?.transcript || "";
+    if (transcript) {
+      $("message").value = transcript.trim();
+      setVoiceStatus("已识别语音内容，你可以直接提交，或再检查一下文字。");
+    }
+  };
+
+  recognition.onerror = (event) => {
+    setVoiceStatus(`语音输入失败：${event.error || "未知错误"}。`);
+  };
+
+  recognition.onend = () => {
+    $("voiceInputBtn").textContent = "语音输入";
+  };
+
+  state.recognition = recognition;
+  state.recognitionAvailable = true;
+}
+
+function startVoiceInput() {
+  if (!state.recognitionAvailable || !state.recognition) {
+    setVoiceStatus("当前浏览器不支持原生语音输入，请改用手动输入。");
+    return;
+  }
+  try {
+    state.recognition.start();
+  } catch (_) {
+    setVoiceStatus("语音输入正在进行中，或浏览器还没准备好。");
+  }
+}
+
+function speakAnswer() {
+  const answer = $("answer").textContent.trim();
+  if (!answer || answer === "尚未生成回答。") {
+    setVoiceStatus("还没有可朗读的回答。");
+    return;
+  }
+
+  if (!("speechSynthesis" in window)) {
+    setVoiceStatus("当前浏览器不支持原生语音朗读。");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(answer);
+  utterance.lang = "zh-CN";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.onstart = () => setVoiceStatus("正在朗读回答。");
+  utterance.onend = () => setVoiceStatus("朗读已完成。");
+  utterance.onerror = () => setVoiceStatus("朗读失败，请稍后再试。");
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeech() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    setVoiceStatus("已停止朗读。");
+  }
+}
+
 function renderList(id, items) {
   const el = $(id);
   el.innerHTML = "";
@@ -235,9 +323,13 @@ function wireUi() {
   $("keepAliveBtn").addEventListener("click", keepAlive);
   $("disconnectBtn").addEventListener("click", disconnectRoom);
   $("askBtn").addEventListener("click", askQuestion);
+  $("voiceInputBtn").addEventListener("click", startVoiceInput);
+  $("speakAnswerBtn").addEventListener("click", speakAnswer);
+  $("stopSpeechBtn").addEventListener("click", stopSpeech);
 }
 
 wireUi();
+initRecognition();
 loadAppConfig().catch((error) => {
   $("answer").textContent = error.message;
 });
