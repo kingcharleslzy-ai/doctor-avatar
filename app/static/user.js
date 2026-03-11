@@ -278,11 +278,13 @@ async function askQuestion() {
     const loadingRow = appendChatMessage("ai", null);
     try {
       const data = await postJson("/api/chat", { message, conversation: state.conversation });
+      setText("answer", data.answer);
       updateChatMessage(loadingRow, data.answer);
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
     } catch (error) {
+      setText("answer", error.message);
       updateChatMessage(loadingRow, `出错了：${error.message}`);
     }
   } else {

@@ -470,18 +470,21 @@
       min-height: 0;
       height: 100%;
       border-radius: var(--radius-xl);
-      padding: 15px;
+      overflow: hidden;
       display: grid;
-      grid-template-rows: auto auto auto minmax(0, 1fr);
-      gap: 10px;
-      background: linear-gradient(180deg, rgba(11, 16, 26, 0.84), rgba(8, 12, 20, 0.94));
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      background:
+        linear-gradient(180deg, rgba(13, 19, 31, 0.94), rgba(7, 11, 19, 0.98)),
+        radial-gradient(circle at 0% 0%, rgba(75, 124, 255, 0.18), transparent 28%);
     }
 
     .chat-head {
+      padding: 18px 18px 14px;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .chat-head h3 {
@@ -493,18 +496,20 @@
     .chat-head p {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       line-height: 1.7;
+      max-width: 220px;
     }
 
     .chat-badge {
-      min-width: 96px;
+      min-width: 92px;
       padding: 8px 10px;
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.04);
       color: var(--muted);
       font-size: 10px;
+      flex-shrink: 0;
     }
 
     .chat-badge strong {
@@ -515,31 +520,187 @@
       letter-spacing: -0.03em;
     }
 
-    textarea {
-      width: 100%;
-      min-height: 92px;
-      resize: none;
-      border-radius: 22px;
+    .chat-history {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .msg-row.user {
+      align-items: flex-end;
+    }
+
+    .msg-row.ai {
+      align-items: flex-start;
+    }
+
+    .ai-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .bubble {
+      max-width: 88%;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .msg-row.user .bubble {
+      padding: 12px 15px;
+      border-radius: 18px 18px 6px 18px;
+      background: linear-gradient(135deg, rgba(124, 224, 215, 0.92), rgba(75, 124, 255, 0.95));
+      color: #071019;
+      box-shadow: 0 12px 30px rgba(75, 124, 255, 0.18);
+    }
+
+    .msg-row.ai .bubble {
+      padding: 14px 15px;
+      border-radius: 18px 18px 18px 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: rgba(237, 244, 255, 0.92);
+    }
+
+    .typing-dots {
+      display: inline-flex;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 18px 18px 18px 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: tdot 1.2s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    .chat-insights {
+      padding: 0 18px 14px;
+      display: grid;
+      gap: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .insight-card {
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0 14px;
+    }
+
+    .insight-card summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 54px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .insight-card summary::-webkit-details-marker { display: none; }
+
+    .insight-card summary::after {
+      content: "+";
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .insight-card[open] summary::after { content: "−"; }
+
+    .insight-body {
+      padding: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    .chat-footer {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .voice-status {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+      min-height: 15px;
+    }
+
+    .input-shell {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 8px 8px 8px 14px;
+      border-radius: 24px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.04);
-      padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .chat-textarea {
+      flex: 1;
+      min-height: 22px;
+      max-height: 110px;
+      resize: none;
+      border: none;
+      background: transparent;
       color: var(--text);
       font: inherit;
-      line-height: 1.72;
+      font-size: 14px;
+      line-height: 1.55;
       outline: none;
-      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      overflow-y: auto;
     }
 
-    textarea:focus {
-      border-color: rgba(124, 224, 215, 0.2);
-      box-shadow: 0 0 0 4px rgba(124, 224, 215, 0.07);
-      background: rgba(255, 255, 255, 0.06);
+    .chat-textarea::placeholder {
+      color: var(--muted);
     }
 
-    .actions {
+    .send-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      place-items: center;
+      background: linear-gradient(135deg, rgba(124, 224, 215, 0.96), rgba(75, 124, 255, 0.98));
+      color: #071019;
+      box-shadow: 0 12px 26px rgba(75, 124, 255, 0.22);
+      font-size: 18px;
+      font-weight: 700;
+      padding: 0;
+    }
+
+    .aux-row {
+      display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     button {
@@ -555,12 +716,6 @@
     button:hover { transform: translateY(-1px); }
     button:disabled { opacity: 0.6; cursor: wait; transform: none; }
 
-    .primary {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-      color: #03121a;
-      font-weight: 700;
-    }
-
     .secondary {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -573,41 +728,6 @@
       color: #ffb3b3;
     }
 
-    .voice-status {
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.45;
-    }
-
-    .response-stack {
-      min-height: 0;
-      display: grid;
-      grid-template-rows: auto auto auto;
-      gap: 10px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .answer-card,
-    .details-card {
-      border-radius: var(--radius-lg);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      padding: 16px;
-    }
-
-    .answer-card {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      min-height: 180px;
-    }
-
-    .answer-card h4 {
-      margin: 0 0 10px;
-      font-size: 16px;
-      letter-spacing: -0.02em;
-    }
-
     .output {
       white-space: pre-wrap;
       color: var(--text);
@@ -615,46 +735,18 @@
       line-height: 1.82;
     }
 
-    .answer-card .output {
-      overflow: auto;
-      padding-right: 2px;
-    }
-
     .muted { color: var(--muted); }
 
-    details summary {
-      cursor: pointer;
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    details summary::-webkit-details-marker { display: none; }
-
-    details summary::after {
-      content: "+";
-      color: var(--muted);
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    details[open] summary::after { content: "−"; }
-
     .detail-content {
-      margin-top: 14px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.82;
+      font-size: 13px;
+      line-height: 1.75;
     }
 
     .list {
       margin: 0;
       padding-left: 18px;
-      line-height: 1.85;
+      line-height: 1.78;
     }
 
     .links {
@@ -682,13 +774,11 @@
       letter-spacing: 0.02em;
     }
 
-    .response-stack::-webkit-scrollbar,
-    .answer-card .output::-webkit-scrollbar {
+    .chat-history::-webkit-scrollbar {
       width: 8px;
     }
 
-    .response-stack::-webkit-scrollbar-thumb,
-    .answer-card .output::-webkit-scrollbar-thumb {
+    .chat-history::-webkit-scrollbar-thumb {
       background: rgba(255, 255, 255, 0.12);
       border-radius: 999px;
     }
@@ -708,6 +798,11 @@
     @keyframes signalPulse {
       0%, 100% { opacity: 0.65; transform: scale(0.9); }
       50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    @keyframes tdot {
+      0%, 100% { transform: translateY(0); opacity: 0.4; }
+      50% { transform: translateY(-4px); opacity: 1; }
     }
 
     @media (max-width: 1100px) {
@@ -799,45 +894,53 @@
         <div class="chat-head">
           <div>
             <h3>提问窗口</h3>
-            <p>右侧提问舱只负责提问、回答和辅助信息，避免打断主视频窗口。现阶段先跑图文与语音，后续可无缝切回分身视频。</p>
+            <p>把问题、回答和参考资料都收进右侧会话舱，让左边始终像未来的视频终端，而不是一张说明海报。</p>
           </div>
           <div class="chat-badge">医生<strong>李勇</strong></div>
         </div>
 
-        <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，需要尽快做进一步检查吗？"></textarea>
-
-        <div class="actions">
-          <button id="askBtn" class="primary">发送问题</button>
-          <button id="voiceInputBtn" class="secondary">语音输入</button>
-          <button id="speakAnswerBtn" class="secondary">朗读回答</button>
-          <button id="stopSpeechBtn" class="secondary">停止朗读</button>
-          <button id="startConsultBtn" class="secondary">视频分身</button>
-          <button id="keepAliveBtn" class="secondary">保持会话</button>
-          <button id="disconnectBtn" class="danger">结束</button>
+        <div id="chatHistory" class="chat-history">
+          <div class="msg-row ai">
+            <div class="ai-label">AI 医疗助手</div>
+            <div class="bubble">您好，我是李勇医生的 AI 医疗助手。当前阶段以耳鼻咽喉科常见问题答疑、就医建议和公开职业信息说明为主。您可以直接开始提问。</div>
+          </div>
         </div>
 
-        <div class="voice-status" id="voiceStatus">当前优先使用浏览器原生语音能力，适合作为现阶段的低成本过渡方案。</div>
-
-        <div class="response-stack">
-          <div class="answer-card">
-            <h4>模型回答</h4>
-            <div id="answer" class="output muted">尚未生成回答。</div>
-          </div>
-
-          <details class="details-card">
+        <div class="chat-insights">
+          <details class="insight-card">
             <summary>公开职业信息</summary>
-            <div class="detail-content output" id="doctorBio">读取中...</div>
+            <div class="insight-body output" id="doctorBio">读取中...</div>
           </details>
 
-          <details class="details-card">
+          <details class="insight-card">
             <summary>专科方向与官方来源</summary>
-            <div class="detail-content">
+            <div class="insight-body">
               <div id="focusTags" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
               <ul id="focusList" class="list"></ul>
               <div id="officialSources" class="links" style="margin-top: 14px;"></div>
             </div>
           </details>
         </div>
+
+        <div class="chat-footer">
+          <div class="voice-status" id="voiceStatus">当前优先使用浏览器原生语音能力，适合作为现阶段的低成本过渡方案。</div>
+
+          <div class="input-shell">
+            <textarea id="message" class="chat-textarea" placeholder="例如：慢性鼻窦炎反复发作，需要尽快做进一步检查吗？"></textarea>
+            <button id="askBtn" class="send-btn" title="发送">↑</button>
+          </div>
+
+          <div class="aux-row">
+            <button id="voiceInputBtn" class="secondary">语音</button>
+            <button id="speakAnswerBtn" class="secondary">朗读</button>
+            <button id="stopSpeechBtn" class="secondary">停止</button>
+            <button id="startConsultBtn" class="secondary">视频分身</button>
+            <button id="keepAliveBtn" class="secondary">保持会话</button>
+            <button id="disconnectBtn" class="danger">结束</button>
+          </div>
+        </div>
+
+        <div id="answer" style="display:none;"></div>
       </aside>
     </section>
   </main>
