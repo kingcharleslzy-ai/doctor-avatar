@@ -40,3 +40,8 @@ jobs:
         run: |
           cd /root/doctor-avatar
           docker compose -f docker-compose.prod.yml up -d --build
+
+      - name: Reload nginx config
+        run: |
+          docker exec doctor-avatar-nginx-1 nginx -s reload || \
+          docker compose -f /root/doctor-avatar/docker-compose.prod.yml restart nginx
