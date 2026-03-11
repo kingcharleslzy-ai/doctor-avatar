@@ -23,6 +23,43 @@ function isMobileLayout() {
   return window.innerWidth <= 920;
 }
 
+// 聊天气泡模式（移动端）
+function isChatMode() {
+  return !!$("chatHistory");
+}
+
+function appendChatMessage(role, text) {
+  const history = $("chatHistory");
+  if (!history) return null;
+  const row = document.createElement("div");
+  row.className = `msg-row ${role}`;
+  if (role === "ai") {
+    const label = document.createElement("div");
+    label.className = "ai-label";
+    label.textContent = "AI 医疗助手";
+    row.appendChild(label);
+  }
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  if (text === null) {
+    bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  } else {
+    bubble.textContent = text;
+  }
+  row.appendChild(bubble);
+  history.appendChild(row);
+  history.scrollTop = history.scrollHeight;
+  return row;
+}
+
+function updateChatMessage(row, text) {
+  if (!row) return;
+  const bubble = row.querySelector(".bubble");
+  if (bubble) bubble.textContent = text;
+  const history = $("chatHistory");
+  if (history) history.scrollTop = history.scrollHeight;
+}
+
 function currentProfile() {
   return state.doctorProfile || {};
 }
@@ -230,28 +267,35 @@ async function disconnectRoom() {
 async function askQuestion() {
   const input = $("message");
   const message = input?.value.trim();
-  if (!message) {
-    return;
-  }
-
+  if (!message) return;
   if (input) {
     input.value = "";
+    input.style.height = "auto";
   }
-  setText("answer", "生成中...");
 
-  try {
-    const data = await postJson("/api/chat", {
-      message,
-      conversation: state.conversation,
-    });
-    setText("answer", data.answer);
-    state.conversation.push({ role: "user", content: message });
-    state.conversation.push({ role: "assistant", content: data.answer });
-    if (state.conversation.length > 20) {
-      state.conversation = state.conversation.slice(-20);
+  if (isChatMode()) {
+    appendChatMessage("user", message);
+    const loadingRow = appendChatMessage("ai", null);
+    try {
+      const data = await postJson("/api/chat", { message, conversation: state.conversation });
+      updateChatMessage(loadingRow, data.answer);
+      state.conversation.push({ role: "user", content: message });
+      state.conversation.push({ role: "assistant", content: data.answer });
+      if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
+    } catch (error) {
+      updateChatMessage(loadingRow, `出错了：${error.message}`);
     }
-  } catch (error) {
-    setText("answer", error.message);
+  } else {
+    setText("answer", "生成中...");
+    try {
+      const data = await postJson("/api/chat", { message, conversation: state.conversation });
+      setText("answer", data.answer);
+      state.conversation.push({ role: "user", content: message });
+      state.conversation.push({ role: "assistant", content: data.answer });
+      if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
+    } catch (error) {
+      setText("answer", error.message);
+    }
   }
 }
 
@@ -448,12 +492,20 @@ function wireUi() {
   $("voiceInputBtn")?.addEventListener("click", startVoiceInput);
   $("speakAnswerBtn")?.addEventListener("click", speakAnswer);
   $("stopSpeechBtn")?.addEventListener("click", stopSpeech);
-  $("message")?.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
-      event.preventDefault();
-      askQuestion();
-    }
-  });
+  const msgEl = $("message");
+  if (msgEl) {
+    msgEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        askQuestion();
+      }
+    });
+    // 自动伸缩高度（聊天模式）
+    msgEl.addEventListener("input", () => {
+      msgEl.style.height = "auto";
+      msgEl.style.height = Math.min(msgEl.scrollHeight, 120) + "px";
+    });
+  }
   let resizeTimer;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
