@@ -3,210 +3,632 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>李勇医生虚拟人</title>
+  <title>李勇医生 AI 医疗助手</title>
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
-      --bg: #f3efe6;
-      --surface: rgba(255,255,255,.76);
-      --surface-strong: rgba(255,255,255,.92);
-      --line: rgba(50, 78, 98, .12);
-      --text: #18222c;
-      --muted: #667786;
-      --accent: #0f6b6b;
-      --shadow: 0 18px 60px rgba(21, 41, 59, .1);
+      --bg: #f4f5f7;
+      --panel: rgba(255, 255, 255, 0.74);
+      --panel-strong: rgba(255, 255, 255, 0.92);
+      --line: rgba(17, 24, 39, 0.09);
+      --text: #101724;
+      --muted: #61707d;
+      --accent: #0f766e;
+      --accent-soft: rgba(15, 118, 110, 0.12);
+      --ai: #215dff;
+      --warning-bg: rgba(255, 246, 234, 0.92);
+      --warning-line: rgba(193, 123, 47, 0.16);
+      --shadow: 0 24px 80px rgba(15, 23, 42, 0.09);
     }
     * { box-sizing: border-box; }
-    body { margin: 0; color: var(--text); font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif; background: radial-gradient(circle at top left, rgba(15,107,107,.10), transparent 24%), radial-gradient(circle at 85% 10%, rgba(193,165,122,.12), transparent 18%), linear-gradient(180deg, #f8f5ef 0%, #f2eee5 44%, #efe9de 100%); }
-    main { max-width: 1340px; margin: 0 auto; padding: 24px; }
-    .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 16px 20px; border: 1px solid var(--line); border-radius: 24px; background: rgba(255,255,255,.58); backdrop-filter: blur(16px); box-shadow: var(--shadow); }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .brand-mark { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent) 0%, #174f73 100%); color: #fff; font-weight: 700; }
-    .brand h1 { margin: 0; font-size: 18px; }
-    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-    .nav-tag { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.78); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-    .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; margin-bottom: 22px; }
-    .card { border: 1px solid var(--line); border-radius: 28px; background: var(--surface); backdrop-filter: blur(18px); box-shadow: var(--shadow); }
-    .hero-copy { padding: 30px; position: relative; overflow: hidden; }
-    .hero-copy::after { content: ""; position: absolute; right: -80px; bottom: -110px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(15,107,107,.12), transparent 70%); border-radius: 999px; }
-    .eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: rgba(15,107,107,.08); border: 1px solid rgba(15,107,107,.12); color: var(--accent); padding: 7px 12px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-    .hero-copy h2 { margin: 16px 0 12px; font-size: 42px; line-height: 1.08; letter-spacing: -.04em; max-width: 760px; }
-    .hero-copy p { margin: 0; color: var(--muted); line-height: 1.85; font-size: 15px; max-width: 780px; }
-    .tag-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-    .chip { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.66); border: 1px solid var(--line); font-size: 13px; color: #324454; }
-    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 22px; }
-    .stat { padding: 18px; border-radius: 22px; background: var(--surface-strong); border: 1px solid var(--line); }
-    .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-    .value { margin-top: 10px; font-size: 28px; font-weight: 600; letter-spacing: -.03em; }
-    .desc { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.7; }
-    .layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: 22px; }
-    .panel { padding: 24px; }
-    .panel h3 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
-    .panel p.lead { margin: 10px 0 0; color: var(--muted); line-height: 1.8; }
-    .video-shell { min-height: 460px; border-radius: 24px; margin-top: 18px; overflow: hidden; background: linear-gradient(180deg, #153040 0%, #0e1f2b 100%); position: relative; display: grid; grid-template-columns: .95fr 1.05fr; border: 1px solid rgba(255,255,255,.12); }
-    .video-shell::after { content: ""; position: absolute; inset: 14px; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; pointer-events: none; }
-    .portrait-side { position: relative; padding: 26px; background: radial-gradient(circle at 30% 20%, rgba(135,213,208,.18), transparent 28%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.01)); display: flex; align-items: flex-end; }
-    .portrait-side::before { content: ""; position: absolute; inset: 28px 36px 28px 24px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.03)); border: 1px solid rgba(255,255,255,.08); }
-    .portrait-card { position: relative; z-index: 1; width: 100%; min-height: 100%; display: flex; align-items: flex-end; }
-    .portrait-placeholder { width: 100%; border-radius: 20px; padding: 28px 24px; color: rgba(239,247,249,.94); background: linear-gradient(180deg, rgba(13,38,53,.28), rgba(9,24,34,.72)); border: 1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.06); }
-    .portrait-badge { display: inline-flex; padding: 6px 10px; border-radius: 999px; background: rgba(135,213,208,.14); color: #b4f0eb; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid rgba(135,213,208,.16); }
-    .portrait-name { margin: 16px 0 6px; font-size: 34px; font-weight: 700; letter-spacing: -.04em; }
-    .portrait-title { color: rgba(239,247,249,.76); line-height: 1.8; font-size: 14px; }
-    .portrait-note { margin-top: 18px; color: rgba(239,247,249,.66); line-height: 1.8; font-size: 13px; }
-    .briefing-side { padding: 28px 28px 24px 8px; display: flex; align-items: center; }
-    .briefing-card { width: 100%; padding: 18px 10px 18px 0; color: rgba(239,247,249,.92); }
-    .briefing-card h4 { margin: 0; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: #9fd8d4; }
-    .briefing-card h5 { margin: 14px 0 10px; font-size: 30px; letter-spacing: -.04em; }
-    .briefing-card p { margin: 0; color: rgba(239,247,249,.72); line-height: 1.85; font-size: 14px; }
-    .briefing-list { display: grid; gap: 10px; margin-top: 18px; }
-    .briefing-item { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: rgba(239,247,249,.84); font-size: 14px; line-height: 1.7; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
-    button { border: 0; border-radius: 999px; padding: 13px 18px; font: inherit; cursor: pointer; transition: transform .18s ease, opacity .18s ease; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(33, 93, 255, 0.08), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(15, 118, 110, 0.08), transparent 18%),
+        linear-gradient(180deg, #fbfcfd 0%, #eef2f6 100%);
+    }
+    main {
+      max-width: 1500px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+    .topbar, .workspace, .stage-card, .chat-card, .meta-card, .details-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow);
+    }
+    .topbar {
+      border-radius: 28px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--text) 0%, var(--ai) 100%);
+      flex-shrink: 0;
+    }
+    .brand h1 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.03em;
+    }
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .topbar-right {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .tag {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .tag.accent {
+      background: rgba(33, 93, 255, 0.08);
+      border-color: rgba(33, 93, 255, 0.12);
+      color: var(--ai);
+    }
+    .workspace {
+      border-radius: 34px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.38fr) minmax(380px, 0.82fr);
+      gap: 18px;
+      min-height: calc(100vh - 114px);
+    }
+    .stage-column, .assistant-column {
+      min-height: 0;
+      display: grid;
+      gap: 16px;
+    }
+    .stage-card {
+      border-radius: 30px;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+    .stage-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(15, 118, 110, 0.1);
+      color: var(--accent);
+      font-size: 11px;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+    .stage-head h2 {
+      margin: 12px 0 8px;
+      font-size: 34px;
+      line-height: 1.04;
+      letter-spacing: -0.05em;
+      max-width: 720px;
+    }
+    .stage-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.82;
+      max-width: 660px;
+    }
+    .status-stack {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      justify-items: end;
+    }
+    .status-pill {
+      min-width: 170px;
+      padding: 10px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .status-pill strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .video-stage {
+      position: relative;
+      min-height: 560px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        radial-gradient(circle at 14% 14%, rgba(124, 226, 218, 0.18), transparent 18%),
+        radial-gradient(circle at 88% 12%, rgba(33, 93, 255, 0.18), transparent 20%),
+        linear-gradient(180deg, #121a25 0%, #0a1118 100%);
+    }
+    .video-stage::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+    .video-stage > * {
+      width: 100%;
+      height: 100%;
+    }
+    .desktop-placeholder {
+      position: absolute;
+      inset: 0;
+      padding: 26px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
+      gap: 18px;
+    }
+    .portrait-panel, .brief-panel {
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      overflow: hidden;
+      position: relative;
+    }
+    .portrait-panel {
+      display: flex;
+      align-items: flex-end;
+      padding: 28px;
+    }
+    .portrait-frame {
+      width: 100%;
+      min-height: 100%;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(180deg, rgba(10, 15, 22, 0.02), rgba(10, 15, 22, 0.44)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='700' viewBox='0 0 500 700'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop stop-color='%23c0d9df'/%3E%3Cstop offset='1' stop-color='%2369808d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='500' height='700' rx='36' fill='%230e1721'/%3E%3Ccircle cx='250' cy='220' r='92' fill='url(%23g)' opacity='.92'/%3E%3Crect x='118' y='320' width='264' height='238' rx='128' fill='url(%23g)' opacity='.84'/%3E%3C/svg%3E") center top / cover no-repeat;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: flex-end;
+    }
+    .portrait-copy {
+      width: 100%;
+      padding: 26px;
+      background: linear-gradient(180deg, rgba(7, 12, 18, 0), rgba(7, 12, 18, 0.78) 36%, rgba(7, 12, 18, 0.92) 100%);
+      color: rgba(247, 250, 252, 0.96);
+    }
+    .portrait-copy span {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(124, 226, 218, 0.14);
+      border: 1px solid rgba(124, 226, 218, 0.14);
+      color: #9ff4ee;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .portrait-copy h3 {
+      margin: 18px 0 6px;
+      font-size: 42px;
+      letter-spacing: -0.06em;
+    }
+    .portrait-copy p {
+      margin: 0;
+      color: rgba(236, 243, 248, 0.76);
+      font-size: 14px;
+      line-height: 1.82;
+    }
+    .brief-panel {
+      padding: 22px 20px;
+      color: rgba(241, 247, 251, 0.94);
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    .brief-panel .label {
+      color: #8bc6ff;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .brief-panel h3 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.05em;
+      line-height: 1.12;
+    }
+    .brief-panel p {
+      margin: 0;
+      color: rgba(236, 243, 248, 0.76);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .brief-points {
+      display: grid;
+      gap: 10px;
+    }
+    .brief-points div {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(241, 247, 251, 0.84);
+      font-size: 13px;
+      line-height: 1.76;
+    }
+    .notice {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-line);
+      color: #7c5a2f;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .meta-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .meta-card {
+      border-radius: 22px;
+      padding: 16px;
+      background: var(--panel-strong);
+      box-shadow: none;
+    }
+    .meta-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .meta-card strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+    .meta-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.72;
+    }
+    .assistant-column {
+      grid-template-rows: minmax(0, 1fr);
+    }
+    .chat-card {
+      border-radius: 30px;
+      padding: 22px;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      gap: 16px;
+      min-height: 0;
+    }
+    .chat-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .chat-head h3 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+    .chat-head p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.76;
+    }
+    .chat-badge {
+      min-width: 134px;
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .chat-badge strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    textarea {
+      width: 100%;
+      min-height: 136px;
+      resize: none;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 18px;
+      color: var(--text);
+      font: inherit;
+      line-height: 1.72;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    textarea:focus {
+      border-color: rgba(33, 93, 255, 0.22);
+      box-shadow: 0 0 0 4px rgba(33, 93, 255, 0.08);
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.18s ease, opacity 0.18s ease;
+    }
     button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: .6; cursor: wait; transform: none; }
-    .primary { background: linear-gradient(135deg, var(--accent) 0%, #17517a 100%); color: #fff; }
-    .secondary { background: rgba(255,255,255,.8); color: var(--text); border: 1px solid var(--line); }
-    .danger { background: rgba(144,70,70,.10); color: #833c3c; border: 1px solid rgba(144,70,70,.12); }
-    .status-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-    .status-pill { padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.8); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-    .notice { margin-top: 18px; padding: 16px 18px; border-radius: 20px; background: #fff7ec; border: 1px solid rgba(193,165,122,.25); color: #6b5638; line-height: 1.8; font-size: 14px; }
-    .stack { display: grid; gap: 18px; }
-    .subcard { padding: 20px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface-strong); }
-    .subcard h4 { margin: 0 0 10px; font-size: 17px; }
-    .subcard p { margin: 0; line-height: 1.8; color: var(--muted); }
-    .list { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.9; }
-    .qa-box { width: 100%; min-height: 132px; padding: 15px 16px; border-radius: 18px; resize: vertical; border: 1px solid var(--line); background: rgba(255,255,255,.76); font: inherit; color: var(--text); }
-    .output { white-space: pre-wrap; color: var(--text); line-height: 1.85; font-size: 14px; }
+    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
+    .primary {
+      background: linear-gradient(135deg, var(--text) 0%, var(--ai) 100%);
+      color: #fff;
+    }
+    .secondary {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    .danger {
+      background: rgba(165, 76, 76, 0.08);
+      border: 1px solid rgba(165, 76, 76, 0.12);
+      color: #8f4141;
+    }
+    .voice-status {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.72;
+    }
+    .response-stack {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto auto;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .answer-card, .details-card {
+      border-radius: 22px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      padding: 18px;
+      min-height: 0;
+    }
+    .answer-card h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+    .output {
+      white-space: pre-wrap;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.85;
+    }
     .muted { color: var(--muted); }
-    .links { display: grid; gap: 10px; margin-top: 12px; }
-    .links a { color: var(--accent); text-decoration: none; }
+    details summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after {
+      content: "+";
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1;
+    }
+    details[open] summary::after { content: "−"; }
+    .detail-content {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.85;
+    }
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.88;
+    }
+    .links {
+      display: grid;
+      gap: 8px;
+    }
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      word-break: break-word;
+    }
     .links a:hover { text-decoration: underline; }
-    .voice-status { margin-top: 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
-    @media (max-width: 1120px) { .hero, .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 1240px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+      .chat-card {
+        grid-template-rows: auto auto auto auto;
+      }
+    }
+    @media (max-width: 940px) {
+      main { padding: 16px; }
+      .topbar {
+        border-radius: 24px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .topbar-right {
+        justify-content: flex-start;
+      }
+      .stage-head,
+      .desktop-placeholder,
+      .meta-row {
+        grid-template-columns: 1fr;
+      }
+      .status-stack {
+        justify-items: start;
+      }
+      .video-stage {
+        min-height: 420px;
+      }
+    }
   </style>
 </head>
 <body>
   <main>
-    <header class="nav">
+    <header class="topbar">
       <div class="brand">
         <div class="brand-mark">LY</div>
         <div>
-          <h1>李勇医生虚拟人</h1>
-          <p id="brandSubtitle">公开资料驱动的耳鼻咽喉科 AI 分身</p>
+          <h1>李勇医生 AI 医疗助手</h1>
+          <p id="brandSubtitle">杭州市第一人民医院 · 耳鼻咽喉科</p>
         </div>
       </div>
-      <div class="nav-tag">仅供健康科普与就医参考，不替代面诊</div>
+      <div class="topbar-right">
+        <div class="tag accent">Apple Minimal × AI Clinical</div>
+        <div class="tag">仅供健康科普与就医参考</div>
+      </div>
     </header>
 
-    <section class="hero">
-      <div class="card hero-copy">
-        <div class="eyebrow">Clinical Digital Human</div>
-        <h2 id="heroTitle">让专科信息触达更自然，也更可信。</h2>
-        <p id="heroDescription">该虚拟人基于李勇医生的公开职业信息构建，面向耳鼻咽喉科常见问题解答、专科方向介绍与初步就医建议说明。正式诊断、检查决策与个体化治疗仍需以医院线下评估为准。</p>
-        <div class="tag-row" id="focusTags"></div>
-      </div>
-
-      <div class="stats">
-        <div class="card stat">
-          <div class="label">Hospital</div>
-          <div class="value" id="hospitalValue">杭州市第一人民医院</div>
-          <div class="desc">以医院公开专家资料为依据展示职业背景与专科方向。</div>
-        </div>
-        <div class="card stat">
-          <div class="label">Department</div>
-          <div class="value" id="departmentValue">耳鼻咽喉科</div>
-          <div class="desc">聚焦鼻科、喉部病变、头颈肿瘤与睡眠呼吸相关问题。</div>
-        </div>
-        <div class="card stat">
-          <div class="label">Mode</div>
-          <div class="value">Video Conversation</div>
-          <div class="desc">后端统一拉起数字分身视频会话，前端不暴露内部运行参数。</div>
-        </div>
-        <div class="card stat">
-          <div class="label">Safety</div>
-          <div class="value">Guardrailed</div>
-          <div class="desc">仅做健康科普、就医建议与专科方向说明，不替代线下问诊。</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="layout">
-      <div class="card panel">
-        <h3>数字分身入口</h3>
-        <p class="lead">视频分身接口已在后端保留。当前上线阶段优先使用低成本的文本问答主流程，后续可按需接回实时视频能力。</p>
-
-        <div class="video-shell" id="videoStage">
-          <div class="portrait-side">
-            <div class="portrait-card">
-              <div class="portrait-placeholder">
-                <div class="portrait-badge">Doctor Profile Visual</div>
-                <div class="portrait-name">李勇</div>
-                <div class="portrait-title">主任医师 / 教授 / 硕士生导师<br />杭州市第一人民医院 耳鼻咽喉科</div>
-                <div class="portrait-note">当前使用医生主视觉卡片代替实时视频位。后续接入分身能力后，可直接替换为真人或虚拟人画面。</div>
-              </div>
+    <section class="workspace">
+      <div class="stage-column">
+        <article class="stage-card">
+          <div class="stage-head">
+            <div>
+              <div class="eyebrow">Future Clinical Interface</div>
+              <h2 id="heroTitle">让视频窗口成为主角，也让医学表达更可信。</h2>
+              <p id="heroDescription">基于李勇医生公开职业资料构建的 AI 医疗助手，面向耳鼻咽喉科常见问题答疑、专科方向说明与就医建议。正式诊断与治疗决策仍需以医院线下评估为准。</p>
+            </div>
+            <div class="status-stack">
+              <div class="status-pill">会话状态<strong id="connectionState">未启用</strong></div>
+              <div class="status-pill">当前模式<strong id="modeState">图文问答主流程</strong></div>
+              <div class="status-pill">专科范围<strong id="deptState">耳鼻咽喉科</strong></div>
             </div>
           </div>
-          <div class="briefing-side">
-            <div class="briefing-card">
-              <h4>Clinical Briefing</h4>
-              <h5>数字分身接口保留，当前先以图文问答为主</h5>
-              <p>现阶段重点先完成可上线、可访问、可持续迭代的医生 AI 助手主流程。视频分身接口和会话链路已经保留，后续可以在不推翻现有产品框架的前提下接回。</p>
-              <div class="briefing-list">
-                <div class="briefing-item">当前适合做常见问题答疑、专科方向说明、就医建议与内容展示。</div>
-                <div class="briefing-item">后续可替换为医生照片、品牌海报，或实时虚拟人视频窗口。</div>
-                <div class="briefing-item">若启用视频分身，只需开启后端配置并补齐对应参数。</div>
-              </div>
-            </div>
+
+          <div class="video-stage" id="videoStage"></div>
+
+          <div class="notice" id="clinicNote">提醒：本页面仅提供健康科普、专科方向说明与就医建议，不提供正式诊断和个体化处方。</div>
+        </article>
+
+        <section class="meta-row">
+          <div class="meta-card">
+            <span>Hospital</span>
+            <strong id="hospitalValue">杭州市第一人民医院</strong>
+            <p>公开职业信息与专科背景均以医院官网专家页面为基础。</p>
           </div>
-        </div>
-
-        <div class="toolbar">
-          <button id="startConsultBtn" class="primary">视频分身即将开放</button>
-          <button id="keepAliveBtn" class="secondary">保持会话</button>
-          <button id="disconnectBtn" class="danger">结束会话</button>
-        </div>
-
-        <div class="status-bar">
-          <div class="status-pill">会话状态：<span id="connectionState">未连接</span></div>
-          <div class="status-pill">医生：<span id="doctorState">李勇</span></div>
-          <div class="status-pill">科室：<span id="deptState">耳鼻咽喉科</span></div>
-        </div>
-
-        <div class="notice" id="clinicNote">提醒：本页面仅提供健康科普、专科方向说明与就医参考，不提供正式诊断和处方。</div>
+          <div class="meta-card">
+            <span>Clinical Focus</span>
+            <strong id="focusPrimary">鼻科微创与头颈肿瘤</strong>
+            <p>聚焦鼻科微创、喉部病变、睡眠呼吸与头颈肿瘤综合诊疗。</p>
+          </div>
+          <div class="meta-card">
+            <span>AI Safety</span>
+            <strong>Guardrailed Consultation</strong>
+            <p>对危险症状会建议线下急诊或尽快面诊，不替代医生本人实时在线。</p>
+          </div>
+        </section>
       </div>
 
-      <div class="stack">
-        <div class="card subcard">
-          <h4>公开职业信息</h4>
-          <div id="doctorBio" class="output muted">读取中...</div>
-        </div>
+      <aside class="assistant-column">
+        <section class="chat-card">
+          <div class="chat-head">
+            <div>
+              <h3>提问窗口</h3>
+              <p>把打字和回答收在右侧，尽量不打断主视频区域。你可以先用文本试回答风格，后续再接视频分身。</p>
+            </div>
+            <div class="chat-badge">医生<strong id="doctorState">李勇</strong></div>
+          </div>
 
-        <div class="card subcard">
-          <h4>专科方向</h4>
-          <ul id="focusList" class="list"></ul>
-        </div>
+          <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，需要尽快做进一步检查吗？"></textarea>
 
-        <div class="card subcard">
-          <h4>在线提问预览</h4>
-          <p>你也可以先用文本方式快速查看回答风格，再决定是否进入视频会话。</p>
-          <textarea id="message" class="qa-box" placeholder="例如：过敏性鼻炎反复发作，需要尽快线下检查吗？"></textarea>
-          <div class="toolbar">
-            <button id="askBtn" class="primary">提交问题</button>
+          <div class="actions">
+            <button id="askBtn" class="primary">发送问题</button>
             <button id="voiceInputBtn" class="secondary">语音输入</button>
             <button id="speakAnswerBtn" class="secondary">朗读回答</button>
             <button id="stopSpeechBtn" class="secondary">停止朗读</button>
+            <button id="startConsultBtn" class="secondary">视频分身即将开放</button>
+            <button id="keepAliveBtn" class="secondary">保持会话</button>
+            <button id="disconnectBtn" class="danger">结束会话</button>
           </div>
-          <div id="voiceStatus" class="voice-status">语音功能默认使用浏览器原生能力，适合作为当前低成本版本的过渡方案。</div>
-          <div style="margin-top: 14px;">
-            <div class="output" id="answer">尚未生成回答。</div>
-          </div>
-        </div>
 
-        <div class="card subcard">
-          <h4>官方来源</h4>
-          <div id="officialSources" class="links"></div>
-        </div>
-      </div>
+          <div class="voice-status" id="voiceStatus">当前优先使用浏览器原生语音能力，适合作为现阶段的低成本过渡方案。</div>
+
+          <div class="response-stack">
+            <div class="answer-card">
+              <h4>模型回答</h4>
+              <div id="answer" class="output muted">尚未生成回答。</div>
+            </div>
+
+            <details class="details-card" open>
+              <summary>公开职业信息</summary>
+              <div class="detail-content output" id="doctorBio">读取中...</div>
+            </details>
+
+            <details class="details-card">
+              <summary>专科方向与官方来源</summary>
+              <div class="detail-content">
+                <ul id="focusList" class="list"></ul>
+                <div id="officialSources" class="links" style="margin-top: 14px;"></div>
+              </div>
+            </details>
+          </div>
+        </section>
+      </aside>
     </section>
   </main>
   <script src="/static/user.js"></script>

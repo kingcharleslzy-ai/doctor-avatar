@@ -173,6 +173,15 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**用户端视觉重构：Apple 极简 × AI 医疗**（by codex）
+
+- `app/templates/user_desktop.html`：桌面端改为“大视频主区域 + 右侧问答窗”，减少长滚动和信息堆叠
+- `app/templates/user_mobile.html`：移动端保留轻量结构，但补全资料与来源展示区域
+- `app/static/user.js`：重构为跨桌面/手机安全渲染，修复移动端因 DOM 不存在导致的“公开职业信息 / 官方来源”不显示问题
+- 整体视觉方向收敛为更接近 Apple 式极简层级，并叠加 AI 医疗氛围感
+
+### 2026-03-11（四-4）
+
 **HTTPS 上线骨架准备**（by codex）
 
 - `docker-compose.prod.yml`：预留 `443:443` 端口和证书目录挂载
