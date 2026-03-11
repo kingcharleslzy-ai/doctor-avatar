@@ -173,6 +173,13 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
+
+- `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗
+- `app/templates/user_desktop.html`：移除不合适的英文风格标签，改为更正式的医疗终端表达，并把顶部区域收紧
+- `app/templates/user_desktop.html`：增强深色玻璃、HUD 状态层、扫描线和轨道光环，让桌面端更接近未来感 AI 医疗界面
+- `app/static/user.js`：同步调整桌面端占位说明和主视窗标题文案，让右侧提问舱与后续视频接入路径表达一致
+
 **用户端视觉重构：Apple 极简 × AI 医疗**（by codex）
 
 - `app/templates/user_desktop.html`：桌面端改为“大视频主区域 + 右侧问答窗”，减少长滚动和信息堆叠

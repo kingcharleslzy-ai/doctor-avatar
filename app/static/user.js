@@ -56,12 +56,26 @@ function desktopPlaceholderMarkup() {
         </div>
       </div>
       <div class="brief-panel">
-        <div class="label">AI Medical Assistant</div>
-        <h3>当前先以图文问答为主，视频分身接口保持待命。</h3>
-        <p>桌面端把主视觉留给未来的视频窗口，右侧专注提问与回答，减少滚动和信息噪音，让体验更像一块高可信的医疗界面。</p>
+        <div class="label">AI Medical Core</div>
+        <h3>当前以图文与语音问答在线，视频分身接口保持待命。</h3>
+        <p>这一版把大部分空间都留给主视窗，让未来的视频分身、字幕与实时会话能自然落位；右侧只保留提问、回答和必要资料，不再把首页切成一堆信息块。</p>
+        <div class="brief-stats">
+          <div class="brief-stat">
+            <span>当前形态</span>
+            <strong>主视窗待机</strong>
+          </div>
+          <div class="brief-stat">
+            <span>语音能力</span>
+            <strong>浏览器原生</strong>
+          </div>
+          <div class="brief-stat">
+            <span>后续升级</span>
+            <strong>实时分身接入</strong>
+          </div>
+        </div>
         <div class="brief-points">
           <div>核心能力优先放在常见问题答疑、专科方向说明与线下就医建议。</div>
-          <div>等视频分身重新接入后，当前主区域会直接切换为实时画面，不需要重做整体页面。</div>
+          <div>接回视频分身后，当前主区域会直接切换为实时画面，不需要重做整体页面。</div>
           <div>所有高风险情形仍以医院线下评估、急诊与正式检查为准。</div>
         </div>
       </div>
@@ -386,10 +400,10 @@ async function loadProfile() {
   state.doctorProfile = profile;
 
   setText("brandSubtitle", `${profile.hospital} · ${profile.department}`);
-  setText("heroTitle", `${profile.name}医生 AI 医疗助手`);
+  setText("heroTitle", `${profile.name}医生 · AI 临床会话视窗`);
   setText(
     "heroDescription",
-    `${profile.public_tagline}。页面信息以公开职业资料为基础，用于专科方向说明、常见问题答疑与就医参考。`
+    `${profile.public_tagline}。当前主窗口已预留视频分身与实时对话区域，右侧提问舱负责图文与语音问答。`
   );
   setText("hospitalValue", profile.hospital || "-");
   setText("doctorState", profile.name || "-");
