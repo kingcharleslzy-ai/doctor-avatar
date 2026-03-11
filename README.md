@@ -180,6 +180,12 @@ uvicorn app.main:app --reload
 - `app/templates/user_desktop.html`：右侧提问舱收窄并简化按钮密度，减少“控制台感”
 - `app/static/user.js`：同步调整桌面占位结构，并在视频未启用时隐藏无意义的保持会话 / 结束会话按钮
 
+**桌面端四次回修：基于 Playwright 宽视口截图继续压缩视觉噪音**（by codex）
+
+- `app/templates/user_desktop.html`：彻底移除主舞台右侧的大说明浮层，只保留顶部 HUD 与底部医生信息
+- `app/templates/user_desktop.html`：把桌面断点进一步下调到 `1100px`，避免中等宽度桌面过早切成单列
+- `app/templates/user_desktop.html`：继续收紧标题、副文案、右侧问答舱和按钮尺寸，让舞台占比更高
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗

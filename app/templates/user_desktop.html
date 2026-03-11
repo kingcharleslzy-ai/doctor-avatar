@@ -138,7 +138,7 @@
       border-radius: 32px;
       padding: 12px;
       display: grid;
-      grid-template-columns: minmax(0, 1.9fr) 400px;
+      grid-template-columns: minmax(0, 2.08fr) 372px;
       gap: 12px;
       min-height: 0;
       overflow: hidden;
@@ -182,9 +182,9 @@
 
     .stage-header {
       position: absolute;
-      top: 18px;
-      left: 20px;
-      right: 20px;
+      top: 16px;
+      left: 18px;
+      right: 18px;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -208,12 +208,12 @@
     }
 
     .stage-copy {
-      max-width: 360px;
+      max-width: 300px;
     }
 
     .stage-copy h2 {
       margin: 12px 0 8px;
-      font-size: 26px;
+      font-size: 22px;
       letter-spacing: -0.06em;
       line-height: 1.06;
     }
@@ -221,8 +221,8 @@
     .stage-copy p {
       margin: 0;
       color: rgba(237, 244, 255, 0.7);
-      font-size: 12px;
-      line-height: 1.62;
+      font-size: 11px;
+      line-height: 1.5;
     }
 
     .hud {
@@ -268,7 +268,7 @@
     .desktop-placeholder {
       position: absolute;
       inset: 0;
-      padding: 86px 18px 18px;
+      padding: 82px 16px 16px;
     }
 
     .portrait-panel {
@@ -402,78 +402,14 @@
     }
 
     .stage-side-panel {
-      position: absolute;
-      top: 126px;
-      right: 28px;
-      width: 320px;
-      padding: 18px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background:
-        linear-gradient(180deg, rgba(19, 29, 45, 0.92), rgba(10, 15, 24, 0.76)),
-        radial-gradient(circle at 100% 0%, rgba(75, 124, 255, 0.18), transparent 42%);
-      backdrop-filter: blur(20px);
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
-      z-index: 2;
-    }
-
-    .stage-side-panel .label {
-      color: var(--accent-3);
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .stage-side-panel h3 {
-      margin: 14px 0 10px;
-      font-size: 28px;
-      line-height: 1.04;
-      letter-spacing: -0.06em;
-    }
-
-    .stage-side-panel p {
-      margin: 0;
-      color: rgba(236, 243, 248, 0.74);
-      font-size: 13px;
-      line-height: 1.72;
-    }
-
-    .stage-stats {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .stage-stat {
-      padding: 12px 12px 13px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .stage-stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .stage-stat strong {
-      display: block;
-      margin-top: 6px;
-      font-size: 14px;
-      letter-spacing: -0.03em;
-      color: var(--text);
-      line-height: 1.35;
+      display: none;
     }
 
     .stage-footer {
       position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
@@ -483,8 +419,8 @@
     }
 
     .doctor-chip {
-      max-width: 420px;
-      padding: 13px 15px;
+      max-width: 360px;
+      padding: 12px 14px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(10, 16, 24, 0.62);
@@ -509,8 +445,8 @@
     }
 
     .data-pill {
-      min-width: 140px;
-      padding: 11px 13px;
+      min-width: 132px;
+      padding: 10px 12px;
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(10, 16, 24, 0.58);
@@ -562,26 +498,26 @@
     }
 
     .chat-badge {
-      min-width: 108px;
+      min-width: 96px;
       padding: 8px 10px;
       border-radius: 18px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.04);
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .chat-badge strong {
       display: block;
-      margin-top: 4px;
+      margin-top: 3px;
       color: var(--text);
-      font-size: 15px;
+      font-size: 14px;
       letter-spacing: -0.03em;
     }
 
     textarea {
       width: 100%;
-      min-height: 96px;
+      min-height: 92px;
       resize: none;
       border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -639,8 +575,8 @@
 
     .voice-status {
       color: var(--muted);
-      font-size: 11px;
-      line-height: 1.55;
+      font-size: 10px;
+      line-height: 1.45;
     }
 
     .response-stack {
@@ -774,16 +710,13 @@
       50% { opacity: 1; transform: scale(1.08); }
     }
 
-    @media (max-width: 1180px) {
+    @media (max-width: 1100px) {
       .workspace {
         grid-template-columns: 1fr;
         overflow: auto;
       }
       .chat-card {
         min-height: 780px;
-      }
-      .stage-side-panel {
-        width: 300px;
       }
     }
 
@@ -800,14 +733,6 @@
       }
       .stage-header {
         flex-direction: column;
-      }
-      .stage-side-panel {
-        position: absolute;
-        top: auto;
-        right: 18px;
-        left: 18px;
-        bottom: 150px;
-        width: auto;
       }
       .hud {
         justify-items: start;
@@ -858,30 +783,6 @@
 
         <div class="video-stage" id="videoStage"></div>
 
-        <div class="stage-side-panel">
-          <div class="label">AI Medical Core</div>
-          <h3>图文与语音问答在线，视频分身接口保持待命。</h3>
-          <p>把主舞台尽量留给未来的实时画面与字幕层，右侧只承载提问和回答。当前阶段先让内容表达、医患沟通与产品气质站住。</p>
-          <div class="stage-stats">
-            <div class="stage-stat">
-              <span>当前形态</span>
-              <strong>主视窗待机</strong>
-            </div>
-            <div class="stage-stat">
-              <span>语音能力</span>
-              <strong>浏览器原生</strong>
-            </div>
-            <div class="stage-stat">
-              <span>后续升级</span>
-              <strong>实时分身</strong>
-            </div>
-            <div class="stage-stat">
-              <span>问答边界</span>
-              <strong>就医参考</strong>
-            </div>
-          </div>
-        </div>
-
         <div class="stage-footer">
           <div class="doctor-chip">
             <strong id="doctorState">李勇</strong>
@@ -923,7 +824,7 @@
             <div id="answer" class="output muted">尚未生成回答。</div>
           </div>
 
-          <details class="details-card" open>
+          <details class="details-card">
             <summary>公开职业信息</summary>
             <div class="detail-content output" id="doctorBio">读取中...</div>
           </details>
