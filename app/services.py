@@ -6,7 +6,6 @@ import httpx
 from openai import OpenAI
 
 from .config import settings
-from .db import search_memory_entries
 from .knowledge import load_doctor_profile, search_knowledge
 from .prompts import build_system_prompt, build_user_prompt
 
@@ -19,32 +18,24 @@ class ChatService:
     def answer(self, message: str, conversation: list[dict[str, str]]) -> dict[str, Any]:
         if self.client is None:
             raise RuntimeError("OPENAI_API_KEY 未配置。")
-        knowledge_hits = search_knowledge(message)
-        memory_hits = search_memory_entries(message)
 
-        knowledge_snippets = [hit.snippet for hit in knowledge_hits]
-        memory_snippets = [
-            f"{hit.title}：{hit.content}"
-            for hit in memory_hits
-        ]
-        citations = [hit.source for hit in knowledge_hits] + [
-            f"doctor-memory:{hit.entry_id}:{hit.kind}"
-            for hit in memory_hits
-        ]
+        hits = search_knowledge(message)
+        snippets = [hit.snippet for hit in hits]
+        citations = [hit.source for hit in hits]
 
         response = self.client.responses.create(
             model=settings.openai_model,
             input=[
                 {"role": "system", "content": build_system_prompt(self.profile)},
                 *conversation,
-                {"role": "user", "content": build_user_prompt(message, knowledge_snippets, memory_snippets)},
+                {"role": "user", "content": build_user_prompt(message, snippets)},
             ],
         )
 
         return {
             "answer": response.output_text.strip(),
             "citations": citations,
-            "context_snippets": [*memory_snippets, *knowledge_snippets],
+            "context_snippets": snippets,
         }
 
 

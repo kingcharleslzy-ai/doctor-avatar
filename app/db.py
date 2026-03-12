@@ -3,42 +3,13 @@ from __future__ import annotations
 import json
 import sqlite3
 from contextlib import closing
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-import re
 from typing import Iterable
 
 import yaml
 
 from .config import KNOWLEDGE_DIR, settings
-
-
-WORD_RE = re.compile(r"[\w\u4e00-\u9fff]+")
-
-
-def _tokenize(text: str) -> set[str]:
-    tokens: set[str] = set()
-    for token in WORD_RE.findall(text.lower()):
-        token = token.strip()
-        if not token:
-            continue
-        tokens.add(token)
-        if any("\u4e00" <= ch <= "\u9fff" for ch in token) and len(token) > 1:
-            for idx in range(len(token) - 1):
-                tokens.add(token[idx: idx + 2])
-    return tokens
-
-
-@dataclass
-class MemorySearchHit:
-    entry_id: int
-    kind: str
-    title: str
-    content: str
-    source: str
-    score: float
-    tags: list[str]
 
 
 def _db_path() -> Path:
@@ -195,27 +166,6 @@ def bootstrap_memory_if_empty() -> None:
                 importance=1.0,
             )
 
-        for path in sorted(KNOWLEDGE_DIR.glob("*.md")):
-            content = path.read_text(encoding="utf-8")
-            sections = [s.strip() for s in content.split("\n##") if s.strip()]
-            for section in sections:
-                lines = [line.strip() for line in section.splitlines() if line.strip()]
-                if not lines:
-                    continue
-                title = lines[0].lstrip("# ").strip()
-                body = "\n".join(lines[1:]).strip()
-                if not body:
-                    continue
-                _insert_seed_entry(
-                    conn,
-                    kind="knowledge_seed",
-                    title=title,
-                    content=body,
-                    tags=focus_tags,
-                    source=path.name,
-                    importance=0.9,
-                )
-
         conn.commit()
 
 
@@ -289,46 +239,6 @@ def create_memory_entry(
 
     return _row_to_dict(row)
 
-
-def search_memory_entries(query: str, top_k: int = 4) -> list[MemorySearchHit]:
-    tokens = _tokenize(query)
-    if not tokens:
-        return []
-
-    rows = list_memory_entries(limit=500)
-    hits: list[MemorySearchHit] = []
-    for row in rows:
-        haystack = " ".join(
-            [
-                row["title"],
-                row["content"],
-                " ".join(row["tags"]),
-                row["kind"],
-            ]
-        ).lower()
-        haystack_tokens = _tokenize(haystack)
-        score = float(row["importance"])
-        overlap = tokens & haystack_tokens
-        if overlap:
-            score += float(len(overlap))
-        if query.strip() and query.strip().lower() in haystack:
-            score += 1.2
-        if score <= float(row["importance"]):
-            continue
-        hits.append(
-            MemorySearchHit(
-                entry_id=row["id"],
-                kind=row["kind"],
-                title=row["title"],
-                content=row["content"],
-                source=row["source"],
-                score=score,
-                tags=row["tags"],
-            )
-        )
-
-    hits.sort(key=lambda item: item.score, reverse=True)
-    return hits[:top_k]
 
 
 def _row_to_dict(row: sqlite3.Row) -> dict:

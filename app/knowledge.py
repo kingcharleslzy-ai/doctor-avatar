@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -12,7 +13,7 @@ from .config import KNOWLEDGE_DIR, settings
 
 WORD_RE = re.compile(r"[\w\u4e00-\u9fff]+")
 
-# 进程内索引缓存，只在首次查询时构建一次
+# 进程内索引缓存，首次请求时构建
 _index: list[dict] | None = None
 _index_ready = False
 
@@ -35,7 +36,7 @@ def load_doctor_profile() -> dict:
     return yaml.safe_load(profile_path.read_text(encoding="utf-8")) or {}
 
 
-def _load_chunks() -> list[dict[str, str]]:
+def _load_file_chunks() -> list[dict[str, str]]:
     chunks = []
     for path in sorted(KNOWLEDGE_DIR.glob("*.md")):
         content = path.read_text(encoding="utf-8")
@@ -43,6 +44,35 @@ def _load_chunks() -> list[dict[str, str]]:
         for section in sections:
             chunks.append({"source": path.name, "text": section})
     return chunks
+
+
+def _load_db_chunks() -> list[dict[str, str]]:
+    """从 SQLite doctor_memory 读取条目作为检索块。"""
+    try:
+        from .db import list_memory_entries
+        entries = list_memory_entries(limit=500)
+        return [
+            {
+                "source": f"memory:{e['kind']}",
+                "text": f"{e['title']}：{e['content']}",
+            }
+            for e in entries
+        ]
+    except Exception:
+        return []
+
+
+def _sqlite_fingerprint() -> str:
+    """SQLite 内容指纹：条数 + 最新更新时间，用于缓存失效判断。"""
+    try:
+        from .db import _connect
+        with closing(_connect()) as conn:
+            row = conn.execute(
+                "SELECT COUNT(*), MAX(updated_at) FROM doctor_memory_entries"
+            ).fetchone()
+            return f"{row[0]}:{row[1] or ''}"
+    except Exception:
+        return ""
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -58,7 +88,6 @@ def _embed(texts: list[str], client) -> list[list[float]]:
 
 
 def _cache_file() -> Path:
-    """返回缓存文件路径。生产环境通过 EMBED_CACHE_DIR 指向持久卷，本地开发默认存在 knowledge/ 内。"""
     cache_dir = settings.embed_cache_dir
     if cache_dir:
         p = Path(cache_dir)
@@ -67,52 +96,65 @@ def _cache_file() -> Path:
     return KNOWLEDGE_DIR / ".embed_cache.json"
 
 
+def invalidate_index() -> None:
+    """手动失效进程内索引缓存（新增 DB 条目后调用）。"""
+    global _index, _index_ready
+    _index = None
+    _index_ready = False
+
+
 def _get_index(client) -> list[dict] | None:
     global _index, _index_ready
     if _index_ready:
         return _index
 
-    chunks = _load_chunks()
-    if not chunks:
+    file_chunks = _load_file_chunks()
+    db_chunks = _load_db_chunks()
+    all_chunks = file_chunks + db_chunks
+
+    if not all_chunks:
         _index_ready = True
         return None
 
-    chunk_texts = [c["text"] for c in chunks]
+    chunk_texts = [c["text"] for c in all_chunks]
+    sqlite_fp = _sqlite_fingerprint()
     cache_file = _cache_file()
 
-    # 优先读磁盘缓存（知识库未变动时跳过 API 调用）
+    # 磁盘缓存命中：内容 + SQLite 指纹均未变则直接用
     if cache_file.exists():
         try:
             cache = json.loads(cache_file.read_text(encoding="utf-8"))
-            if cache.get("texts") == chunk_texts:
+            if cache.get("texts") == chunk_texts and cache.get("sqlite_fp") == sqlite_fp:
                 _index = cache["entries"]
                 _index_ready = True
                 return _index
         except Exception:
             pass
 
-    # 构建新索引并写入磁盘缓存
+    # 调 OpenAI 重建索引
     embeddings = _embed(chunk_texts, client)
     _index = [
         {"source": c["source"], "text": c["text"], "embedding": emb}
-        for c, emb in zip(chunks, embeddings)
+        for c, emb in zip(all_chunks, embeddings)
     ]
     cache_file.write_text(
-        json.dumps({"texts": chunk_texts, "entries": _index}, ensure_ascii=False),
+        json.dumps(
+            {"texts": chunk_texts, "sqlite_fp": sqlite_fp, "entries": _index},
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
     _index_ready = True
     return _index
 
 
-def search_knowledge(query: str, top_k: int = 3) -> list[KnowledgeHit]:
-    """语义检索知识库。有 OpenAI key 时用 embedding，否则降级为 token 匹配。"""
+def search_knowledge(query: str, top_k: int = 5) -> list[KnowledgeHit]:
+    """统一语义检索：知识库文件 + SQLite 医生想法，失败时降级为关键词匹配。"""
     if not settings.openai_api_key:
         return _token_search(query, top_k)
 
     try:
         from openai import OpenAI
-
         client = OpenAI(api_key=settings.openai_api_key)
         index = _get_index(client)
         if index is None:
@@ -122,7 +164,7 @@ def search_knowledge(query: str, top_k: int = 3) -> list[KnowledgeHit]:
         hits = [
             KnowledgeHit(
                 source=entry["source"],
-                snippet=re.sub(r"\s+", " ", entry["text"])[:280],
+                snippet=re.sub(r"\s+", " ", entry["text"])[:300],
                 score=_cosine(query_emb, entry["embedding"]),
             )
             for entry in index
@@ -130,26 +172,34 @@ def search_knowledge(query: str, top_k: int = 3) -> list[KnowledgeHit]:
         hits.sort(key=lambda h: h.score, reverse=True)
         return hits[:top_k]
     except Exception:
-        # Embedding 接口偶发失败时，退回关键词检索，避免直接把问答打成 500。
         return _token_search(query, top_k)
 
 
 def _token_search(query: str, top_k: int) -> list[KnowledgeHit]:
-    """降级方案：基于 token 重叠的关键词匹配。"""
+    """降级方案：关键词匹配，覆盖文件和 SQLite 两个来源。"""
     query_tokens = _tokenize(query)
     hits: list[KnowledgeHit] = []
+
     for path in sorted(KNOWLEDGE_DIR.glob("*.md")):
         content = path.read_text(encoding="utf-8")
         sections = [s.strip() for s in re.split(r"\n##+\s+", content) if s.strip()]
         for section in sections:
             score = len(query_tokens & _tokenize(section))
-            if score == 0:
-                continue
+            if score:
+                hits.append(KnowledgeHit(
+                    source=path.name,
+                    snippet=re.sub(r"\s+", " ", section)[:300],
+                    score=float(score),
+                ))
+
+    for chunk in _load_db_chunks():
+        score = len(query_tokens & _tokenize(chunk["text"]))
+        if score:
             hits.append(KnowledgeHit(
-                source=path.name,
-                snippet=re.sub(r"\s+", " ", section)[:280],
+                source=chunk["source"],
+                snippet=re.sub(r"\s+", " ", chunk["text"])[:300],
                 score=float(score),
             ))
+
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:top_k]
-
