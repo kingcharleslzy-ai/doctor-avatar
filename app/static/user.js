@@ -80,16 +80,62 @@ function profileDepartment() {
   return currentProfile().department || "耳鼻咽喉科";
 }
 
+function avatarSvg() {
+  return `<svg viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block">
+    <defs>
+      <radialGradient id="avH" cx="38%" cy="30%" r="62%"><stop offset="0%" stop-color="#dce9f0"/><stop offset="100%" stop-color="#96afc0"/></radialGradient>
+      <radialGradient id="avC" cx="28%" cy="20%" r="72%"><stop offset="0%" stop-color="#edf4f8"/><stop offset="100%" stop-color="#bccedd"/></radialGradient>
+      <linearGradient id="avR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7ce0d7"/><stop offset="100%" stop-color="#4b7cff"/></linearGradient>
+      <filter id="avG"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <circle cx="180" cy="175" r="90" fill="none" stroke="url(#avR)" stroke-width="1.2" opacity="0.3"><animate attributeName="r" values="88;102;88" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.08;0.3" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="180" cy="175" r="112" fill="none" stroke="url(#avR)" stroke-width="0.7" opacity="0.14"><animate attributeName="r" values="110;128;110" dur="3s" begin="0.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.14;0.03;0.14" dur="3s" begin="0.5s" repeatCount="indefinite"/></circle>
+    <path d="M93 318 C88 278 108 255 138 248 L162 316 L198 316 L222 248 C252 255 272 278 267 318 L267 450 L93 450Z" fill="url(#avC)"/>
+    <path d="M138 248 L162 316 L162 450 L110 450 L110 295 Q116 265 138 248Z" fill="rgba(0,0,0,0.055)"/>
+    <path d="M222 248 L198 316 L198 450 L250 450 L250 295 Q244 265 222 248Z" fill="rgba(0,0,0,0.055)"/>
+    <path d="M154 252 L162 316 L198 316 L206 252 L180 268Z" fill="rgba(255,255,255,0.3)"/>
+    <rect x="165" y="208" width="30" height="46" rx="13" fill="url(#avH)"/>
+    <ellipse cx="180" cy="170" rx="55" ry="59" fill="url(#avH)"/>
+    <ellipse cx="162" cy="172" rx="18" ry="50" fill="rgba(0,0,0,0.05)"/>
+    <path d="M125 158 Q127 104 180 99 Q233 104 235 158 Q226 124 180 122 Q134 124 125 158Z" fill="#22303e" opacity="0.88"/>
+    <path d="M144 111 Q170 103 196 106" fill="none" stroke="rgba(255,255,255,0.13)" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="125" cy="173" rx="10" ry="14" fill="url(#avH)"/>
+    <ellipse cx="235" cy="173" rx="10" ry="14" fill="url(#avH)"/>
+    <ellipse cx="160" cy="165" rx="9" ry="10" fill="#1b2b3a"/>
+    <ellipse cx="200" cy="165" rx="9" ry="10" fill="#1b2b3a"/>
+    <circle cx="160" cy="165" r="5" fill="#2d4868"/>
+    <circle cx="200" cy="165" r="5" fill="#2d4868"/>
+    <circle cx="162" cy="162" r="2.8" fill="white" opacity="0.88"/>
+    <circle cx="202" cy="162" r="2.8" fill="white" opacity="0.88"/>
+    <path d="M150 151 Q160 147 170 150" fill="none" stroke="#22303e" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M190 150 Q200 147 210 151" fill="none" stroke="#22303e" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M176 177 Q180 186 184 177" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M166 192 Q180 202 194 192" fill="none" stroke="rgba(50,75,90,0.48)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M148 258 Q136 276 134 298 Q132 316 143 326 Q155 338 167 326 Q179 314 175 298" fill="none" stroke="#7ce0d7" stroke-width="4" stroke-linecap="round" filter="url(#avG)"/>
+    <circle cx="175" cy="296" r="10" fill="none" stroke="#7ce0d7" stroke-width="3.5" filter="url(#avG)"/>
+    <circle cx="175" cy="296" r="4.5" fill="#7ce0d7" opacity="0.38"/>
+    <path d="M148 258 Q150 244 158 240 Q166 236 170 244" fill="none" stroke="#7ce0d7" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="148" cy="258" r="4.5" fill="#7ce0d7" opacity="0.62"/>
+    <circle cx="170" cy="244" r="4.5" fill="#7ce0d7" opacity="0.62"/>
+    <rect x="204" y="276" width="40" height="34" rx="7" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2"/>
+    <rect x="219" y="283" width="10" height="20" rx="3" fill="#7ce0d7" opacity="0.76"/>
+    <rect x="213" y="289" width="22" height="8" rx="3" fill="#7ce0d7" opacity="0.76"/>
+    <circle cx="95" cy="138" r="3.5" fill="#7ce0d7" opacity="0.5" filter="url(#avG)"><animate attributeName="cy" values="138;124;138" dur="2.7s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0.14;0.5" dur="2.7s" repeatCount="indefinite"/></circle>
+    <circle cx="270" cy="158" r="2.5" fill="#4b7cff" opacity="0.44" filter="url(#avG)"><animate attributeName="cy" values="158;143;158" dur="3.3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.44;0.11;0.44" dur="3.3s" repeatCount="indefinite"/></circle>
+    <circle cx="76" cy="245" r="3" fill="#7ce0d7" opacity="0.36"><animate attributeName="cy" values="245;229;245" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.36;0.09;0.36" dur="3s" repeatCount="indefinite"/></circle>
+    <circle cx="284" cy="224" r="2" fill="#a3f1ec" opacity="0.4"><animate attributeName="cy" values="224;208;224" dur="3.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0.1;0.4" dur="3.9s" repeatCount="indefinite"/></circle>
+    <circle cx="314" cy="310" r="2.5" fill="#4b7cff" opacity="0.26"><animate attributeName="cy" values="310;294;310" dur="2.9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.26;0.06;0.26" dur="2.9s" repeatCount="indefinite"/></circle>
+  </svg>`;
+}
+
 function desktopPlaceholderMarkup() {
   return `
-    <div class="desktop-placeholder">
-      <div class="portrait-panel">
-        <div class="portrait-frame">
-          <div class="portrait-photo-shell">
-            <img class="portrait-photo" src="/static/doctor-liyong-official.jpg" alt="${profileName()}医生公开职业照" />
-          </div>
-          <div class="portrait-signal">视频通道待机</div>
-        </div>
+    <div class="avatar-wrap">
+      ${avatarSvg()}
+      <div class="avatar-info">
+        <div class="av-badge">AI AVATAR · STANDBY</div>
+        <div class="av-name">${profileName()}医生</div>
+        <div class="av-meta">${profileHospital()} · ${profileDepartment()} · ${(state.doctorProfile?.focus_areas || [])[0] || ""}</div>
       </div>
     </div>
   `;
@@ -97,12 +143,12 @@ function desktopPlaceholderMarkup() {
 
 function mobilePlaceholderMarkup() {
   return `
-    <div class="mobile-placeholder">
-      <div class="portrait-mobile">
-        <div class="badge">Doctor Visual</div>
-        <div class="name">${profileName()}</div>
-        <div class="meta">${profileTitle()}<br />${profileHospital()} · ${profileDepartment()}</div>
-        <div class="note">当前先用医生主视觉卡片承接移动端入口。后续接回视频分身时，这里会直接切换成实时画面。</div>
+    <div class="avatar-wrap">
+      ${avatarSvg()}
+      <div class="avatar-info">
+        <div class="av-badge">AI AVATAR · STANDBY</div>
+        <div class="av-name">${profileName()}医生</div>
+        <div class="av-meta">${profileHospital()} · ${profileDepartment()}</div>
       </div>
     </div>
   `;
