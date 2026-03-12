@@ -17,7 +17,8 @@ COPY app ./app
 COPY knowledge ./knowledge
 
 RUN useradd -m -u 10001 appuser \
-    && chown -R appuser:appuser /app
+    && mkdir -p /app_cache /app_data \
+    && chown -R appuser:appuser /app /app_cache /app_data
 
 USER appuser
 

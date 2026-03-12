@@ -70,6 +70,13 @@ def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(cons
             detail="控制台认证已启用，但尚未配置 CONSOLE_USERNAME / CONSOLE_PASSWORD。",
         )
 
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="控制台认证失败。",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
     username_ok = secrets.compare_digest(credentials.username, settings.console_username)
     password_ok = secrets.compare_digest(credentials.password, settings.console_password)
 
@@ -296,9 +303,3 @@ async def liveavatar_keepalive(
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="控制台认证失败。",
-            headers={"WWW-Authenticate": "Basic"},
-        )

@@ -255,6 +255,11 @@ uvicorn app.main:app --reload
 - `app/prompts.py`：把“医生想法与口吻资料”单独注入提示词，不再和普通知识片段混成一层
 - `docker-compose.prod.yml`：新增数据库持久化卷，避免容器重建后资料丢失
 
+**数据库上线热修：修正容器写权限与控制台认证旁路**（by codex）
+
+- `Dockerfile`：预创建并授权 `/app_data` 与 `/app_cache`，避免生产容器因挂载卷不可写导致 SQLite 启动失败
+- `app/main.py`：修正 `CONSOLE_AUTH_MODE=off` 时的认证旁路逻辑，避免 `HTTPBasic` 先一步把无凭据请求拦掉
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗
