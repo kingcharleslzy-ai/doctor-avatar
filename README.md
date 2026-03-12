@@ -48,6 +48,8 @@ uvicorn app.main:app --reload
 
 - `CONSOLE_USERNAME`
 - `CONSOLE_PASSWORD`
+- `DOCTOR_MEMORY_DB_PATH`
+- `DOCTOR_MEMORY_BOOTSTRAP`
 
 如果你要保护公网控制台，这两个必须填写。
 
@@ -108,6 +110,20 @@ uvicorn app.main:app --reload
 
 用 `session_token` 延长当前 session 生命周期。
 
+### `GET /api/memory/entries`
+
+读取“医生想法资料库”里的条目。当前默认受控制台 Basic Auth 保护，适合内部维护。
+
+支持参数：
+
+- `kind`
+- `q`
+- `limit`
+
+### `POST /api/memory/entries`
+
+新增一条“医生想法资料”到 SQLite 资料库。适合后面逐步把你爸的口头表达、判断原则、沟通方式、临床偏好补进去。
+
 ## 当前前端能力
 
 用户端现在已经可以：
@@ -116,6 +132,31 @@ uvicorn app.main:app --reload
 - 按设备自动切换桌面版和手机版
 - 提供一个面向用户的文本提问入口
 - 保留视频分身入口与接口，但当前默认不启用高成本的实时视频链路
+
+## 医生想法资料数据库
+
+当前已经新增一层轻量数据库：
+
+- 默认使用 `SQLite`
+- 本地默认路径：`data/doctor_memory.db`
+- 生产环境通过 `DOCTOR_MEMORY_DB_PATH` 指向持久化卷
+- 首次启动会自动把：
+  - `doctor_profile.yaml`
+  - `common_faq.md`
+  - `style_examples.md`
+  的内容导入为第一批种子数据
+
+这层数据库的作用不是替代原来的知识文件，而是专门存：
+
+- 你爸的想法
+- 他的表达习惯
+- 临床沟通偏好
+- 一些你后面慢慢补充的经验规则
+
+当前问答链路已经会同时参考：
+
+- 静态知识库
+- 医生想法资料库
 
 控制台现在已经可以：
 
@@ -205,6 +246,14 @@ uvicorn app.main:app --reload
 - `app/templates/user_desktop.html`：把舞台右侧四宫格小卡片改成一组更轻的胶囊状态，减少 dashboard 感
 - `app/templates/user_desktop.html`：新增“快速提问”胶囊，让右侧提问舱在首屏更像真实入口，而不是一块空白聊天面板
 - `app/static/user.js`：接入快速提问交互，点击后直接填充并发送问题，提升首屏可用性
+
+**数据库上线：新增“医生想法资料库”SQLite 层**（by codex）
+
+- `app/db.py`：新增 SQLite 记忆层，负责初始化、首轮种子导入、条目新增、列表查询与检索
+- `app/main.py`：新增 `/api/memory/entries` 读写接口，并在启动时自动初始化数据库
+- `app/services.py`：聊天时同时检索静态知识库和“医生想法资料库”，让回答能用上你爸的想法资料
+- `app/prompts.py`：把“医生想法与口吻资料”单独注入提示词，不再和普通知识片段混成一层
+- `docker-compose.prod.yml`：新增数据库持久化卷，避免容器重建后资料丢失
 
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 

@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
     embed_cache_dir: str = Field(default="", alias="EMBED_CACHE_DIR")
+    doctor_memory_db_path: str = Field(default=str(BASE_DIR / "data" / "doctor_memory.db"), alias="DOCTOR_MEMORY_DB_PATH")
+    doctor_memory_bootstrap: bool = Field(default=True, alias="DOCTOR_MEMORY_BOOTSTRAP")
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

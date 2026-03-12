@@ -33,15 +33,25 @@ def build_system_prompt(profile: dict) -> str:
     ).strip()
 
 
-def build_user_prompt(message: str, knowledge_snippets: list[str]) -> str:
-    context = "\n\n".join(f"- {snippet}" for snippet in knowledge_snippets) or "- 当前没有命中知识库，请基于安全边界保守回答。"
+def build_user_prompt(message: str, knowledge_snippets: list[str], memory_snippets: list[str]) -> str:
+    knowledge_context = (
+        "\n\n".join(f"- {snippet}" for snippet in knowledge_snippets)
+        or "- 当前没有命中静态知识库，请基于安全边界保守回答。"
+    )
+    memory_context = (
+        "\n\n".join(f"- {snippet}" for snippet in memory_snippets)
+        or "- 当前没有命中医生想法/口吻资料。"
+    )
     return dedent(
         f"""
         用户问题：
         {message}
 
-        可用知识片段：
-        {context}
+        可用静态知识片段：
+        {knowledge_context}
+
+        医生想法与口吻资料：
+        {memory_context}
 
         请先直接回答用户，再在末尾补一行：`提醒：以上内容仅供健康科普与就医参考，不替代面诊。`
         """

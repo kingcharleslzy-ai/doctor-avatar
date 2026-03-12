@@ -8,3 +8,6 @@ knowledge/.embed_cache.json
 app/build_meta.json
 .playwright-cli/
 output/playwright/
+data/*.db
+data/*.sqlite
+data/*.sqlite3

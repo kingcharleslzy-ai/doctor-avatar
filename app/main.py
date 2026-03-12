@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .config import settings
+from .db import create_memory_entry, init_memory_db, list_memory_entries
 from .knowledge import load_doctor_profile
 from .models import (
     ChatRequest,
@@ -18,6 +19,8 @@ from .models import (
     LiveAvatarSessionRequest,
     LiveAvatarStartRequest,
     LiveAvatarTokenResponse,
+    MemoryEntryCreate,
+    MemoryEntryResponse,
 )
 from .services import ChatService, HeyGenService
 
@@ -28,7 +31,7 @@ app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
 doctor_profile = load_doctor_profile()
-console_auth = HTTPBasic()
+console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
 
 
@@ -57,7 +60,7 @@ def resolve_user_template(request: Request) -> str:
     return "user_desktop.html"
 
 
-def require_console_auth(credentials: HTTPBasicCredentials = Depends(console_auth)) -> str:
+def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(console_auth)) -> str:
     if settings.console_auth_mode == "off":
         return "console-auth-disabled"
 
@@ -103,6 +106,11 @@ def load_build_meta() -> dict[str, str]:
     }
 
 
+@app.on_event("startup")
+def startup() -> None:
+    init_memory_db()
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -111,11 +119,17 @@ def health() -> dict[str, str]:
 @app.get("/api/app-config")
 def app_config() -> dict[str, object]:
     build_meta = load_build_meta()
+    memory_entries = list_memory_entries(limit=1)
     return {
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
         "video_avatar_enabled": settings.enable_video_avatar,
         "runtime": build_meta,
+        "doctor_memory": {
+            "db_path": settings.doctor_memory_db_path,
+            "bootstrap_enabled": settings.doctor_memory_bootstrap,
+            "has_entries": bool(memory_entries),
+        },
         "doctor": {
             "name": doctor_profile.get("name"),
             "title": doctor_profile.get("title"),
@@ -153,6 +167,30 @@ def public_doctor_profile() -> dict[str, object]:
         "telephone": doctor_profile.get("telephone"),
         "official_sources": doctor_profile.get("official_sources", []),
     }
+
+
+@app.get("/api/memory/entries", response_model=list[MemoryEntryResponse])
+def memory_entries(
+    kind: str | None = None,
+    q: str | None = None,
+    limit: int = 100,
+    _: str = Depends(require_console_auth),
+) -> list[MemoryEntryResponse]:
+    rows = list_memory_entries(kind=kind, query=q, limit=limit)
+    return [MemoryEntryResponse(**row) for row in rows]
+
+
+@app.post("/api/memory/entries", response_model=MemoryEntryResponse)
+def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_auth)) -> MemoryEntryResponse:
+    row = create_memory_entry(
+        kind=payload.kind,
+        title=payload.title,
+        content=payload.content,
+        tags=payload.tags,
+        source=payload.source,
+        importance=payload.importance,
+    )
+    return MemoryEntryResponse(**row)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -258,3 +296,9 @@ async def liveavatar_keepalive(
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="控制台认证失败。",
+            headers={"WWW-Authenticate": "Basic"},
+        )

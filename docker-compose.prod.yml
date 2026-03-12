@@ -8,8 +8,10 @@ services:
       - .env
     environment:
       - EMBED_CACHE_DIR=/app_cache
+      - DOCTOR_MEMORY_DB_PATH=/app_data/doctor_memory.db
     volumes:
       - embed_cache:/app_cache
+      - doctor_memory:/app_data
     expose:
       - "8000"
     networks:
@@ -42,3 +44,4 @@ networks:
 
 volumes:
   embed_cache:
+  doctor_memory:
