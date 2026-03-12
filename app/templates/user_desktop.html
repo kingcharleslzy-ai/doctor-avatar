@@ -4,1043 +4,391 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>李勇医生 AI 医疗助手</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%2315213a'/%3E%3Cstop offset='1' stop-color='%233b64ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Ctext x='32' y='39' font-size='25' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'%3ELY%3C/text%3E%3C/svg%3E" />
   <script defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
-      --bg: #060b12;
-      --surface: rgba(11, 16, 26, 0.72);
-      --surface-strong: rgba(13, 20, 31, 0.92);
-      --surface-soft: rgba(255, 255, 255, 0.05);
-      --line: rgba(153, 192, 255, 0.12);
-      --line-strong: rgba(124, 224, 215, 0.22);
-      --text: #edf4ff;
-      --muted: #93a6bf;
-      --accent: #7ce0d7;
-      --accent-2: #4b7cff;
-      --accent-3: #a7d3ff;
-      --warning-bg: rgba(214, 143, 63, 0.1);
-      --warning-line: rgba(214, 143, 63, 0.18);
-      --shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
-      --radius-xl: 30px;
-      --radius-lg: 24px;
-      --radius-md: 18px;
+      --bg: #f5f6f8;
+      --surface: rgba(255,255,255,0.92);
+      --line: rgba(17,24,39,0.08);
+      --text: #111824;
+      --muted: #61707d;
+      --accent: #0f766e;
+      --ai: #215dff;
+      --warning-bg: rgba(255,246,234,0.96);
+      --warning-line: rgba(193,123,47,0.18);
+      --shadow: 0 8px 28px rgba(15,23,42,0.09);
     }
-
     * { box-sizing: border-box; }
-
-    html, body {
-      height: 100%;
-      overflow: hidden;
-    }
-
+    html, body { height: 100%; margin: 0; overflow: hidden; }
     body {
-      margin: 0;
       color: var(--text);
       font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
-      background:
-        radial-gradient(circle at 10% 8%, rgba(124, 224, 215, 0.16), transparent 18%),
-        radial-gradient(circle at 82% 10%, rgba(75, 124, 255, 0.15), transparent 20%),
-        radial-gradient(circle at 50% 100%, rgba(22, 41, 78, 0.5), transparent 42%),
-        linear-gradient(180deg, #081019 0%, #04070d 100%);
+      background: linear-gradient(180deg, #fafbfd 0%, #eef2f5 100%);
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
     }
 
+    /* ── 布局 ── */
     main {
-      max-width: 1680px;
-      margin: 0 auto;
       height: 100vh;
       padding: 12px;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       gap: 12px;
-      overflow: hidden;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) 380px;
+      gap: 12px;
+      min-height: 0;
     }
 
-    .topbar,
-    .workspace,
-    .chat-card,
-    .answer-card,
-    .details-card {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      backdrop-filter: blur(20px);
-      box-shadow: var(--shadow);
-    }
-
+    /* ── 顶栏 ── */
     .topbar {
-      border-radius: 24px;
       padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 14px;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
-    }
-
-    .brand-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 15px;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-      background:
-        radial-gradient(circle at 30% 25%, rgba(167, 211, 255, 0.45), transparent 36%),
-        linear-gradient(135deg, #14213a 0%, #2f53ff 100%);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      color: #fff; font-weight: 700; font-size: 14px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--ai) 100%);
       flex-shrink: 0;
     }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 17px;
-      letter-spacing: -0.03em;
-    }
-
-    .brand p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
+    .brand h1 { margin: 0; font-size: 17px; letter-spacing: -0.02em; }
+    .brand p  { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .topbar-chips { display: flex; gap: 8px; }
     .top-chip {
-      padding: 9px 13px;
-      border-radius: 999px;
+      padding: 7px 12px; border-radius: 999px;
       border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--muted);
-      font-size: 11px;
-      white-space: nowrap;
+      background: rgba(255,255,255,0.7);
+      color: var(--muted); font-size: 11px;
     }
 
-    .top-chip.accent {
-      color: var(--accent-3);
-      border-color: rgba(75, 124, 255, 0.18);
-      background: rgba(75, 124, 255, 0.08);
-    }
-
-    .workspace {
-      border-radius: 32px;
-      padding: 12px;
+    /* ── 左侧：视频卡片 ── */
+    .video-card {
       display: grid;
-      grid-template-columns: minmax(0, 2.36fr) 344px;
-      gap: 12px;
-      min-height: 0;
+      grid-template-rows: minmax(0, 1fr) auto;
       overflow: hidden;
     }
-
-    .stage-card {
-      min-height: 0;
-      height: 100%;
-      border-radius: var(--radius-xl);
-      overflow: hidden;
-      position: relative;
-      border: 1px solid rgba(140, 180, 255, 0.1);
-      background:
-        radial-gradient(circle at 14% 16%, rgba(124, 224, 215, 0.2), transparent 16%),
-        radial-gradient(circle at 82% 10%, rgba(75, 124, 255, 0.2), transparent 18%),
-        linear-gradient(180deg, rgba(12, 18, 27, 0.96), rgba(7, 11, 18, 0.98));
-      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
-    }
-
-    .stage-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 82%);
-      pointer-events: none;
-      opacity: 0.55;
-    }
-
-    .stage-card::after {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      pointer-events: none;
-    }
-
-    .stage-header {
-      position: absolute;
-      top: 16px;
-      left: 18px;
-      right: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(124, 224, 215, 0.16);
-      background: rgba(124, 224, 215, 0.08);
-      color: var(--accent);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    .stage-copy {
-      max-width: 180px;
-    }
-
-    .stage-microcopy {
-      margin-top: 10px;
-      color: rgba(237, 244, 255, 0.58);
-      font-size: 10px;
-      line-height: 1.45;
-      letter-spacing: 0.04em;
-    }
-
-    .hud {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-      flex-wrap: wrap;
-      min-width: 0;
-    }
-
-    .hud-card {
-      min-width: 118px;
-      padding: 8px 10px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      color: var(--muted);
-      font-size: 9px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .hud-card strong {
-      display: block;
-      margin-top: 4px;
-      color: var(--text);
-      font-size: 13px;
-      letter-spacing: -0.03em;
-      text-transform: none;
-    }
-
     .video-stage {
-      position: absolute;
-      inset: 0;
+      position: relative;
       overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(124,226,218,0.2), transparent 22%),
+        radial-gradient(circle at 85% 10%, rgba(33,93,255,0.18), transparent 24%),
+        linear-gradient(180deg, #121a25 0%, #0a1118 100%);
     }
-
-    .video-stage > * {
-      width: 100%;
-      height: 100%;
+    .video-stage::after {
+      content: "";
+      position: absolute; inset: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      pointer-events: none;
     }
+    .video-stage > * { width: 100%; height: 100%; }
 
-    .desktop-placeholder {
-      position: absolute;
-      inset: 0;
-      padding: 78px 18px 18px;
+    /* 视频占位符 */
+    .video-placeholder {
+      position: absolute; inset: 0; padding: 20px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      color: rgba(240,247,249,0.96);
     }
-
     .portrait-panel {
-      height: 100%;
-      border-radius: 26px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      position: relative;
-      background:
-        radial-gradient(circle at 25% 12%, rgba(124, 224, 215, 0.16), transparent 26%),
-        radial-gradient(circle at 75% 14%, rgba(75, 124, 255, 0.18), transparent 28%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
-      padding: 16px;
-      display: flex;
-      align-items: flex-end;
+      border-radius: 18px; padding: 18px 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .portrait-panel .badge {
+      display: inline-flex; padding: 4px 10px; border-radius: 999px;
+      background: rgba(124,226,218,0.14); color: #a3f1ec;
+      border: 1px solid rgba(124,226,218,0.14);
+      font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .portrait-panel .name {
+      margin-top: 10px; font-size: 32px; font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+    .portrait-panel .meta {
+      margin-top: 4px; color: rgba(240,247,249,0.7);
+      line-height: 1.6; font-size: 13px;
     }
 
-    .portrait-frame {
-      width: 100%;
-      height: 100%;
-      min-height: 0;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background:
-        radial-gradient(circle at 20% 18%, rgba(124, 224, 215, 0.1), transparent 24%),
-        linear-gradient(180deg, rgba(8, 14, 22, 0.02), rgba(8, 14, 22, 0.52));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: stretch;
-      position: relative;
+    .video-bar {
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      border-top: 1px solid var(--line);
     }
-
-    .portrait-frame::after {
-      content: "";
-      position: absolute;
-      left: 8%;
-      right: 8%;
-      top: 18%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(124, 224, 215, 0.75), transparent);
-      filter: drop-shadow(0 0 12px rgba(124, 224, 215, 0.55));
-      animation: scanline 6s linear infinite;
-      opacity: 0.9;
+    .conn-status {
+      display: flex; align-items: center; gap: 7px;
+      color: var(--muted); font-size: 13px;
     }
-
-    .portrait-photo-shell {
-      position: absolute;
-      inset: 14px 26% 14px 14px;
-      border-radius: 26px;
-      overflow: hidden;
-      background:
-        linear-gradient(180deg, rgba(6, 10, 16, 0.08), rgba(6, 10, 16, 0.38)),
-        radial-gradient(circle at 70% 20%, rgba(167, 211, 255, 0.12), transparent 30%);
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-        0 40px 80px rgba(0, 0, 0, 0.35);
+    .conn-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #9ca3af; flex-shrink: 0;
+      transition: background 0.3s;
     }
+    .conn-dot.live { background: #22c55e; }
+    .video-actions { display: flex; gap: 8px; align-items: center; }
 
-    .portrait-photo-shell::before {
-      content: "";
-      position: absolute;
-      inset: auto auto 22px 24px;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(75, 124, 255, 0.24), transparent 72%);
-      filter: blur(6px);
-      pointer-events: none;
-      opacity: 0.9;
-    }
-
-    .portrait-photo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center 14%;
-      filter: saturate(0.92) contrast(1.04) brightness(0.96);
-      transform: scale(1.02);
-    }
-
-    .portrait-signal {
-      position: absolute;
-      top: 18px;
-      left: 18px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(10, 16, 24, 0.58);
-      color: rgba(237, 244, 255, 0.84);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      backdrop-filter: blur(18px);
-    }
-
-    .portrait-signal::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 14px rgba(124, 224, 215, 0.8);
-      animation: signalPulse 1.8s ease-in-out infinite;
-    }
-
-    .portrait-panel::after {
-      content: "";
-      position: absolute;
-      inset: auto 28px 22px auto;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(75, 124, 255, 0.18), transparent 68%);
-      filter: blur(8px);
-      pointer-events: none;
-    }
-
-    .stage-identity {
-      position: absolute;
-      right: 24px;
-      top: 120px;
-      width: min(30%, 284px);
-      padding: 18px 18px 16px;
-      border-radius: 24px;
-      background:
-        linear-gradient(180deg, rgba(18, 26, 40, 0.82), rgba(8, 13, 22, 0.86));
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.26);
-    }
-
-    .stage-identity-label {
-      color: var(--accent-3);
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .stage-identity h3 {
-      margin: 10px 0 6px;
-      font-size: 36px;
-      letter-spacing: -0.08em;
-      line-height: 0.98;
-    }
-
-    .stage-identity .meta {
-      color: rgba(237, 244, 255, 0.76);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .stage-identity .summary {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      color: rgba(237, 244, 255, 0.86);
-      font-size: 14px;
-      line-height: 1.65;
-      letter-spacing: -0.02em;
-    }
-
-    .identity-pills {
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .identity-pill {
-      padding: 8px 11px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      color: rgba(237, 244, 255, 0.76);
-      font-size: 11px;
-      line-height: 1;
-    }
-
-    .identity-note {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-      color: rgba(237, 244, 255, 0.62);
-      font-size: 12px;
-      line-height: 1.65;
-    }
-
-    .stage-footer {
-      position: absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 16px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: end;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .doctor-chip {
-      max-width: 360px;
-      padding: 11px 13px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(10, 16, 24, 0.62);
-      color: rgba(241, 247, 251, 0.86);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .doctor-chip strong {
-      display: block;
-      margin-bottom: 5px;
-      color: #fff;
-      font-size: 16px;
-      letter-spacing: -0.03em;
-    }
-
-    .data-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .data-pill {
-      min-width: 118px;
-      padding: 9px 10px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(10, 16, 24, 0.58);
-      color: var(--muted);
-      font-size: 9px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      pointer-events: auto;
-    }
-
-    .data-pill strong {
-      display: block;
-      margin-top: 6px;
-      color: var(--text);
-      font-size: 13px;
-      letter-spacing: -0.03em;
-      text-transform: none;
-    }
-
+    /* ── 右侧：聊天卡片 ── */
     .chat-card {
-      min-height: 0;
-      height: 100%;
-      border-radius: var(--radius-xl);
-      overflow: hidden;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto auto;
-      background:
-        linear-gradient(180deg, rgba(13, 19, 31, 0.94), rgba(7, 11, 19, 0.98)),
-        radial-gradient(circle at 0% 0%, rgba(75, 124, 255, 0.18), transparent 28%);
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      overflow: hidden;
     }
-
-    .chat-head {
-      padding: 16px 16px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .chat-head h3 {
-      margin: 0;
-      font-size: 20px;
-      letter-spacing: -0.05em;
-    }
-
-    .chat-head p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.6;
-      max-width: 190px;
-    }
-
-    .chat-badge {
-      min-width: 82px;
-      padding: 7px 9px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--muted);
-      font-size: 9px;
-      flex-shrink: 0;
-    }
-
-    .chat-badge strong {
-      display: block;
-      margin-top: 3px;
-      color: var(--text);
-      font-size: 13px;
-      letter-spacing: -0.03em;
-    }
-
     .chat-history {
-      min-height: 0;
-      overflow: auto;
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 16px;
       scroll-behavior: smooth;
     }
-
-    .msg-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .chat-history::-webkit-scrollbar { width: 6px; }
+    .chat-history::-webkit-scrollbar-thumb {
+      background: rgba(17,24,39,0.1); border-radius: 999px;
     }
-
-    .msg-row.user {
-      align-items: flex-end;
-    }
-
-    .msg-row.ai {
-      align-items: flex-start;
-    }
-
+    .msg-row { display: flex; flex-direction: column; }
+    .msg-row.user { align-items: flex-end; }
+    .msg-row.ai   { align-items: flex-start; }
     .ai-label {
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--accent);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;
     }
-
     .bubble {
-      max-width: 90%;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-size: 13px;
-      line-height: 1.68;
+      max-width: 85%; font-size: 14px; line-height: 1.72;
+      white-space: pre-wrap; word-break: break-word;
     }
-
     .msg-row.user .bubble {
-      padding: 12px 15px;
-      border-radius: 18px 18px 6px 18px;
-      background: linear-gradient(135deg, rgba(124, 224, 215, 0.92), rgba(75, 124, 255, 0.95));
-      color: #071019;
-      box-shadow: 0 12px 30px rgba(75, 124, 255, 0.18);
+      background: var(--text); color: #fff;
+      padding: 10px 15px;
+      border-radius: 18px 18px 4px 18px;
     }
-
     .msg-row.ai .bubble {
-      padding: 14px 15px;
-      border-radius: 18px 18px 18px 6px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      color: rgba(237, 244, 255, 0.92);
+      max-width: 100%; color: var(--text); padding: 0;
     }
-
     .typing-dots {
-      display: inline-flex;
-      gap: 6px;
-      padding: 12px 14px;
-      border-radius: 18px 18px 18px 6px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      display: inline-flex; gap: 5px;
+      padding: 10px 14px;
+      background: rgba(17,24,39,0.06);
+      border-radius: 18px 18px 18px 4px;
     }
-
     .typing-dots span {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--muted);
-      animation: tdot 1.2s infinite;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--muted); animation: tdot 1.2s infinite;
     }
-
     .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
     .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-    .chat-insights {
-      padding: 0 16px 12px;
-      display: grid;
-      gap: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .quick-prompts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 16px 12px;
-    }
-
-    .prompt-pill {
-      padding: 9px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      color: rgba(237, 244, 255, 0.82);
-      font-size: 11px;
-      line-height: 1.1;
-      cursor: pointer;
-    }
-
-    .prompt-pill:hover {
-      background: rgba(124, 224, 215, 0.1);
-      border-color: rgba(124, 224, 215, 0.16);
-      color: var(--text);
-    }
-
-    .insight-card {
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      background: rgba(255, 255, 255, 0.03);
-      padding: 0 12px;
-    }
-
-    .insight-card summary {
-      cursor: pointer;
-      list-style: none;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 48px;
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .insight-card summary::-webkit-details-marker { display: none; }
-
-    .insight-card summary::after {
-      content: "+";
-      color: var(--muted);
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    .insight-card[open] summary::after { content: "−"; }
-
-    .insight-body {
-      padding: 0 0 12px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.72;
-    }
-
-    .chat-footer {
-      padding: 0 16px 16px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .voice-status {
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.45;
-      min-height: 15px;
-    }
-
-    .input-shell {
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      padding: 8px 8px 8px 12px;
-      border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.04);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-    }
-
-    .chat-textarea {
-      flex: 1;
-      min-height: 22px;
-      max-height: 110px;
-      resize: none;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font: inherit;
-      font-size: 13px;
-      line-height: 1.55;
-      outline: none;
-      overflow-y: auto;
-    }
-
-    .chat-textarea::placeholder {
-      color: var(--muted);
-    }
-
-    .send-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, rgba(124, 224, 215, 0.96), rgba(75, 124, 255, 0.98));
-      color: #071019;
-      box-shadow: 0 12px 26px rgba(75, 124, 255, 0.22);
-      font-size: 17px;
-      font-weight: 700;
-      padding: 0;
-    }
-
-    .aux-row {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: 0;
-      border-radius: 999px;
-      padding: 9px 12px;
-      font: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
-    }
-
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: 0.6; cursor: wait; transform: none; }
-
-    .secondary {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: var(--text);
-    }
-
-    .danger {
-      background: rgba(165, 76, 76, 0.08);
-      border: 1px solid rgba(165, 76, 76, 0.12);
-      color: #ffb3b3;
-    }
-
-    .output {
-      white-space: pre-wrap;
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.82;
-    }
-
-    .muted { color: var(--muted); }
-
-    .detail-content {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.75;
-    }
-
-    .list {
-      margin: 0;
-      padding-left: 18px;
-      line-height: 1.78;
-    }
-
-    .links {
-      display: grid;
-      gap: 8px;
-    }
-
-    .links a {
-      color: var(--accent);
-      text-decoration: none;
-      word-break: break-word;
-    }
-
-    .links a:hover { text-decoration: underline; }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 11px;
-      border-radius: 999px;
-      border: 1px solid rgba(124, 224, 215, 0.18);
-      background: rgba(124, 224, 215, 0.08);
-      color: var(--accent);
-      font-size: 11px;
-      letter-spacing: 0.02em;
-    }
-
-    .chat-history::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .chat-history::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 999px;
-    }
-
-    @keyframes scanline {
-      0% { transform: translateY(0); opacity: 0; }
-      8% { opacity: 0.9; }
-      50% { opacity: 0.55; }
-      100% { transform: translateY(420px); opacity: 0; }
-    }
-
-    @keyframes orbitPulse {
-      0%, 100% { transform: scale(0.96); opacity: 0.7; }
-      50% { transform: scale(1.03); opacity: 1; }
-    }
-
-    @keyframes signalPulse {
-      0%, 100% { opacity: 0.65; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.08); }
-    }
-
     @keyframes tdot {
-      0%, 100% { transform: translateY(0); opacity: 0.4; }
-      50% { transform: translateY(-4px); opacity: 1; }
+      0%,100% { transform: translateY(0); opacity: 0.4; }
+      50%      { transform: translateY(-5px); opacity: 1; }
     }
 
-    @media (max-width: 1100px) {
-      .workspace {
-        grid-template-columns: 1fr;
-        overflow: auto;
-      }
-      .chat-card {
-        min-height: 780px;
-      }
+    /* 医生信息折叠 */
+    .details-section {
+      border-top: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .details-section summary {
+      padding: 13px 18px;
+      cursor: pointer; list-style: none;
+      font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+      display: flex; justify-content: space-between; align-items: center;
+      user-select: none;
+    }
+    .details-section summary::-webkit-details-marker { display: none; }
+    .details-section summary::after {
+      content: "›"; color: var(--muted); font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .details-section[open] summary::after { transform: rotate(90deg); }
+    .details-body {
+      padding: 0 18px 14px;
+      border-top: 1px solid var(--line);
+      display: grid; gap: 12px;
+      max-height: 220px; overflow-y: auto;
+    }
+    .notice {
+      padding: 10px 14px; border-radius: 14px;
+      background: var(--warning-bg); border: 1px solid var(--warning-line);
+      color: #7c5a2f; font-size: 12px; line-height: 1.8;
+    }
+    .output { font-size: 13px; line-height: 1.85; white-space: pre-wrap; }
+    .muted { color: var(--muted); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 5px 10px; border-radius: 999px;
+      background: rgba(255,255,255,0.88); border: 1px solid var(--line);
+      color: #33424f; font-size: 11px;
+    }
+    .list {
+      margin: 0; padding-left: 18px;
+      color: var(--muted); font-size: 13px; line-height: 1.85;
+    }
+    .links { display: grid; gap: 6px; }
+    .links a {
+      color: var(--accent); text-decoration: none;
+      font-size: 13px; word-break: break-word;
     }
 
-    @media (max-width: 960px) {
-      .topbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .topbar-right {
-        justify-content: flex-start;
-      }
-      .desktop-placeholder {
-        padding-top: 136px;
-      }
-      .stage-header {
-        flex-direction: column;
-      }
-      .hud {
-        justify-items: start;
-        width: 100%;
-      }
-      .stage-identity {
-        position: absolute;
-        inset: auto 18px 114px 18px;
-        width: auto;
-      }
-      .stage-footer {
-        grid-template-columns: 1fr;
-      }
-      .data-row {
-        justify-content: flex-start;
-      }
-      .actions {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    /* ── 输入区 ── */
+    .chat-footer {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--line);
+      display: grid; gap: 9px;
+    }
+    .voice-hint { font-size: 12px; color: var(--muted); min-height: 14px; }
+    .input-row {
+      display: flex; align-items: flex-end; gap: 8px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 8px 8px 8px 14px;
+      box-shadow: 0 2px 6px rgba(15,23,42,0.05);
+    }
+    .chat-textarea {
+      flex: 1; border: none; background: transparent;
+      color: var(--text); font: inherit;
+      font-size: 14px; line-height: 1.5;
+      resize: none; outline: none;
+      min-height: 22px; max-height: 110px; overflow-y: auto;
+    }
+    .chat-textarea::placeholder { color: var(--muted); }
+
+    /* ── 按钮 ── */
+    button {
+      border: 0; cursor: pointer; font: inherit;
+      transition: opacity 0.15s, transform 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active  { opacity: 0.72; transform: scale(0.96); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .send-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--text); color: #fff; border: none;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 18px; font-weight: 700;
+    }
+    .aux-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .aux-btn {
+      min-height: 34px; padding: 0 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid var(--line);
+      color: var(--muted); font-size: 12px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .video-btn {
+      background: rgba(33,93,255,0.1);
+      border: 1px solid rgba(33,93,255,0.2);
+      color: var(--ai);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px; font-weight: 500;
+      min-height: 36px;
+    }
+    .danger-aux {
+      color: #8f4141;
+      background: rgba(165,76,76,0.07);
+      border-color: rgba(165,76,76,0.14);
     }
   </style>
 </head>
 <body>
   <main>
-    <header class="topbar">
+    <!-- 顶栏 -->
+    <header class="card topbar">
       <div class="brand">
-        <div class="brand-mark">LY</div>
+        <div class="logo">LY</div>
         <div>
           <h1>李勇医生 AI 医疗助手</h1>
           <p id="brandSubtitle">杭州市第一人民医院 · 耳鼻咽喉科</p>
         </div>
       </div>
-      <div class="topbar-right">
-        <div class="top-chip accent">AI 医疗终端预览</div>
+      <div class="topbar-chips">
         <div class="top-chip">仅供健康科普与就医参考</div>
       </div>
     </header>
 
-    <section class="workspace">
-      <article class="stage-card">
-        <div class="stage-header">
-          <div class="stage-copy">
-            <div class="eyebrow">AI 临床主视窗</div>
-            <div class="stage-microcopy" id="heroDescription">左侧只保留主舞台和状态层，减少说明性 UI，把注意力留给医生形象与未来视频会话。</div>
-          </div>
-          <div class="hud">
-            <div class="hud-card">会话状态<strong id="connectionState">未启用</strong></div>
-            <div class="hud-card">当前模式<strong id="modeState">图文问答主流程</strong></div>
-            <div class="hud-card">专科范围<strong id="deptState">耳鼻咽喉科</strong></div>
+    <div class="workspace">
+      <!-- 左：视频 -->
+      <article class="card video-card">
+        <div class="video-stage" id="videoStage">
+          <div class="video-placeholder">
+            <div class="portrait-panel">
+              <div class="badge">AI AVATAR · STANDBY</div>
+              <div class="name" id="doctorState">李勇医生</div>
+              <div class="meta" id="heroDescription">
+                <span id="hospitalValue">杭州市第一人民医院</span> · 耳鼻咽喉科<br>
+                <span id="focusPrimary">鼻科微创与头颈肿瘤</span>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div class="video-stage" id="videoStage"></div>
-
-        <div class="stage-identity">
-          <div class="stage-identity-label">医生终端</div>
-          <h3 id="heroTitle">李勇医生</h3>
-          <div class="meta" id="brandMeta">杭州市第一人民医院 · 耳鼻咽喉科</div>
-          <div class="summary" id="heroSummary">以鼻科微创、头颈肿瘤综合诊疗与规范化耳鼻咽喉疾病管理为核心方向。</div>
-          <div class="identity-pills">
-            <div class="identity-pill">主视窗待机</div>
-            <div class="identity-pill">浏览器语音</div>
-            <div class="identity-pill">实时分身预留</div>
-            <div class="identity-pill" id="focusPrimaryCard">鼻科微创与头颈肿瘤</div>
+        <div class="video-bar">
+          <div class="conn-status">
+            <span class="conn-dot" id="connDot"></span>
+            <span id="connectionState">未启用</span>
           </div>
-          <div class="identity-note" id="identityNote">当前优先保留大画面与低干扰布局，后续视频分身与字幕层会直接在这里接入。</div>
-        </div>
-
-        <div class="stage-footer">
-          <div class="doctor-chip">
-            <strong id="doctorState">李勇</strong>
-            <div id="clinicNote">提醒：本页面仅提供健康科普、专科方向说明与就医建议，不提供正式诊断和个体化处方。</div>
-          </div>
-          <div class="data-row">
-            <div class="data-pill">医院<strong id="hospitalValue">杭州市第一人民医院</strong></div>
-            <div class="data-pill">重点方向<strong id="focusPrimary">鼻科微创与头颈肿瘤</strong></div>
+          <div class="video-actions">
+            <button id="keepAliveBtn" class="aux-btn" style="display:none">保持会话</button>
+            <button id="disconnectBtn" class="aux-btn danger-aux" style="display:none">断开</button>
+            <button id="startConsultBtn" class="video-btn">视频分身</button>
           </div>
         </div>
       </article>
 
-      <aside class="chat-card">
-        <div class="chat-head">
-          <div>
-            <h3>提问舱</h3>
-            <p>只保留会话、资料与少量动作。</p>
-          </div>
-          <div class="chat-badge">医生<strong>李勇</strong></div>
-        </div>
-
+      <!-- 右：聊天 -->
+      <aside class="card chat-card">
         <div id="chatHistory" class="chat-history">
           <div class="msg-row ai">
             <div class="ai-label">AI 医疗助手</div>
-            <div class="bubble">您好，我是李勇医生的 AI 医疗助手。当前阶段以耳鼻咽喉科常见问题答疑、就医建议和公开职业信息说明为主。您可以直接开始提问。</div>
+            <div class="bubble">您好，我是李勇医生的 AI 助手，专注耳鼻咽喉科常见问题的健康科普与就医建议。请问有什么可以帮您？</div>
           </div>
         </div>
 
-        <div class="quick-prompts" id="quickPrompts">
-          <button class="prompt-pill" data-question="慢性鼻炎反复发作，通常需要先做哪些检查？">慢性鼻炎需要做哪些检查？</button>
-          <button class="prompt-pill" data-question="鼻窦炎一直不好，什么情况下应该尽快去医院面诊？">鼻窦炎什么情况该尽快面诊？</button>
-          <button class="prompt-pill" data-question="耳鼻咽喉科常见症状里，哪些属于需要尽快线下就诊的风险信号？">哪些症状属于风险信号？</button>
-        </div>
+        <!-- 医生信息折叠 -->
+        <details class="details-section">
+          <summary>医生信息与资料来源</summary>
+          <div class="details-body">
+            <div class="notice" id="clinicNote">提醒：仅供健康科普与就医参考，不替代面诊和处方。</div>
+            <div id="doctorBio" class="output muted">读取中...</div>
+            <div class="chips" id="focusTags"></div>
+            <ul id="focusList" class="list"></ul>
+            <div id="officialSources" class="links"></div>
+          </div>
+        </details>
 
-        <div class="chat-insights">
-          <details class="insight-card">
-            <summary>公开职业信息</summary>
-            <div class="insight-body output" id="doctorBio">读取中...</div>
-          </details>
-
-          <details class="insight-card">
-            <summary>专科方向与官方来源</summary>
-            <div class="insight-body">
-              <div id="focusTags" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;"></div>
-              <ul id="focusList" class="list"></ul>
-              <div id="officialSources" class="links" style="margin-top: 14px;"></div>
-            </div>
-          </details>
-        </div>
-
+        <!-- 输入区 -->
         <div class="chat-footer">
-          <div class="voice-status" id="voiceStatus">当前优先使用浏览器原生语音能力，适合作为现阶段的低成本过渡方案。</div>
-
-          <div class="input-shell">
-            <textarea id="message" class="chat-textarea" placeholder="例如：慢性鼻窦炎反复发作，需要尽快做进一步检查吗？"></textarea>
+          <div id="voiceStatus" class="voice-hint"></div>
+          <div class="input-row">
+            <textarea id="message" class="chat-textarea" placeholder="输入问题，Ctrl+Enter 发送…" rows="1"></textarea>
             <button id="askBtn" class="send-btn" title="发送">↑</button>
           </div>
-
           <div class="aux-row">
-            <button id="voiceInputBtn" class="secondary">语音输入</button>
-            <button id="speakAnswerBtn" class="secondary">朗读回答</button>
-            <button id="stopSpeechBtn" class="secondary">停止</button>
-            <button id="startConsultBtn" class="secondary">视频分身</button>
-            <button id="keepAliveBtn" class="secondary">保持会话</button>
-            <button id="disconnectBtn" class="danger">结束</button>
+            <button id="voiceInputBtn" class="aux-btn">🎤 语音</button>
+            <button id="speakAnswerBtn" class="aux-btn">🔊 朗读</button>
+            <button id="stopSpeechBtn" class="aux-btn">⏹ 停止</button>
           </div>
         </div>
 
+        <!-- JS 兼容 IDs -->
         <div id="answer" style="display:none;"></div>
+        <span id="heroTitle" style="display:none;"></span>
+        <span id="modeState" style="display:none;"></span>
+        <span id="deptState" style="display:none;"></span>
       </aside>
-    </section>
+    </div>
   </main>
   <script src="/static/user.js"></script>
 </body>
