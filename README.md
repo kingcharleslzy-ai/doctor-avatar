@@ -214,6 +214,13 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**统一 embedding 检索修复：新增资料即时生效，取消 500 条数据库截断**（by codex）
+
+- `app/main.py`：新增“医生想法资料”后会主动失效进程内索引，避免聊天继续命中旧 embedding 结果直到重启
+- `app/knowledge.py`：统一索引现在会校验文件内容和 SQLite 指纹，不再因为 `_index_ready` 命中过早返回旧索引
+- `app/knowledge.py`：数据库资料块改为全量参与统一 embedding 检索，不再只取前 `500` 条
+- `app/db.py`：`list_memory_entries()` 支持不设 `limit` 的全量读取，保留其他接口的轻量分页能力
+
 **桌面端三次重构：去掉舞台内第二块大卡片，按真实截图回修断点**（by codex）
 
 - `app/templates/user_desktop.html`：桌面端把主舞台恢复成单一视觉主体，不再在舞台中间并排塞第二块大说明卡

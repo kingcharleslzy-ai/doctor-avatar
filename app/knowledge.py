@@ -16,6 +16,7 @@ WORD_RE = re.compile(r"[\w\u4e00-\u9fff]+")
 # 进程内索引缓存，首次请求时构建
 _index: list[dict] | None = None
 _index_ready = False
+_index_signature: str | None = None
 
 
 @dataclass
@@ -50,7 +51,7 @@ def _load_db_chunks() -> list[dict[str, str]]:
     """从 SQLite doctor_memory 读取条目作为检索块。"""
     try:
         from .db import list_memory_entries
-        entries = list_memory_entries(limit=500)
+        entries = list_memory_entries(limit=None)
         return [
             {
                 "source": f"memory:{e['kind']}",
@@ -96,17 +97,20 @@ def _cache_file() -> Path:
     return KNOWLEDGE_DIR / ".embed_cache.json"
 
 
+def _build_index_signature(chunk_texts: list[str], sqlite_fp: str) -> str:
+    return json.dumps({"texts": chunk_texts, "sqlite_fp": sqlite_fp}, ensure_ascii=False)
+
+
 def invalidate_index() -> None:
     """手动失效进程内索引缓存（新增 DB 条目后调用）。"""
-    global _index, _index_ready
+    global _index, _index_ready, _index_signature
     _index = None
     _index_ready = False
+    _index_signature = None
 
 
 def _get_index(client) -> list[dict] | None:
-    global _index, _index_ready
-    if _index_ready:
-        return _index
+    global _index, _index_ready, _index_signature
 
     file_chunks = _load_file_chunks()
     db_chunks = _load_db_chunks()
@@ -118,6 +122,11 @@ def _get_index(client) -> list[dict] | None:
 
     chunk_texts = [c["text"] for c in all_chunks]
     sqlite_fp = _sqlite_fingerprint()
+    signature = _build_index_signature(chunk_texts, sqlite_fp)
+
+    if _index_ready and _index_signature == signature:
+        return _index
+
     cache_file = _cache_file()
 
     # 磁盘缓存命中：内容 + SQLite 指纹均未变则直接用
@@ -127,6 +136,7 @@ def _get_index(client) -> list[dict] | None:
             if cache.get("texts") == chunk_texts and cache.get("sqlite_fp") == sqlite_fp:
                 _index = cache["entries"]
                 _index_ready = True
+                _index_signature = signature
                 return _index
         except Exception:
             pass
@@ -145,6 +155,7 @@ def _get_index(client) -> list[dict] | None:
         encoding="utf-8",
     )
     _index_ready = True
+    _index_signature = signature
     return _index
 
 

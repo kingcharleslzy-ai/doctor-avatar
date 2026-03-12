@@ -169,7 +169,11 @@ def bootstrap_memory_if_empty() -> None:
         conn.commit()
 
 
-def list_memory_entries(kind: str | None = None, query: str | None = None, limit: int = 100) -> list[dict]:
+def list_memory_entries(
+    kind: str | None = None,
+    query: str | None = None,
+    limit: int | None = 100,
+) -> list[dict]:
     sql = """
         SELECT id, kind, title, content, tags_json, source, importance, created_at, updated_at
         FROM doctor_memory_entries
@@ -188,8 +192,10 @@ def list_memory_entries(kind: str | None = None, query: str | None = None, limit
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
 
-    sql += " ORDER BY importance DESC, updated_at DESC LIMIT ?"
-    params.append(max(1, min(limit, 500)))
+    sql += " ORDER BY importance DESC, updated_at DESC"
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(max(1, min(limit, 5000)))
 
     with closing(_connect()) as conn:
         rows = conn.execute(sql, params).fetchall()

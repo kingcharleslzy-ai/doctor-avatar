@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from .config import settings
 from .db import create_memory_entry, init_memory_db, list_memory_entries
-from .knowledge import load_doctor_profile
+from .knowledge import invalidate_index, load_doctor_profile
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -197,6 +197,7 @@ def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_a
         source=payload.source,
         importance=payload.importance,
     )
+    invalidate_index()
     return MemoryEntryResponse(**row)
 
 
