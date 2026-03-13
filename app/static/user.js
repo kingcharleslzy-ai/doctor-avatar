@@ -8,6 +8,7 @@ const state = {
   recognitionAvailable: false,
   microphonePrimed: false,
   presenceSessionId: "",
+  dittoWs: null,
 };
 
 function hasLiveAvatarMode() {
@@ -448,7 +449,8 @@ async function askQuestion() {
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
       void speakAnswer(data.answer);
-      if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
+      if (state.appConfig?.ditto_stream?.enabled) startDittoStream(data.answer);
+      else if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
       updateChatMessage(loadingRow, `出错了：${error.message}`);
@@ -462,7 +464,8 @@ async function askQuestion() {
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
       void speakAnswer(data.answer);
-      if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
+      if (state.appConfig?.ditto_stream?.enabled) startDittoStream(data.answer);
+      else if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
     }
@@ -614,6 +617,72 @@ async function generateDittoVideo(text) {
     updateVideoModeUi();
     console.warn("Ditto:", exc.message);
   }
+}
+
+function startDittoStream(text) {
+  const stage = $("videoStage");
+  if (!stage || state.room) return;
+
+  // 关闭上一个流（如果有）
+  if (state.dittoWs) {
+    try { state.dittoWs.close(); } catch (_) {}
+    state.dittoWs = null;
+  }
+
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws/ditto/stream`);
+  state.dittoWs = ws;
+
+  // Canvas 占位
+  stage.innerHTML = "";
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  canvas.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;";
+  stage.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+  setText("modeState", "实时视频流中…");
+
+  ws.binaryType = "arraybuffer";
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ text }));
+  };
+
+  ws.onmessage = (event) => {
+    if (event.data instanceof ArrayBuffer) {
+      // JPEG 帧 → 画到 Canvas
+      const blob = new Blob([event.data], { type: "image/jpeg" });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => { ctx.drawImage(img, 0, 0, canvas.width, canvas.height); URL.revokeObjectURL(url); };
+      img.src = url;
+    } else {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.done) {
+          ws.close();
+          setTimeout(() => { renderVideoPlaceholder(); setText("modeState", "图文问答主流程"); }, 1500);
+        }
+        if (payload.error) {
+          console.warn("Ditto stream:", payload.error);
+          ws.close();
+          renderVideoPlaceholder();
+          setText("modeState", "图文问答主流程");
+        }
+      } catch (_) {}
+    }
+  };
+
+  ws.onerror = () => {
+    renderVideoPlaceholder();
+    setText("modeState", "图文问答主流程");
+    state.dittoWs = null;
+  };
+
+  ws.onclose = () => {
+    state.dittoWs = null;
+  };
 }
 
 function renderList(id, items) {

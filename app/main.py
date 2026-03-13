@@ -6,7 +6,9 @@ import secrets
 import time
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+import asyncio
+
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -153,6 +155,10 @@ def app_config() -> dict[str, object]:
             "title": doctor_profile.get("title"),
             "hospital": doctor_profile.get("hospital"),
             "department": doctor_profile.get("department"),
+        },
+        "ditto_stream": {
+            "enabled": settings.ditto_stream_enabled,
+            "ws_url_configured": bool(settings.ditto_ws_url),
         },
         "liveavatar": {
             "mode": settings.heygen_mode,
@@ -393,6 +399,106 @@ async def liveavatar_session(
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return LiveAvatarTokenResponse(data=result)
+
+
+# ---------------------------------------------------------------------------
+# Ditto 流式 WebSocket 端点
+# 协议：
+#   浏览器 → 服务端：JSON {"text": "..."} 触发一次流式请求
+#   服务端 → 4090D：原始 PCM bytes（16kHz mono 16-bit），最后发 b"END"
+#   4090D → 服务端：JPEG 帧（bytes）或 JSON {"done":true}
+#   服务端 → 浏览器：转发 JPEG bytes；会话结束发 JSON {"done":true}
+# ---------------------------------------------------------------------------
+@app.websocket("/ws/ditto/stream")
+async def ditto_ws_stream(ws: WebSocket) -> None:
+    await ws.accept()
+    try:
+        if not settings.ditto_stream_enabled:
+            await ws.send_json({"error": "流式视频未启用。"})
+            await ws.close(code=1008)
+            return
+
+        # 1. 从浏览器接收待合成文本
+        try:
+            msg = await asyncio.wait_for(ws.receive_json(), timeout=10.0)
+        except asyncio.TimeoutError:
+            await ws.close(code=1008)
+            return
+        text = (msg.get("text") or "").strip()
+        if not text:
+            await ws.close(code=1003)
+            return
+
+        # 2. edge-tts → MP3 → ffmpeg → 16kHz mono PCM WAV
+        import edge_tts
+        communicate = edge_tts.Communicate(text, settings.tts_voice)
+        mp3_buf = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                mp3_buf.write(chunk["data"])
+        mp3_buf.seek(0)
+
+        proc = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-y", "-i", "pipe:0",
+            "-ar", "16000", "-ac", "1", "-f", "wav", "pipe:1",
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        wav_data, _ = await proc.communicate(input=mp3_buf.read())
+        if not wav_data or len(wav_data) <= 44:
+            await ws.send_json({"error": "TTS 转换失败。"})
+            await ws.close(code=1011)
+            return
+
+        pcm_data = wav_data[44:]  # 跳过 WAV 头，取裸 PCM
+
+        # 3. 连接 4090D 流式服务
+        import websockets as _ws_lib
+        try:
+            ditto_conn = await _ws_lib.connect(
+                settings.ditto_ws_url,
+                max_size=20 * 1024 * 1024,
+                open_timeout=10,
+            )
+        except Exception as exc:
+            await ws.send_json({"error": f"无法连接 Ditto 流式服务：{exc}"})
+            await ws.close(code=1011)
+            return
+
+        async with ditto_conn:
+            CHUNK = int(0.4 * 16000 * 2)  # 0.4s × 16kHz × 2bytes = 12800 bytes
+
+            async def _send() -> None:
+                for i in range(0, len(pcm_data), CHUNK):
+                    await ditto_conn.send(pcm_data[i : i + CHUNK])
+                    await asyncio.sleep(0.01)
+                await ditto_conn.send(b"END")
+
+            async def _recv() -> None:
+                async for frame in ditto_conn:
+                    if isinstance(frame, bytes):
+                        await ws.send_bytes(frame)
+                    else:
+                        try:
+                            payload = json.loads(frame)
+                        except Exception:
+                            payload = {}
+                        if payload.get("done"):
+                            await ws.send_json({"done": True})
+                            return
+
+            await asyncio.gather(_send(), _recv())
+
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        try:
+            await ws.close()
+        except Exception:
+            pass
 
 
 @app.get("/api/liveavatar/sessions", response_model=LiveAvatarTokenResponse)

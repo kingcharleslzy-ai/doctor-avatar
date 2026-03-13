@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     embed_cache_dir: str = Field(default="", alias="EMBED_CACHE_DIR")
     ditto_service_url: str = Field(default="http://127.0.0.1:8001", alias="DITTO_SERVICE_URL")
     ditto_enabled: bool = Field(default=False, alias="ENABLE_DITTO_VIDEO")
+    ditto_ws_url: str = Field(default="ws://host.docker.internal:8002", alias="DITTO_WS_URL")
+    ditto_stream_enabled: bool = Field(default=False, alias="ENABLE_DITTO_STREAM")
     tts_voice: str = Field(default="zh-CN-XiaoxiaoNeural", alias="TTS_VOICE")
     doctor_memory_db_path: str = Field(default=str(BASE_DIR / "data" / "doctor_memory.db"), alias="DOCTOR_MEMORY_DB_PATH")
     doctor_memory_bootstrap: bool = Field(default=True, alias="DOCTOR_MEMORY_BOOTSTRAP")
