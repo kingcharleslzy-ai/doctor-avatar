@@ -110,9 +110,21 @@ def monitor_snapshot(db_path: Path) -> dict[str, Any]:
 def _usage_value(usage: Any, key: str) -> int:
     if usage is None:
         return 0
-    value = getattr(usage, key, None)
-    if value is None and isinstance(usage, dict):
-        value = usage.get(key)
+    candidate_keys = [key]
+    if key == "input_tokens":
+        candidate_keys.extend(["prompt_tokens", "promptTokens"])
+    elif key == "output_tokens":
+        candidate_keys.extend(["completion_tokens", "completionTokens"])
+    elif key == "total_tokens":
+        candidate_keys.extend(["totalTokens"])
+
+    value = None
+    for candidate in candidate_keys:
+        value = getattr(usage, candidate, None)
+        if value is None and isinstance(usage, dict):
+            value = usage.get(candidate)
+        if value is not None:
+            break
     return int(value or 0)
 
 

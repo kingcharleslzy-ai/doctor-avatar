@@ -428,6 +428,22 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-14（六）—— codex 线上监控与密钥修复
+
+**为什么改**：本轮发现 3 个直接影响线上稳定性和安全性的点：
+- `README` 里误写入了真实 DeepSeek API key
+- 控制台 token 统计只认 OpenAI 自有字段，切到 DeepSeek 后会失真
+- 生产容器开了 `uvicorn --workers 2`，而监控统计存于进程内全局变量，导致 `/api/ops/overview` 会随 worker 漂移
+
+**改了什么**（`README.md`、`app/ops.py`、`Dockerfile`）：
+- `README.md`：移除公开仓库里的真实 key，改回占位符
+- `app/ops.py`：`_usage_value()` 新增兼容字段映射，支持 `prompt_tokens / completion_tokens / totalTokens`
+- `Dockerfile`：生产容器 worker 数从 `2` 收到 `1`，优先保证这台 `2核2G` 机器上的监控口径稳定一致
+
+**影响**：
+- 控制台里的 `openai_input_tokens / openai_output_tokens / openai_total_tokens` 现在能正确反映 DeepSeek 这类兼容接口的 usage
+- 控制台里的请求量、错误量、活跃用户、OpenAI 调用次数不再因为多 worker 随机漂移
+
 ### 2026-03-14（六）—— windows-claude DeepSeek 接入
 
 **为什么改**：用户切换到 DeepSeek API（中文更强、更聪明），原 `responses.create` 是 OpenAI 专有接口，DeepSeek 不支持。
@@ -439,10 +455,14 @@ cd D:\charles\Documents\doctor-avatar
 
 **服务器 .env 需要更新**：
 ```bash
-OPENAI_API_KEY=sk-6e43183c85a6408383758ebfffb9e2df
+OPENAI_API_KEY=<YOUR_DEEPSEEK_API_KEY>
 OPENAI_BASE_URL=https://api.deepseek.com
 OPENAI_MODEL=deepseek-chat
 ```
+
+**补充说明**：
+- 生产容器现在固定为单 worker 运行，这样 `/api/ops/overview` 的请求量、错误数、活跃用户数和 token 统计不会因为多进程而漂移。
+- `app/ops.py` 已兼容 `prompt_tokens / completion_tokens` 这类 OpenAI-compatible 返回字段，适配 DeepSeek 的 token 口径。
 
 ### 2026-03-13（五）—— codex
 
