@@ -158,6 +158,19 @@ uvicorn app.main:app --reload
 - 静态知识库
 - 医生想法资料库
 
+如果要把整理好的草稿批量导入 SQLite，可执行：
+
+```powershell
+cd D:\charles\Documents\doctor-avatar
+.\.venv\Scripts\python.exe .\scripts\import_memory_draft.py
+```
+
+可选参数：
+
+- `--section public`
+- `--section ppt`
+- `--path research/doctor-li-memory-draft.yaml`
+
 控制台现在已经可以：
 
 - 创建 LiveAvatar token
@@ -213,6 +226,12 @@ uvicorn app.main:app --reload
 ## CHANGELOG
 
 ### 2026-03-11（四）
+
+**资料库批量导入能力：支持按草稿 YAML 幂等写入 SQLite**（by codex）
+
+- `app/db.py`：新增 `upsert_memory_entry()`，按 `kind + title + source` 幂等更新或插入资料条目
+- `scripts/import_memory_draft.py`：新增批量导入脚本，可把 `research/doctor-li-memory-draft.yaml` 的公开资料和 PPT 草稿导入数据库
+- `README.md`：补充导入命令与使用方式
 
 **李勇医生资料整理首版：公开资料深搜 + 本地 PPT 提炼 + 可入库草稿**（by codex）
 

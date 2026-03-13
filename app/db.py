@@ -246,6 +246,84 @@ def create_memory_entry(
     return _row_to_dict(row)
 
 
+def upsert_memory_entry(
+    *,
+    kind: str,
+    title: str,
+    content: str,
+    tags: Iterable[str] | None = None,
+    source: str = "manual",
+    importance: float = 1.0,
+) -> tuple[dict, bool]:
+    now = _utc_now()
+    normalized_kind = kind.strip()
+    normalized_title = title.strip()
+    normalized_source = source.strip() or "manual"
+    normalized_tags = json.dumps(_normalize_tags(tags), ensure_ascii=False)
+
+    with closing(_connect()) as conn:
+        existing = conn.execute(
+            """
+            SELECT id, created_at
+            FROM doctor_memory_entries
+            WHERE kind = ? AND title = ? AND source = ?
+            ORDER BY id ASC
+            LIMIT 1
+            """,
+            (normalized_kind, normalized_title, normalized_source),
+        ).fetchone()
+
+        if existing:
+            conn.execute(
+                """
+                UPDATE doctor_memory_entries
+                SET content = ?, tags_json = ?, importance = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (
+                    content.strip(),
+                    normalized_tags,
+                    float(importance),
+                    now,
+                    existing["id"],
+                ),
+            )
+            row_id = existing["id"]
+            created = False
+        else:
+            cursor = conn.execute(
+                """
+                INSERT INTO doctor_memory_entries (
+                    kind, title, content, tags_json, source, importance, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    normalized_kind,
+                    normalized_title,
+                    content.strip(),
+                    normalized_tags,
+                    normalized_source,
+                    float(importance),
+                    now,
+                    now,
+                ),
+            )
+            row_id = cursor.lastrowid
+            created = True
+
+        conn.commit()
+        row = conn.execute(
+            """
+            SELECT id, kind, title, content, tags_json, source, importance, created_at, updated_at
+            FROM doctor_memory_entries
+            WHERE id = ?
+            """,
+            (row_id,),
+        ).fetchone()
+
+    return _row_to_dict(row), created
+
+
 
 def _row_to_dict(row: sqlite3.Row) -> dict:
     tags = []
