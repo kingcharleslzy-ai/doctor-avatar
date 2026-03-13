@@ -19,6 +19,14 @@ function setText(id, value) {
   }
 }
 
+// 只更新按钮内的文字节点，保留 SVG 图标不被清除
+function setBtnText(btn, text) {
+  if (!btn) return;
+  let tn = [...btn.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+  if (tn) { tn.textContent = "\u00a0" + text; }
+  else { btn.appendChild(document.createTextNode("\u00a0" + text)); }
+}
+
 function isMobileLayout() {
   return window.innerWidth <= 920;
 }
@@ -264,7 +272,7 @@ async function startConsultation() {
   const startBtn = $("startConsultBtn");
   if (startBtn) {
     startBtn.disabled = true;
-    startBtn.textContent = "连接中...";
+    setBtnText(startBtn, "连接中…");
   }
 
   try {
@@ -280,7 +288,7 @@ async function startConsultation() {
   } finally {
     if (startBtn) {
       startBtn.disabled = false;
-      startBtn.textContent = "开始视频咨询";
+      setBtnText(startBtn, "视频通话");
     }
   }
 }
@@ -518,7 +526,7 @@ async function loadAppConfig() {
   const keepAliveBtn = $("keepAliveBtn");
 
   if (startBtn && !enabled) {
-    startBtn.textContent = "视频分身";
+    setBtnText(startBtn, "视频通话");
   }
   if (keepAliveBtn) {
     keepAliveBtn.disabled = !enabled;

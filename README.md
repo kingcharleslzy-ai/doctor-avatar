@@ -237,6 +237,14 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-13（五）—— windows-claude 视频按钮图标修复 + 信息面板精简
+
+**为什么改**：user.js 用 `textContent` 覆盖按钮时会把 SVG 图标一起清掉；专注领域标签蓝色加粗不和谐；官方来源用处不大需删除。
+
+**改了什么**：
+- `app/static/user.js`：新增 `setBtnText(btn, text)` 工具函数，只更新按钮内文字节点而不清除 SVG 子元素；将3处 `startBtn.textContent =` 改为 `setBtnText`，文字统一为"视频通话"
+- `app/templates/index.html`：`.chip/.tag` 改为浅灰底色 + 细边框 + 常规字重，去掉蓝色加粗，视觉更柔和；官方资料来源区段从 DOM 移除（`#officialSources` 保留隐藏节点供 user.js 写入但不显示）
+
 ### 2026-03-13（五）—— windows-claude 适老化 + 视频通话入口改版
 
 **为什么改**：网页服务老年患者，字体偏小、按钮偏小、状态文字技术感太强（"未启用"让人困惑）。

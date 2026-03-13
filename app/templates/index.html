@@ -260,25 +260,12 @@
     .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
     .chip, .tag {
       padding: 4px 12px;
-      background: linear-gradient(135deg, var(--accent-light), rgba(124,58,237,0.06));
-      border: 1px solid rgba(37,99,235,0.15);
-      border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--accent);
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px; font-size: 13px; font-weight: 400; color: var(--text-secondary);
     }
 
-    /* 官方来源：每条链接显示为卡片行 */
-    #officialSources { display: flex; flex-direction: column; gap: 6px; }
-    #officialSources a {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px;
-      background: rgba(37,99,235,0.04);
-      border: 1px solid rgba(37,99,235,0.1); border-radius: 10px;
-      color: var(--accent); font-size: 12px; font-weight: 500;
-      text-decoration: none;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    #officialSources a::before { content: "↗"; font-size: 12px; opacity: 0.55; flex-shrink: 0; }
-    #officialSources a:hover { background: rgba(37,99,235,0.09); border-color: rgba(37,99,235,0.22); }
-
+    #officialSources { display: none; }
     #focusList { display: none; }
 
     /* ═══════════════════════ 视频框（视频分身激活后显示） ═══════════════════════ */
@@ -824,10 +811,8 @@
             <div class="tag-list" id="focusTags"></div>
             <ul id="focusList"></ul>
           </div>
-          <div class="info-section">
-            <div class="info-section-label">官方资料来源</div>
-            <div id="officialSources"></div>
-          </div>
+          <!-- officialSources 保留隐藏供 user.js 填充，不展示 -->
+          <div id="officialSources" style="display:none"></div>
         </div>
 
         <!-- 视频框（默认隐藏，视频激活后显示） -->
