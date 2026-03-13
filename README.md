@@ -225,7 +225,7 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
-### 2026-03-11（四）
+### 2026-03-13（五）
 
 **资料库批量导入能力：支持按草稿 YAML 幂等写入 SQLite**（by codex）
 
@@ -240,12 +240,16 @@ cd D:\charles\Documents\doctor-avatar
 - `research/doctor-li-memory-draft.yaml`：按 `doctor_memory_entries` 字段结构产出第一版可入库草稿，分为 `public_search_entries` 和 `ppt_entries`
 - `tmp/ppt_summary.md` 与 `tmp/ppt_raw_extract.md`：保留本轮 PPT 文字层抽取结果，便于后续继续精炼与校对
 
+### 2026-03-12（四）
+
 **统一 embedding 检索修复：新增资料即时生效，取消 500 条数据库截断**（by codex）
 
 - `app/main.py`：新增“医生想法资料”后会主动失效进程内索引，避免聊天继续命中旧 embedding 结果直到重启
 - `app/knowledge.py`：统一索引现在会校验文件内容和 SQLite 指纹，不再因为 `_index_ready` 命中过早返回旧索引
 - `app/knowledge.py`：数据库资料块改为全量参与统一 embedding 检索，不再只取前 `500` 条
 - `app/db.py`：`list_memory_entries()` 支持不设 `limit` 的全量读取，保留其他接口的轻量分页能力
+
+### 2026-03-11（三）
 
 **桌面端三次重构：去掉舞台内第二块大卡片，按真实截图回修断点**（by codex）
 
@@ -265,6 +269,8 @@ cd D:\charles\Documents\doctor-avatar
 - `app/templates/user_desktop.html`：桌面端右侧改为聊天气泡式会话舱，不再使用“回答框 + 资料框 + 一排按钮”的调试台布局
 - `app/templates/user_desktop.html`：把发送动作收进底部输入壳，辅助按钮收成次级操作，整体更像正式产品而不是后台
 - `app/static/user.js`：桌面端聊天模式下也同步写入隐藏 `answer`，保证朗读回答与现有逻辑继续可用
+
+### 2026-03-12（四）
 
 **桌面端六次回修：接入李勇医生公开职业照，主舞台从 demo 占位改成真实终端视觉**（by codex）
 
@@ -293,6 +299,8 @@ cd D:\charles\Documents\doctor-avatar
 - `Dockerfile`：预创建并授权 `/app_data` 与 `/app_cache`，避免生产容器因挂载卷不可写导致 SQLite 启动失败
 - `app/main.py`：修正 `CONSOLE_AUTH_MODE=off` 时的认证旁路逻辑，避免 `HTTPBasic` 先一步把无凭据请求拦掉
 
+### 2026-03-11（三）
+
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
 - `app/templates/user_desktop.html`：把首屏压成完整的一屏布局，避免进入页面后还需要整页下滚才能看到完整主视窗
@@ -307,7 +315,7 @@ cd D:\charles\Documents\doctor-avatar
 - `app/static/user.js`：重构为跨桌面/手机安全渲染，修复移动端因 DOM 不存在导致的“公开职业信息 / 官方来源”不显示问题
 - 整体视觉方向收敛为更接近 Apple 式极简层级，并叠加 AI 医疗氛围感
 
-### 2026-03-11（四-4）
+### 2026-03-11（三）
 
 **HTTPS 上线骨架准备**（by codex）
 
@@ -316,7 +324,7 @@ cd D:\charles\Documents\doctor-avatar
 - `deploy/nginx/certs/.gitkeep`：预留证书目录
 - `deploy/HTTPS_SETUP.md`：新增 HTTPS 切换说明，方便服务器上直接落地
 
-### 2026-03-11（四-3）
+### 2026-03-11（三）
 
 **控制台新增线上版本信息**（by codex）
 
@@ -325,7 +333,7 @@ cd D:\charles\Documents\doctor-avatar
 - `.github/workflows/deploy.yml`：自动部署时写入 `app/build_meta.json`，让容器内能读取本次部署元信息
 - `.gitignore`：忽略 `app/build_meta.json`，避免部署期生成的元数据被误提交
 
-### 2026-03-11（四-2）
+### 2026-03-11（三）
 
 **自动部署文档同步 + 并发保护**（by codex）
 
