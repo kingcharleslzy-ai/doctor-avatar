@@ -34,6 +34,38 @@ uvicorn app.main:app --reload
 - 用户端手机版：`/mobile`
 - 控制台：`/console`
 
+## 本机前端验收工具
+
+项目现在已经固定安装了本地 Node + Playwright 工具链，不需要每次再临时下载：
+
+- `package.json`
+- `package-lock.json`
+- `playwright@1.58.2`
+- 独立 `Chromium`
+
+控制台验收可直接执行：
+
+```powershell
+cd D:\charles\Documents\doctor-avatar
+$env:CONSOLE_USERNAME="admin"
+$env:CONSOLE_PASSWORD="你的控制台密码"
+npm run validate:console
+```
+
+会输出：
+
+- `output/console-validation.png`
+- `output/console-validation.txt`
+
+这样后面做后台 UI 验证时，不需要再去抢占你正在开的 Chrome 会话。
+
+验收脚本当前会核对这些关键点：
+
+- 监控台是否正常打开
+- `CPU / Memory / Disk / Active Users`
+- `Memory Code`
+- 只读模式提示
+
 ## 需要填写的内容
 
 ### 1. `.env`
@@ -400,6 +432,12 @@ cd D:\charles\Documents\doctor-avatar
 - `app/templates/console.html` + `app/static/console.js`：把控制台右侧从“资料增删改”改成“系统监控 + 问答验证 + 只读资料检索”
 - `.env.example`：新增 `CONSOLE_MEMORY_WRITE_ENABLED=false`
 - `README.md`：补充监控接口和控制台只读模式说明
+
+**补齐本机前端验收工具链：固定 Playwright 与独立 Chromium，不再每次临时下载或抢系统 Chrome**（by codex）
+
+- `package.json` + `package-lock.json`：新增本地 Node 工具清单与 `npm run validate:console`
+- `scripts/validate_console_ui.mjs`：新增独立控制台验收脚本，支持 Basic Auth、自动截图和正文导出
+- `README.md`：补充本机 UI 验收命令与输出路径
 
 **视频分身二期技术方案落地：明确不走 Live2D 主线，优先家里 4090D + Ditto / MuseTalk 1.5**（by codex）
 

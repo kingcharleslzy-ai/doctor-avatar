@@ -1,0 +1,27 @@
+{
+  "name": "doctor-avatar",
+  "version": "1.0.0",
+  "description": "这是一个新的独立项目，用来搭建你爸的医生虚拟人第一版。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "validate:console": "node scripts/validate_console_ui.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kingcharleslzy-ai/doctor-avatar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/kingcharleslzy-ai/doctor-avatar/issues"
+  },
+  "homepage": "https://github.com/kingcharleslzy-ai/doctor-avatar#readme",
+  "devDependencies": {
+    "playwright": "^1.58.2"
+  }
+}
