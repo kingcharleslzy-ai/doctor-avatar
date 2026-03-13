@@ -85,6 +85,18 @@ function formatUptime(seconds) {
   return `${minutes}分钟`;
 }
 
+function stagePlaceholderMarkup() {
+  return `
+    <div class="placeholder">
+      <div class="placeholder-visual">
+        <div class="scanline"></div>
+      </div>
+      <strong>等待视频会话启动</strong>
+      令牌创建、会话启动、房间接入完成后，远端数字分身会直接落在这里。
+    </div>
+  `;
+}
+
 function renderRemoteTrack(track) {
   const container = $("videoStage");
   container.innerHTML = "";
@@ -246,6 +258,7 @@ async function sendChat() {
 function renderMemorySummary(data) {
   state.memorySummary = data;
   $("memoryCode").textContent = data.memory_code || "-";
+  if ($("memoryCodeHero")) $("memoryCodeHero").textContent = data.memory_code || "-";
   $("memoryTotal").textContent = String(data.total || 0);
   const topKinds = (data.kinds || []).slice(0, 3).map((item) => `${item.kind} (${item.count})`);
   $("memoryTopKinds").textContent = topKinds.join(" / ") || "-";
@@ -346,12 +359,15 @@ function renderOpsOverview(data) {
   $("memoryUsage").textContent = `${memory.used_percent ?? 0}%`;
   $("diskUsage").textContent = `${disk.used_percent ?? 0}%`;
   $("activeUsers").textContent = String(traffic.active_users ?? 0);
+  if ($("activeUsersMini")) $("activeUsersMini").textContent = String(traffic.active_users ?? 0);
   $("requestTotal").textContent = String(traffic.requests_total ?? 0);
   $("openaiCalls").textContent = String(apiUsage.openai_calls ?? 0);
+  if ($("openaiCallsMini")) $("openaiCallsMini").textContent = String(apiUsage.openai_calls ?? 0);
   $("avgLatency").textContent = `${traffic.avg_latency_ms ?? 0} ms`;
   $("requestErrors").textContent = String(traffic.request_errors ?? 0);
   $("uptimeValue").textContent = formatUptime(data.uptime_seconds ?? 0);
   $("writeMode").textContent = doctorMemory.write_enabled ? "已开启（危险）" : "只读模式";
+  if ($("writeModeChip")) $("writeModeChip").textContent = doctorMemory.write_enabled ? "可写" : "只读";
   $("apiTokenInfo").textContent = [
     `OpenAI 调用：${apiUsage.openai_calls ?? 0}`,
     `OpenAI 错误：${apiUsage.openai_errors ?? 0}`,
@@ -418,7 +434,7 @@ async function disconnectRoom() {
     state.room = null;
   }
   $("connectionState").textContent = "未连接";
-  $("videoStage").innerHTML = "<div class=\"placeholder\"><strong>等待视频会话启动</strong>完成会话令牌创建与实时会话启动后，李勇医生虚拟人的远端视频将显示在此区域。</div>";
+  $("videoStage").innerHTML = stagePlaceholderMarkup();
   log("已断开 LiveKit 房间。");
 }
 
@@ -436,6 +452,7 @@ async function loadAppConfig() {
       `部署时间：${runtime.deployed_at || "-"}`,
       `部署来源：${runtime.source || "-"}`,
     ].join("\n");
+    if ($("runtimeShortSha")) $("runtimeShortSha").textContent = runtime.git_short_sha || "-";
     $("backendConfig").textContent = [
       `医生：${doctor.name || "-"} ${doctor.title ? ` / ${doctor.title}` : ""}`,
       `医院：${doctor.hospital || "-"}`,
@@ -452,6 +469,7 @@ async function loadAppConfig() {
       `Voice 已配置：${liveavatar.voice_configured ? "是" : "否"}`,
       `Context 已配置：${liveavatar.context_configured ? "是" : "否"}`,
     ].join("\n");
+    if ($("modeBadge")) $("modeBadge").textContent = liveavatar.mode || "-";
   } catch (error) {
     $("backendConfig").textContent = error.message;
     $("runtimeInfo").textContent = error.message;

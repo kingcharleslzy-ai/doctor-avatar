@@ -340,6 +340,14 @@ cd D:\charles\Documents\doctor-avatar
 
 ### 2026-03-13（五）—— codex
 
+**控制台二次视觉重构：收成一屏主舞台 + 窄侧监控轨道，去掉大片空白和低级联调感**（by codex）
+
+- `app/templates/console.html`：整体重做为“顶部摘要条 + 左侧主舞台 + 右侧监控轨道”的单屏内部终端，去掉原先松散堆叠的大块空白卡片
+- `app/templates/console.html`：实时会话舞台改成更完整的主视觉壳，加入更克制的扫描/环形占位，不再像裸空框
+- `app/templates/console.html`：右侧压缩成真正的运营侧栏，把系统概览、问答验证、资料抽查明确分段，减少后台杂乱感
+- `app/static/console.js`：补齐新布局所需状态映射（顶部版本、主舞台状态胶囊、侧栏关键指标）
+- `scripts/validate_console_ui.mjs`：同步适配新版控制台文案，保证 Playwright 本机验收不再因旧关键词误报失败
+
 **控制台视觉重构：从联调堆叠页收成内部工作台**（by codex）
 
 - `app/templates/console.html`：整体布局改为“顶部概览 + 左侧实时会话 + 右侧知识与资料”两栏工作台，移除原来过多的并列区块和重复说明

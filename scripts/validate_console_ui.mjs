@@ -39,13 +39,13 @@ async function main() {
     url: page.url(),
     screenshot: screenshotPath,
     textDump: textPath,
-    hasCpu: includesAny(bodyText, ["CPU Load", "CPU LOAD"]),
-    hasMemory: includesAny(bodyText, ["Memory Usage", "MEMORY USAGE"]),
-    hasDisk: includesAny(bodyText, ["Disk Usage", "DISK USAGE"]),
+    hasCpu: includesAny(bodyText, ["CPU Load", "CPU LOAD", "\nCPU\n"]),
+    hasMemory: includesAny(bodyText, ["Memory Usage", "MEMORY USAGE", "\nMemory\n"]),
+    hasDisk: includesAny(bodyText, ["Disk Usage", "DISK USAGE", "\nDisk\n"]),
     hasActiveUsers: includesAny(bodyText, ["Active Users", "ACTIVE USERS"]),
     hasReadOnly: includesAny(bodyText, ["Read-only Monitor", "只读模式", "只读监控", "Read-only"]),
     hasMemoryCode: includesAny(bodyText, ["MEMORY CODE", "资料库暗号"]),
-    hasRequests: includesAny(bodyText, ["REQUESTS TOTAL", "请求总量"]),
+    hasRequests: includesAny(bodyText, ["REQUESTS TOTAL", "请求总量", "\nRequests\n"]),
   };
 
   console.log(JSON.stringify(summary, null, 2));

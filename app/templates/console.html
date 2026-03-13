@@ -7,36 +7,38 @@
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
-      --bg: #071019;
-      --bg-soft: #0c1824;
-      --panel: rgba(10, 20, 31, 0.9);
-      --panel-strong: rgba(12, 24, 38, 0.96);
-      --line: rgba(132, 170, 201, 0.16);
-      --line-strong: rgba(132, 170, 201, 0.28);
-      --text: #eef6fb;
-      --muted: #87a0b4;
-      --accent: #6fd6cf;
-      --accent-strong: #48bcb2;
-      --ok: #7ad9a6;
-      --danger: #ff9a9a;
-      --shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+      --bg: #060b12;
+      --bg-2: #09111a;
+      --panel: rgba(9, 17, 26, 0.86);
+      --panel-strong: rgba(10, 18, 29, 0.94);
+      --panel-soft: rgba(255, 255, 255, 0.03);
+      --line: rgba(147, 180, 210, 0.12);
+      --line-strong: rgba(147, 180, 210, 0.22);
+      --text: #edf4fa;
+      --muted: #8ca0b1;
+      --accent: #78d8dd;
+      --accent-2: #8ea7ff;
+      --ok: #8ce0b6;
+      --warn: #ffce8d;
       --radius-xl: 28px;
       --radius-lg: 22px;
       --radius-md: 18px;
       --radius-sm: 14px;
+      --shadow: 0 20px 80px rgba(0, 0, 0, 0.34);
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
+      min-height: 100%;
       color: var(--text);
-      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
+      font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
       background:
-        radial-gradient(circle at 12% 12%, rgba(74, 188, 178, 0.13), transparent 20%),
-        radial-gradient(circle at 86% 16%, rgba(113, 145, 255, 0.12), transparent 18%),
-        linear-gradient(180deg, #071019 0%, #09131d 48%, #050d14 100%);
+        radial-gradient(circle at top left, rgba(120, 216, 221, 0.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(142, 167, 255, 0.12), transparent 22%),
+        linear-gradient(180deg, #04080d 0%, #09111a 52%, #060b12 100%);
+      overflow: hidden;
     }
 
     body::before {
@@ -44,334 +46,457 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background-image:
-        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
-      background-size: 36px 36px;
-      mask-image: radial-gradient(circle at center, black 35%, transparent 82%);
-      opacity: .35;
+      background:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(circle at center, black 34%, transparent 82%);
+      opacity: .28;
     }
 
     main {
-      max-width: 1480px;
-      margin: 0 auto;
-      padding: 24px 22px 36px;
+      height: 100vh;
+      padding: 18px;
     }
 
     .shell {
+      height: 100%;
       display: grid;
-      gap: 20px;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
     }
 
-    .panel,
-    .surface,
-    .subpanel {
+    .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      backdrop-filter: blur(18px);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(22px);
       box-shadow: var(--shadow);
     }
 
-    .masthead {
+    .topbar {
+      padding: 18px 22px;
       display: grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 18px;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 16px;
+      align-items: center;
     }
 
-    .surface {
-      border-radius: var(--radius-xl);
-      padding: 24px 26px;
-      position: relative;
-      overflow: hidden;
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
     }
 
-    .surface::after {
-      content: "";
-      position: absolute;
-      right: -80px;
-      top: -80px;
-      width: 220px;
-      height: 220px;
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(111, 214, 207, .16), transparent 72%);
-      pointer-events: none;
+    .avatar-mark {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: -.04em;
+      background:
+        linear-gradient(145deg, rgba(120,216,221,.16), rgba(142,167,255,.2)),
+        linear-gradient(145deg, #111c29, #0a111a);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 12px;
+      padding: 7px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(111, 214, 207, .18);
-      background: rgba(111, 214, 207, .08);
+      border: 1px solid rgba(120,216,221,.16);
       color: var(--accent);
-      font-size: 12px;
-      letter-spacing: .14em;
+      background: rgba(120,216,221,.08);
+      font-size: 11px;
+      letter-spacing: .18em;
       text-transform: uppercase;
     }
 
-    h1 {
-      margin: 14px 0 10px;
-      font-size: 38px;
-      line-height: 1.08;
-      letter-spacing: -.04em;
+    .topbar-left h1 {
+      margin: 10px 0 6px;
+      font-size: 30px;
+      line-height: 1.06;
+      letter-spacing: -.05em;
     }
 
-    .lead {
+    .topbar-left p {
       margin: 0;
-      max-width: 780px;
       color: var(--muted);
-      line-height: 1.8;
-      font-size: 15px;
+      font-size: 14px;
+      line-height: 1.7;
     }
 
-    .masthead-grid {
+    .topbar-right {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 20px;
+      gap: 10px;
     }
 
-    .signal {
+    .top-stat {
       padding: 14px 16px;
       border-radius: var(--radius-md);
-      background: rgba(255,255,255,.03);
+      background: var(--panel-soft);
       border: 1px solid rgba(255,255,255,.05);
+      min-width: 0;
     }
 
-    .signal strong {
+    .top-stat .k {
       display: block;
-      margin-bottom: 6px;
-      font-size: 20px;
-      letter-spacing: -.03em;
-    }
-
-    .signal span {
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .info-stack {
-      display: grid;
-      gap: 14px;
-    }
-
-    .info-card {
-      padding: 20px 22px;
-      border-radius: var(--radius-lg);
-    }
-
-    .label {
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: .08em;
+      font-size: 11px;
+      letter-spacing: .1em;
       text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
-    .value {
-      margin-top: 10px;
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -.03em;
-    }
-
-    .desc {
-      margin-top: 8px;
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 14px;
+    .top-stat strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: -.04em;
     }
 
     .workspace {
+      min-height: 0;
       display: grid;
-      grid-template-columns: 1.08fr .92fr;
-      gap: 20px;
-      align-items: start;
+      grid-template-columns: minmax(0, 1.42fr) 430px;
+      gap: 16px;
     }
 
-    .panel {
-      border-radius: var(--radius-xl);
-      padding: 20px;
+    .main-stage,
+    .side-rail {
+      min-height: 0;
+      display: grid;
+      gap: 16px;
     }
 
-    .panel-head {
+    .main-stage {
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      padding: 18px;
+    }
+
+    .stage-head {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 16px;
+      gap: 20px;
     }
 
-    .panel-title {
-      margin: 0;
+    .section-kicker {
+      color: var(--accent);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .stage-head h2,
+    .side-section h2 {
+      margin: 8px 0 0;
       font-size: 24px;
+      line-height: 1.15;
       letter-spacing: -.04em;
     }
 
-    .panel-subtitle {
-      margin: 6px 0 0;
+    .stage-head p,
+    .side-section p,
+    .caption {
+      margin: 8px 0 0;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.75;
-      max-width: 680px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      color: var(--muted);
-      white-space: nowrap;
       font-size: 13px;
+      line-height: 1.75;
     }
 
-    .pill.ok {
-      color: var(--ok);
-      border-color: rgba(122, 217, 166, .18);
-      background: rgba(122, 217, 166, .08);
-    }
-
-    .stage-card {
-      padding: 18px;
-      border-radius: var(--radius-lg);
-      background: var(--panel-strong);
-      border: 1px solid rgba(255,255,255,.05);
-    }
-
-    .stage-topline {
+    .status-cluster {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      max-width: 360px;
     }
 
-    .stage-title {
-      font-size: 15px;
+    .chip {
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .chip.ok {
+      color: var(--ok);
+      border-color: rgba(140, 224, 182, .18);
+      background: rgba(140, 224, 182, .08);
+    }
+
+    .stage-canvas {
+      min-height: 0;
+      border-radius: calc(var(--radius-xl) - 6px);
+      border: 1px solid rgba(255,255,255,.06);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(120,216,221,.18), transparent 28%),
+        linear-gradient(180deg, #0a121c 0%, #0c1621 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 18px;
+      padding: 18px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stage-canvas::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,.04);
+      pointer-events: none;
+    }
+
+    .video-surface {
+      min-height: 0;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 24%, rgba(120,216,221,.08), transparent 28%),
+        linear-gradient(180deg, #081119 0%, #09131d 100%);
+      border: 1px solid rgba(255,255,255,.06);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-label {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      z-index: 2;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(6, 11, 18, .56);
       color: var(--muted);
-      letter-spacing: .08em;
+      font-size: 11px;
+      letter-spacing: .12em;
       text-transform: uppercase;
     }
 
     .video-stage {
-      min-height: 430px;
-      border-radius: 22px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.07);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(72,188,178,.15), transparent 28%),
-        linear-gradient(180deg, #0a1520 0%, #101b28 100%);
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
+      min-height: 420px;
       position: relative;
+      background:
+        radial-gradient(circle at 50% 18%, rgba(142,167,255,.09), transparent 18%),
+        linear-gradient(180deg, #08131c 0%, #0a1118 100%);
     }
 
-    .video-stage::after {
+    .video-stage::before {
       content: "";
       position: absolute;
-      inset: 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.05);
-      pointer-events: none;
+      inset: 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.04);
     }
 
     .placeholder {
+      width: min(440px, 80%);
       text-align: center;
-      color: #dcebf5;
-      padding: 26px;
-      max-width: 360px;
+      color: #e4eef7;
       line-height: 1.85;
       font-size: 15px;
+      z-index: 1;
+    }
+
+    .placeholder-visual {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 22px;
+      border-radius: 999px;
+      position: relative;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(120,216,221,.18), rgba(142,167,255,.08) 42%, transparent 68%),
+        linear-gradient(145deg, rgba(120,216,221,.08), rgba(142,167,255,.04));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 0 50px rgba(120,216,221,.08);
+      overflow: hidden;
+    }
+
+    .placeholder-visual::before,
+    .placeholder-visual::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .placeholder-visual::after {
+      inset: 52px;
+      background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,.04));
+      border-color: rgba(120,216,221,.12);
+    }
+
+    .scanline {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      top: 82px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(120,216,221,.35), transparent);
+      box-shadow: 0 0 24px rgba(120,216,221,.18);
     }
 
     .placeholder strong {
       display: block;
       margin-bottom: 10px;
-      font-size: 20px;
-      letter-spacing: -.02em;
+      font-size: 24px;
+      letter-spacing: -.04em;
     }
 
-    .compact-grid {
+    .stage-note {
+      padding: 16px 18px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      background: rgba(255,255,255,.02);
+    }
+
+    .canvas-sidebar {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: auto auto 1fr;
       gap: 14px;
-      margin-top: 16px;
+      min-height: 0;
+    }
+
+    .glass-box {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .glass-box .label {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .glass-box .value {
+      margin-top: 8px;
+      font-size: 26px;
+      letter-spacing: -.05em;
+      font-weight: 600;
+    }
+
+    .metric-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-mini {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 13px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .metric-mini strong {
+      font-size: 15px;
+      letter-spacing: -.03em;
+    }
+
+    .metric-mini span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .bottom-grid > .subpanel {
+      align-self: start;
     }
 
     .subpanel {
-      border-radius: var(--radius-md);
-      padding: 16px 18px;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.05);
+      min-height: 0;
     }
 
     .subpanel h3 {
-      margin: 0 0 10px;
-      font-size: 15px;
-      color: var(--text);
-    }
-
-    .subpanel p {
       margin: 0;
+      font-size: 16px;
+      letter-spacing: -.03em;
+    }
+
+    .subpanel p,
+    .inline-note {
       color: var(--muted);
-      line-height: 1.7;
-      font-size: 13px;
-    }
-
-    .output {
-      white-space: pre-wrap;
-      line-height: 1.8;
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    .muted { color: var(--muted); }
-
-    .ops-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.75;
     }
 
     .field-label {
       display: block;
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       color: var(--muted);
-      font-size: 12px;
-      letter-spacing: .06em;
+      font-size: 11px;
+      letter-spacing: .1em;
       text-transform: uppercase;
     }
 
-    textarea,
-    input {
+    input,
+    textarea {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 14px 15px;
-      color: var(--text);
+      border-radius: 15px;
+      padding: 13px 14px;
       background: rgba(255,255,255,.035);
+      color: var(--text);
       font: inherit;
       outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
     }
 
-    textarea::placeholder,
-    input::placeholder { color: rgba(190, 209, 222, .42); }
-
-    textarea:focus,
-    input:focus {
+    input:focus,
+    textarea:focus {
       border-color: var(--line-strong);
-      box-shadow: 0 0 0 3px rgba(72,188,178,.12);
+      box-shadow: 0 0 0 3px rgba(120,216,221,.1);
       background: rgba(255,255,255,.05);
     }
 
-    textarea { min-height: 140px; resize: vertical; }
+    textarea {
+      min-height: 112px;
+      resize: vertical;
+    }
 
     .toolbar,
     .memory-toolbar {
@@ -384,287 +509,348 @@
     button {
       border: 0;
       border-radius: 999px;
-      padding: 12px 16px;
+      padding: 11px 15px;
       font: inherit;
       cursor: pointer;
-      transition: transform .18s ease, opacity .18s ease, background .18s ease;
+      transition: transform .18s ease, opacity .18s ease;
     }
 
     button:hover { transform: translateY(-1px); }
     button:disabled { opacity: .65; cursor: wait; transform: none; }
 
     .button-primary {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
-      color: #07202b;
+      color: #061319;
       font-weight: 600;
+      background: linear-gradient(135deg, var(--accent) 0%, #5fbfd4 100%);
     }
 
     .button-secondary {
-      background: rgba(255,255,255,.04);
       color: var(--text);
+      background: rgba(255,255,255,.045);
       border: 1px solid rgba(255,255,255,.08);
     }
 
     .button-danger {
-      background: rgba(169,72,72,.12);
-      color: #ffc5c5;
-      border: 1px solid rgba(255,149,149,.15);
+      color: #ffd6d6;
+      background: rgba(204, 100, 100, .12);
+      border: 1px solid rgba(255, 150, 150, .14);
     }
 
     .button-ghost {
-      background: rgba(255,255,255,.03);
       color: var(--muted);
-      border: 1px solid rgba(255,255,255,.08);
-    }
-
-    .memory-header-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .memory-stat {
-      padding: 16px;
-      border-radius: var(--radius-md);
       background: rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.06);
     }
 
-    .memory-stat strong {
+    .output {
+      white-space: pre-wrap;
+      line-height: 1.78;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .scroll-box {
+      max-height: 220px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .side-rail {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .side-scroll {
+      min-height: 0;
+      overflow: auto;
+      display: grid;
+      gap: 16px;
+      padding-right: 4px;
+    }
+
+    .side-section {
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .monitor-hero {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-stat {
+      padding: 16px;
+      border-radius: 18px;
+      background:
+        linear-gradient(145deg, rgba(120,216,221,.1), rgba(142,167,255,.08)),
+        rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .hero-stat strong {
       display: block;
       margin-top: 8px;
-      font-size: 24px;
-      letter-spacing: -.03em;
+      font-size: 28px;
+      letter-spacing: -.05em;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-cell {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    .stat-cell strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 20px;
+      letter-spacing: -.04em;
     }
 
     .kind-list {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .kind-chip {
-      padding: 7px 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
       border-radius: 999px;
       background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.06);
       color: var(--text);
+      font-size: 12px;
+      line-height: 1.2;
     }
 
-    .kind-chip span {
-      color: var(--muted);
-      margin-left: 6px;
-    }
+    .kind-chip span { color: var(--muted); }
 
-    .memory-layout {
+    .metric-list {
       display: grid;
-      grid-template-columns: .9fr 1.1fr;
-      gap: 16px;
-      align-items: start;
+      gap: 10px;
+      margin-top: 12px;
     }
 
-    .stack {
+    .metric-row {
       display: grid;
-      gap: 14px;
-    }
-
-    .caption {
-      margin: 0 0 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.75;
-    }
-
-    .memory-form-grid,
-    .memory-filter-grid {
-      display: grid;
+      grid-template-columns: 1fr auto;
       gap: 12px;
+      align-items: start;
+      padding: 10px 0;
+      border-top: 1px solid rgba(255,255,255,.05);
     }
 
-    .memory-form-grid {
-      grid-template-columns: 1fr 1fr;
-    }
+    .metric-row:first-child { border-top: 0; padding-top: 0; }
 
-    .memory-filter-grid {
-      grid-template-columns: 1fr .72fr .42fr;
-    }
-
-    .inline-note {
-      margin-top: 10px;
+    .metric-row .name {
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.7;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .metric-row .data {
+      text-align: right;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .memory-filter-grid {
+      display: grid;
+      grid-template-columns: 1fr .8fr .42fr;
+      gap: 10px;
     }
 
     .memory-list {
       display: grid;
-      gap: 12px;
-      max-height: 920px;
+      gap: 10px;
+      margin-top: 12px;
+      max-height: 360px;
       overflow: auto;
       padding-right: 4px;
     }
 
     .memory-item {
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255,255,255,.06);
+      padding: 14px;
+      border-radius: 16px;
       background: rgba(255,255,255,.025);
-      padding: 16px;
+      border: 1px solid rgba(255,255,255,.05);
     }
 
     .memory-item-head {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 14px;
+      gap: 12px;
     }
 
     .memory-item h4 {
       margin: 0;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.5;
     }
 
     .memory-meta {
-      margin-top: 8px;
+      margin-top: 6px;
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.75;
+      line-height: 1.7;
     }
 
     .memory-content {
-      margin-top: 12px;
+      margin-top: 10px;
       color: var(--text);
-      line-height: 1.82;
-      font-size: 14px;
+      font-size: 13px;
+      line-height: 1.8;
       white-space: pre-wrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .memory-item-actions {
-      display: flex;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .monitor-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .monitor-card {
-      padding: 16px;
-      border-radius: var(--radius-md);
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.06);
-    }
-
-    .monitor-card strong {
-      display: block;
-      margin-top: 8px;
-      font-size: 24px;
-      letter-spacing: -.03em;
-    }
-
-    .monitor-detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    @media (max-width: 1180px) {
-      .masthead,
-      .workspace,
-      .memory-layout,
-      .memory-header-strip,
-      .memory-form-grid,
-      .memory-filter-grid,
-      .masthead-grid,
-      .compact-grid,
-      .ops-grid,
-      .monitor-grid,
-      .monitor-detail-grid {
+    @media (max-width: 1380px) {
+      .workspace {
         grid-template-columns: 1fr;
+      }
+
+      .side-rail {
+        max-height: 42vh;
       }
     }
 
-    @media (max-width: 720px) {
-      main { padding: 16px 12px 24px; }
-      h1 { font-size: 30px; }
-      .surface,
-      .panel { border-radius: 22px; padding: 18px; }
-      .video-stage { min-height: 300px; }
+    @media (max-width: 1120px) {
+      html, body { overflow: auto; }
+      main { height: auto; }
+      .shell { height: auto; }
+      .workspace,
+      .topbar,
+      .topbar-right,
+      .stage-canvas,
+      .bottom-grid,
+      .memory-filter-grid,
+      .stat-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
   <main>
     <div class="shell">
-      <section class="masthead">
-        <div class="surface">
-          <div class="eyebrow">Clinical Operator Console</div>
-          <h1>李勇医生数字分身工作台</h1>
-          <p class="lead">把实时视频链路、问答验证和资料维护收在一套内部界面里。这个页面优先服务上线前检查、资料清洗和日常维护，不再做成堆满组件的联调页。</p>
-          <div class="masthead-grid">
-            <div class="signal">
-              <strong>实时会话</strong>
-              <span>查看 LiveAvatar 会话状态、视频承载和远端房间连接。</span>
-            </div>
-            <div class="signal">
-              <strong>问答校验</strong>
-              <span>直接验证当前模型回答是否符合耳鼻咽喉科场景与安全边界。</span>
-            </div>
-            <div class="signal">
-              <strong>资料维护</strong>
-              <span>在同一页查看资料库暗号、筛选条目并手动录入你爸的经验规则。</span>
-            </div>
+      <section class="panel topbar">
+        <div class="topbar-left">
+          <div class="avatar-mark">LY</div>
+          <div>
+            <div class="eyebrow">Doctor Avatar Console</div>
+            <h1>李勇医生数字分身控制台</h1>
+            <p>只保留真正有用的东西：实时舞台、系统状态、问答校验和资料核对。少一点联调感，多一点高可信的内部运营终端。</p>
           </div>
         </div>
-
-        <div class="info-stack">
-          <div class="surface info-card">
-            <div class="label">Doctor Profile</div>
-            <div class="value">李勇 / ENT</div>
-            <div class="desc">杭州市第一人民医院耳鼻咽喉科，围绕鼻科微创、规范化管理和高风险病例识别展开数字化知识沉淀。</div>
+        <div class="topbar-right">
+          <div class="top-stat">
+            <span class="k">资料暗号</span>
+            <strong id="memoryCode">读取中...</strong>
           </div>
-          <div class="surface info-card">
-            <div class="label">Operating Rule</div>
-            <div class="value">先稳后深</div>
-            <div class="desc">后台优先减少噪声和误操作。把高频信息压成概览，把具体操作收在清晰的工作区内。</div>
+          <div class="top-stat">
+            <span class="k">资料总数</span>
+            <strong id="memoryTotal">-</strong>
+          </div>
+          <div class="top-stat">
+            <span class="k">线上版本</span>
+            <strong id="runtimeShortSha">读取中...</strong>
           </div>
         </div>
       </section>
 
       <section class="workspace">
-        <section class="panel">
-          <div class="panel-head">
+        <section class="panel main-stage">
+          <div class="stage-head">
             <div>
-              <h2 class="panel-title">实时会话工作区</h2>
-              <p class="panel-subtitle">左侧保留最重要的事情：看主画面、看连接、做会话操作。把杂乱的说明和细碎状态收进更小的支持区。</p>
+              <div class="section-kicker">Primary Stage</div>
+              <h2>实时会话舞台</h2>
+              <p>主区只负责两件事：看远端画面，判断当前会话链路是否正常。其余说明和细节全部降噪到侧边。</p>
             </div>
-            <div class="pill ok">Console Ready</div>
+            <div class="status-cluster">
+              <div class="chip" id="connectionState">未连接</div>
+              <div class="chip">资料写入 <span id="writeModeChip">只读</span></div>
+              <div class="chip ok">运营监控已启用</div>
+            </div>
           </div>
 
-          <div class="stage-card">
-            <div class="stage-topline">
-              <div class="stage-title">Remote Video Stage</div>
-              <div class="pill" id="connectionState">未连接</div>
+          <div class="stage-canvas">
+            <div class="video-surface">
+              <div class="stage-label">Remote Video Stage</div>
+              <div class="video-stage" id="videoStage">
+                <div class="placeholder">
+                  <div class="placeholder-visual">
+                    <div class="scanline"></div>
+                  </div>
+                  <strong>等待视频会话启动</strong>
+                  令牌创建、会话启动、房间接入完成后，远端数字分身会直接落在这里。
+                </div>
+              </div>
+              <div class="stage-note">
+                <span>当前控制台默认以“先观测、再操作”的节奏工作，避免误触和过载。</span>
+                <span id="memoryListState">资料状态读取中...</span>
+              </div>
             </div>
-            <div class="video-stage" id="videoStage">
-              <div class="placeholder">
-                <strong>等待视频会话启动</strong>
-                当前区域只承载一件事：显示远端视频画面。完成令牌创建与会话启动后，数字分身会直接落在这里。
+
+            <div class="canvas-sidebar">
+              <div class="glass-box">
+                <div class="label">Doctor Profile</div>
+                <div class="value">李勇 / ENT</div>
+                <p class="caption">杭州市第一人民医院耳鼻咽喉科。围绕鼻科微创、规范管理和高风险识别展开数字化沉淀。</p>
+              </div>
+
+              <div class="metric-stack">
+                <div class="metric-mini">
+                  <div>
+                    <span>当前模式</span>
+                    <strong id="modeBadge">读取中...</strong>
+                  </div>
+                </div>
+                <div class="metric-mini">
+                  <div>
+                    <span>活跃用户</span>
+                    <strong id="activeUsersMini">读取中...</strong>
+                  </div>
+                </div>
+                <div class="metric-mini">
+                  <div>
+                    <span>OpenAI 调用</span>
+                    <strong id="openaiCallsMini">读取中...</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-box">
+                <div class="label">Top Kinds</div>
+                <div id="memoryTopKinds" class="output muted">读取中...</div>
+                <div class="kind-list" id="memoryKindChips"></div>
               </div>
             </div>
           </div>
 
-          <div class="ops-grid">
+          <div class="bottom-grid">
             <div class="subpanel">
-              <h3>会话令牌</h3>
-              <p class="caption">默认由后端生成并回填，仅在内部排障时查看。</p>
+              <h3>会话控制</h3>
+              <p class="caption">保留必要的令牌与会话动作，但不让它喧宾夺主。</p>
               <label class="field-label" for="sessionToken">Session Token</label>
               <input id="sessionToken" placeholder="创建会话令牌后自动显示" />
               <div class="toolbar">
@@ -678,194 +864,158 @@
 
             <div class="subpanel">
               <h3>系统事件</h3>
-              <div id="eventLog" class="output muted">等待操作。</div>
+              <div id="eventLog" class="output muted scroll-box">等待操作。</div>
             </div>
-          </div>
 
-          <div class="compact-grid">
             <div class="subpanel">
-              <h3>线上版本信息</h3>
+              <h3>线上版本</h3>
               <div id="runtimeInfo" class="output muted">读取中...</div>
             </div>
+
             <div class="subpanel">
-              <h3>后端运行预设</h3>
+              <h3>后端预设</h3>
               <div id="backendConfig" class="output muted">读取中...</div>
             </div>
-          </div>
 
-          <div class="compact-grid">
             <div class="subpanel">
-              <h3>会话返回信息</h3>
+              <h3>会话返回</h3>
               <div id="sessionInfo" class="output muted">尚未启动会话。</div>
             </div>
+
             <div class="subpanel">
-              <h3>接口响应记录</h3>
+              <h3>接口响应</h3>
               <div id="apiResult" class="output muted">尚无调用记录。</div>
             </div>
           </div>
         </section>
 
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <h2 class="panel-title">系统监控与知识校验</h2>
-              <p class="panel-subtitle">右侧改成只读监控台。重点看服务器负载、接口消耗、在线用户、资料库版本和问答效果，不再在这里提供危险的资料写删入口。</p>
-            </div>
-            <div class="pill">Read-only Monitor</div>
+        <aside class="panel side-rail">
+          <div class="side-scroll">
+            <section class="side-section">
+              <div class="section-kicker">Ops Rail</div>
+              <h2>系统概览</h2>
+              <p>右侧只保留监控、问答核验和资料抽查。把运营者真正会看的东西压成一条清晰的侧边轨道。</p>
+              <div class="monitor-hero" style="margin-top:14px;">
+                <div class="hero-stat">
+                  <div class="label">Memory Code</div>
+                  <strong id="memoryCodeHero">读取中...</strong>
+                  <p class="caption">用于核对线上资料库是否已经同步到最新版本。</p>
+                </div>
+                <div class="stat-grid">
+                  <div class="stat-cell">
+                    <div class="label">CPU</div>
+                    <strong id="cpuUsage">读取中...</strong>
+                  </div>
+                  <div class="stat-cell">
+                    <div class="label">Memory</div>
+                    <strong id="memoryUsage">读取中...</strong>
+                  </div>
+                  <div class="stat-cell">
+                    <div class="label">Disk</div>
+                    <strong id="diskUsage">读取中...</strong>
+                  </div>
+                  <div class="stat-cell">
+                    <div class="label">Requests</div>
+                    <strong id="requestTotal">读取中...</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="metric-list">
+                <div class="metric-row">
+                  <div class="name">Active Users</div>
+                  <div class="data" id="activeUsers">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">OpenAI Calls</div>
+                  <div class="data" id="openaiCalls">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Network RX</div>
+                  <div class="data" id="networkRx">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Network TX</div>
+                  <div class="data" id="networkTx">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Avg Latency</div>
+                  <div class="data" id="avgLatency">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Request Errors</div>
+                  <div class="data" id="requestErrors">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Uptime</div>
+                  <div class="data" id="uptimeValue">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">Write Mode</div>
+                  <div class="data" id="writeMode">读取中...</div>
+                </div>
+              </div>
+              <div class="memory-toolbar">
+                <button id="refreshOpsBtn" class="button-primary">刷新监控</button>
+              </div>
+            </section>
+
+            <section class="side-section">
+              <div class="section-kicker">Validation</div>
+              <h2>问答验证</h2>
+              <label class="field-label" for="message" style="margin-top:14px;">验证问题</label>
+              <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，门诊应先补哪几项病史？"></textarea>
+              <div class="toolbar">
+                <button id="sendBtn" class="button-primary">生成回答</button>
+              </div>
+              <div style="margin-top:14px;" class="output muted" id="answer">尚未生成回答。</div>
+            </section>
+
+            <section class="side-section">
+              <div class="section-kicker">Context</div>
+              <h2>命中与资源</h2>
+              <div class="output muted" id="context">尚未检索知识内容。</div>
+              <div class="metric-list" style="margin-top:14px;">
+                <div class="metric-row">
+                  <div class="name">API 消耗</div>
+                  <div class="data" id="apiTokenInfo">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">资源情况</div>
+                  <div class="data" id="resourceInfo">读取中...</div>
+                </div>
+                <div class="metric-row">
+                  <div class="name">热点路由</div>
+                  <div class="data" id="topPaths">读取中...</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="side-section">
+              <div class="section-kicker">Memory Browser</div>
+              <h2>资料抽查</h2>
+              <p>这里只做快速抽查和复制，不再把它做成危险的后台编辑器。</p>
+              <div class="memory-filter-grid" style="margin-top:14px;">
+                <div>
+                  <label class="field-label" for="memoryQuery">关键词</label>
+                  <input id="memoryQuery" placeholder="按标题、正文、标签搜索" />
+                </div>
+                <div>
+                  <label class="field-label" for="memoryKindFilter">分类</label>
+                  <input id="memoryKindFilter" placeholder="例如：doctor_thought" />
+                </div>
+                <div>
+                  <label class="field-label" for="memoryLimit">数量</label>
+                  <input id="memoryLimit" value="100" />
+                </div>
+              </div>
+              <div class="memory-toolbar">
+                <button id="refreshMemoryBtn" class="button-primary">刷新列表</button>
+                <button id="clearMemoryFiltersBtn" class="button-secondary">清空筛选</button>
+              </div>
+              <div class="memory-list" id="memoryList"></div>
+            </section>
           </div>
-
-          <div class="memory-header-strip">
-            <div class="memory-stat">
-              <div class="label">Memory Code</div>
-              <strong id="memoryCode">读取中...</strong>
-              <div class="desc">用于核对线上资料库是否已经同步到最新版本。</div>
-            </div>
-            <div class="memory-stat">
-              <div class="label">Total Entries</div>
-              <strong id="memoryTotal">-</strong>
-              <div class="desc">当前可参与检索的资料总条数。</div>
-            </div>
-            <div class="memory-stat">
-              <div class="label">Top Kinds</div>
-              <strong id="memoryTopKinds">-</strong>
-              <div class="desc">快速判断资料结构是否偏科。</div>
-            </div>
-          </div>
-
-          <div class="kind-list" id="memoryKindChips"></div>
-
-          <div class="monitor-grid" style="margin-top: 18px;">
-            <div class="monitor-card">
-              <div class="label">CPU Load</div>
-              <strong id="cpuUsage">读取中...</strong>
-              <div class="desc">按 1 分钟负载折算的当前 CPU 占用趋势。</div>
-            </div>
-            <div class="monitor-card">
-              <div class="label">Memory Usage</div>
-              <strong id="memoryUsage">读取中...</strong>
-              <div class="desc">当前应用所在机器的内存使用率。</div>
-            </div>
-            <div class="monitor-card">
-              <div class="label">Disk Usage</div>
-              <strong id="diskUsage">读取中...</strong>
-              <div class="desc">数据目录所在磁盘占用。</div>
-            </div>
-            <div class="monitor-card">
-              <div class="label">Active Users</div>
-              <strong id="activeUsers">读取中...</strong>
-              <div class="desc">最近心跳仍活跃的浏览器会话数。</div>
-            </div>
-            <div class="monitor-card">
-              <div class="label">Requests Total</div>
-              <strong id="requestTotal">读取中...</strong>
-              <div class="desc">当前进程启动以来的站内请求总量。</div>
-            </div>
-            <div class="monitor-card">
-              <div class="label">OpenAI Calls</div>
-              <strong id="openaiCalls">读取中...</strong>
-              <div class="desc">当前进程统计到的 OpenAI 调用次数。</div>
-            </div>
-          </div>
-
-          <div class="memory-layout" style="margin-top: 18px;">
-            <div class="stack">
-              <div class="subpanel">
-                <h3>系统细节</h3>
-                <div class="monitor-detail-grid">
-                  <div>
-                    <div class="label">Network RX</div>
-                    <div class="value" id="networkRx" style="font-size:20px">读取中...</div>
-                  </div>
-                  <div>
-                    <div class="label">Network TX</div>
-                    <div class="value" id="networkTx" style="font-size:20px">读取中...</div>
-                  </div>
-                  <div>
-                    <div class="label">Avg Latency</div>
-                    <div class="value" id="avgLatency" style="font-size:20px">读取中...</div>
-                  </div>
-                  <div>
-                    <div class="label">Request Errors</div>
-                    <div class="value" id="requestErrors" style="font-size:20px">读取中...</div>
-                  </div>
-                  <div>
-                    <div class="label">Uptime</div>
-                    <div class="value" id="uptimeValue" style="font-size:20px">读取中...</div>
-                  </div>
-                  <div>
-                    <div class="label">Write Mode</div>
-                    <div class="value" id="writeMode" style="font-size:20px">读取中...</div>
-                  </div>
-                </div>
-                <div class="memory-toolbar">
-                  <button id="refreshOpsBtn" class="button-primary">刷新监控</button>
-                </div>
-              </div>
-
-              <div class="subpanel">
-                <h3>问答验证</h3>
-                <p class="caption">直接用实际问题验证当前知识库和医生风格是否已经对齐。这里保留必要功能，不再堆额外调试信息。</p>
-                <label class="field-label" for="message">验证问题</label>
-                <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，应该先问哪些病史？"></textarea>
-                <div class="toolbar">
-                  <button id="sendBtn" class="button-primary">生成回答</button>
-                </div>
-              </div>
-
-              <div class="subpanel">
-                <h3>模型回答</h3>
-                <div id="answer" class="output muted">尚未生成回答。</div>
-              </div>
-
-              <div class="subpanel">
-                <h3>知识命中摘要</h3>
-                <div id="context" class="output muted">尚未检索知识内容。</div>
-              </div>
-              <div class="subpanel">
-                <h3>接口消耗</h3>
-                <div id="apiTokenInfo" class="output muted">读取中...</div>
-              </div>
-            </div>
-
-            <div class="stack">
-              <div class="subpanel">
-                <h3>资源与路由</h3>
-                <div id="resourceInfo" class="output muted">读取中...</div>
-                <div class="inline-note">下方列出当前进程内最常被访问的接口路径，便于判断请求热点。</div>
-                <div id="topPaths" class="output muted" style="margin-top:10px">读取中...</div>
-              </div>
-
-              <div class="subpanel">
-                <h3>资料检索（只读）</h3>
-                <p class="caption">这里只读查看资料库，不再提供保存和删除入口。真正需要改库时，优先走本地审阅和受控脚本流程。</p>
-                <div class="memory-filter-grid">
-                  <div>
-                    <label class="field-label" for="memoryQuery">关键词</label>
-                    <input id="memoryQuery" placeholder="按标题、正文、标签搜索" />
-                  </div>
-                  <div>
-                    <label class="field-label" for="memoryKindFilter">分类筛选</label>
-                    <input id="memoryKindFilter" placeholder="例如：doctor_thought" />
-                  </div>
-                  <div>
-                    <label class="field-label" for="memoryLimit">数量</label>
-                    <input id="memoryLimit" value="100" />
-                  </div>
-                </div>
-                <div class="memory-toolbar">
-                  <button id="refreshMemoryBtn" class="button-primary">刷新列表</button>
-                  <button id="clearMemoryFiltersBtn" class="button-secondary">清空筛选</button>
-                </div>
-              </div>
-
-              <div class="subpanel">
-                <h3>资料列表</h3>
-                <div class="inline-note" id="memoryListState">读取中...</div>
-                <div class="memory-list" id="memoryList"></div>
-              </div>
-            </div>
-          </div>
-        </section>
+        </aside>
       </section>
     </div>
   </main>
