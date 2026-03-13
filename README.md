@@ -124,6 +124,14 @@ uvicorn app.main:app --reload
 
 新增一条“医生想法资料”到 SQLite 资料库。适合后面逐步把你爸的口头表达、判断原则、沟通方式、临床偏好补进去。
 
+### `GET /api/memory/summary`
+
+返回当前资料库总条数、各分类分布，以及当前资料库暗号 `memory_code`。这个暗号会跟随快照一起进入 Git 和服务器，可用来快速核对线上是否已经同步到最新资料。
+
+### `POST /api/memory/entries/delete`
+
+按 `entry_ids` 删除误录或明显错误的资料条目。删除后会自动刷新资料库暗号，并让统一检索索引立即失效重建。
+
 ## 当前前端能力
 
 用户端现在已经可以：
@@ -192,6 +200,24 @@ cd D:\charles\Documents\doctor-avatar
 - 显示 session 信息和事件日志
 - 显示后端当前采用的 LiveAvatar 预设配置
 - 单独调试 OpenAI 问答层
+- 直接查看当前资料库暗号与分类分布
+- 按关键词 / 分类筛选资料条目
+- 手动新增、复制、删除资料条目，减少脚本操作
+
+## 资料库暗号校验
+
+现在数据库会自动生成一个“资料库暗号”，格式类似：
+
+- `LYDB-20260313-48885737`
+
+这个暗号有 3 个用途：
+
+- 每次资料库内容变化后，快照会自动刷新暗号
+- 自动部署后，服务器数据库会同步到同一个暗号
+- 可直接在网站里提问：
+  - `请只回答当前资料库暗号和资料条数，不要解释`
+
+如果网页返回的暗号和 Git 里的 `research/doctor-memory-snapshot.json` 一致，就说明线上数据库已经更新到对应版本。
 
 ## 云端部署
 
@@ -236,6 +262,16 @@ cd D:\charles\Documents\doctor-avatar
 4. 再补用户端字幕、会话摘要和隐私提示细节
 
 ## CHANGELOG
+
+### 2026-03-13（五）—— codex
+
+**控制台新增资料录入后台 + 资料库暗号校验链路**（by codex）
+
+- `app/templates/console.html`：新增“资料录入与检索”面板，显示当前资料库暗号、总条数、分类分布，并提供手动录入与筛选查看入口
+- `app/static/console.js`：支持资料摘要读取、列表筛选、手动新增、复制、删除和当前暗号展示，减少脚本操作
+- `app/main.py`：新增 `/api/memory/summary` 和 `/api/memory/entries/delete`，并让 `/api/memory/entries` 默认隐藏技术用的 `system_marker`
+- `app/memory_snapshot.py` 与 `scripts/write_memory_snapshot.py`：资料快照写入时自动维护数据库暗号，`/api/app-config` 和网站问答都可用于线上数据库版本核验
+- `scripts/export_memory_review.py`：导出给医生审阅的精简 PDF 时自动排除技术暗号条目
 
 ### 2026-03-13（五）—— windows-claude 按钮文字重复修复
 

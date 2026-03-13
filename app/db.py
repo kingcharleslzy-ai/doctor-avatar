@@ -350,6 +350,19 @@ def delete_memory_entries(entry_ids: Iterable[int]) -> int:
         return cursor.rowcount
 
 
+def memory_kind_counts() -> list[dict]:
+    with closing(_connect()) as conn:
+        rows = conn.execute(
+            """
+            SELECT kind, COUNT(*) AS row_count
+            FROM doctor_memory_entries
+            GROUP BY kind
+            ORDER BY row_count DESC, kind ASC
+            """
+        ).fetchall()
+    return [{"kind": row["kind"], "count": row["row_count"]} for row in rows]
+
+
 def find_exact_duplicate_groups() -> list[dict]:
     with closing(_connect()) as conn:
         rows = conn.execute(

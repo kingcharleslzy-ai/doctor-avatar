@@ -11,9 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .config import settings
-from .db import create_memory_entry, init_memory_db, list_memory_entries
+from .db import create_memory_entry, delete_memory_entries, init_memory_db, list_memory_entries, memory_kind_counts
 from .knowledge import invalidate_index, load_doctor_profile
-from .memory_snapshot import get_memory_status
+from .memory_snapshot import MARKER_KIND, get_memory_status
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -21,6 +21,7 @@ from .models import (
     LiveAvatarStartRequest,
     LiveAvatarTokenResponse,
     MemoryEntryCreate,
+    MemoryEntryDeleteRequest,
     MemoryEntryResponse,
 )
 from .services import ChatService, HeyGenService
@@ -171,8 +172,22 @@ def memory_entries(
     limit: int = 100,
     _: str = Depends(require_console_auth),
 ) -> list[MemoryEntryResponse]:
-    rows = list_memory_entries(kind=kind, query=q, limit=limit)
+    rows = list_memory_entries(kind=kind, query=q, limit=None)
+    if kind != MARKER_KIND:
+        rows = [row for row in rows if row["kind"] != MARKER_KIND]
+    rows = rows[: max(1, min(limit, 5000))]
     return [MemoryEntryResponse(**row) for row in rows]
+
+
+@app.get("/api/memory/summary")
+def memory_summary(_: str = Depends(require_console_auth)) -> dict[str, object]:
+    rows = [row for row in list_memory_entries(limit=None) if row["kind"] != MARKER_KIND]
+    counts = [item for item in memory_kind_counts() if item["kind"] != MARKER_KIND]
+    return {
+        "total": len(rows),
+        "kinds": counts,
+        "memory_code": get_memory_status(Path(settings.doctor_memory_db_path))[0] if rows else None,
+    }
 
 
 @app.post("/api/memory/entries", response_model=MemoryEntryResponse)
@@ -188,6 +203,19 @@ def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_a
     get_memory_status(Path(settings.doctor_memory_db_path))
     invalidate_index()
     return MemoryEntryResponse(**row)
+
+
+@app.post("/api/memory/entries/delete")
+def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_console_auth)) -> dict[str, int | str]:
+    protected_ids = {
+        row["id"]
+        for row in list_memory_entries(kind=MARKER_KIND, limit=None)
+    }
+    candidate_ids = [entry_id for entry_id in payload.entry_ids if entry_id not in protected_ids]
+    deleted = delete_memory_entries(candidate_ids)
+    get_memory_status(Path(settings.doctor_memory_db_path))
+    invalidate_index()
+    return {"deleted": deleted}
 
 
 @app.get("/", response_class=HTMLResponse)

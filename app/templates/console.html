@@ -67,7 +67,28 @@
     .button-danger { background: rgba(169,72,72,.16); color: #ffc5c5; border: 1px solid rgba(255,149,149,.18); }
     .panel-stack { display: grid; gap: 18px; }
     .caption { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .memory-admin { margin-top: 22px; }
+    .memory-admin-grid { display: grid; grid-template-columns: 0.92fr 1.08fr; gap: 22px; }
+    .memory-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 16px; }
+    .memory-stat { padding: 16px; border-radius: 18px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
+    .memory-stat strong { display: block; margin-top: 8px; font-size: 26px; letter-spacing: -.03em; }
+    .kind-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .kind-chip { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); font-size: 13px; color: var(--text); }
+    .kind-chip span { color: var(--muted); margin-left: 6px; }
+    .memory-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .memory-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .memory-list { display: grid; gap: 12px; max-height: 920px; overflow: auto; padding-right: 4px; }
+    .memory-item { border-radius: 18px; border: 1px solid rgba(255,255,255,.07); background: rgba(255,255,255,.025); padding: 16px; }
+    .memory-item-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .memory-item h4 { margin: 0; font-size: 16px; }
+    .memory-meta { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .memory-content { margin-top: 12px; color: var(--text); line-height: 1.8; font-size: 14px; white-space: pre-wrap; }
+    .memory-item-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .button-ghost { background: rgba(255,255,255,.03); color: var(--muted); border: 1px solid rgba(255,255,255,.08); }
+    .inline-note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .memory-filter-grid { display: grid; grid-template-columns: 1fr 0.7fr 0.4fr; gap: 12px; }
     @media (max-width: 1120px) { .hero-wrap, .dashboard, .hero-grid, .section-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1120px) { .memory-admin-grid, .memory-summary-grid, .memory-form-grid, .memory-filter-grid { grid-template-columns: 1fr; } }
     @media (max-width: 720px) { main { padding: 18px 14px 28px; } h1 { font-size: 30px; } .panel, .hero, .metric-card { border-radius: 22px; } .video-stage { min-height: 320px; } }
   </style>
 </head>
@@ -193,6 +214,107 @@
         <div class="subpanel">
           <h3>接口响应记录</h3>
           <div id="apiResult" class="output muted">尚无调用记录。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel memory-admin">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">资料录入与检索</h2>
+          <p class="panel-subtitle">直接在后台查看当前资料库、按分类筛选、手动新增你爸的表达与经验规则，并同步观察当前资料库暗号，减少脚本操作。</p>
+        </div>
+        <div class="status-pill">Memory Admin</div>
+      </div>
+
+      <div class="memory-summary-grid">
+        <div class="memory-stat">
+          <div class="label">Memory Code</div>
+          <strong id="memoryCode">读取中...</strong>
+          <div class="desc">每次资料库变更后自动更新，可用来核对线上是否已经同步到最新版本。</div>
+        </div>
+        <div class="memory-stat">
+          <div class="label">Total Entries</div>
+          <strong id="memoryTotal">-</strong>
+          <div class="desc">当前资料条目总数，不含前端界面里额外生成的问答记录。</div>
+        </div>
+        <div class="memory-stat">
+          <div class="label">Top Kinds</div>
+          <strong id="memoryTopKinds">-</strong>
+          <div class="desc">优先看资料分布是否均衡，避免风格类太少或知识类过多失衡。</div>
+        </div>
+      </div>
+
+      <div class="kind-list" id="memoryKindChips"></div>
+
+      <div class="memory-admin-grid" style="margin-top: 18px;">
+        <div class="panel-stack">
+          <div class="subpanel">
+            <h3>新增资料</h3>
+            <p class="caption">适合录入你爸真实会说的话、问诊追问顺序、治疗取向、风险提醒和患者解释方式。保存后会自动刷新资料库暗号。</p>
+            <div class="memory-form-grid">
+              <div>
+                <label class="field-label" for="memoryKind">资料分类</label>
+                <input id="memoryKind" placeholder="例如：doctor_thought / thinking_style" />
+              </div>
+              <div>
+                <label class="field-label" for="memorySource">来源</label>
+                <input id="memorySource" placeholder="例如：manual:family-review" />
+              </div>
+              <div>
+                <label class="field-label" for="memoryTitle">标题</label>
+                <input id="memoryTitle" placeholder="例如：鼻炎复诊时先追问用药依从性" />
+              </div>
+              <div>
+                <label class="field-label" for="memoryImportance">重要度</label>
+                <input id="memoryImportance" placeholder="默认 1.0，建议 0.8 - 2.0" value="1.0" />
+              </div>
+            </div>
+            <div style="margin-top: 14px;">
+              <label class="field-label" for="memoryTags">标签</label>
+              <input id="memoryTags" placeholder="用逗号分隔，例如：鼻炎, 随访, 问诊" />
+            </div>
+            <div style="margin-top: 14px;">
+              <label class="field-label" for="memoryContent">正文内容</label>
+              <textarea id="memoryContent" placeholder="尽量写成你爸真实会说的话，或明确的判断/处理原则。"></textarea>
+            </div>
+            <div class="memory-toolbar">
+              <button id="saveMemoryBtn" class="button-primary">保存资料</button>
+              <button id="resetMemoryBtn" class="button-secondary">清空表单</button>
+            </div>
+            <div class="inline-note" id="memorySaveResult">尚未新增资料。</div>
+          </div>
+        </div>
+
+        <div class="panel-stack">
+          <div class="subpanel">
+            <h3>资料检索</h3>
+            <p class="caption">先筛选再看，能更快判断当前数据库里的内容是否合适。删除按钮只用于误录和明显错误条目。</p>
+            <div class="memory-filter-grid">
+              <div>
+                <label class="field-label" for="memoryQuery">关键词</label>
+                <input id="memoryQuery" placeholder="按标题、正文、标签搜索" />
+              </div>
+              <div>
+                <label class="field-label" for="memoryKindFilter">分类筛选</label>
+                <input id="memoryKindFilter" placeholder="例如：doctor_thought" />
+              </div>
+              <div>
+                <label class="field-label" for="memoryLimit">数量</label>
+                <input id="memoryLimit" value="40" />
+              </div>
+            </div>
+            <div class="memory-toolbar">
+              <button id="refreshMemoryBtn" class="button-primary">刷新列表</button>
+              <button id="clearMemoryFiltersBtn" class="button-secondary">清空筛选</button>
+            </div>
+          </div>
+
+          <div class="subpanel">
+            <h3>资料列表</h3>
+            <div class="inline-note" id="memoryListState">读取中...</div>
+            <div class="memory-list" id="memoryList"></div>
+          </div>
         </div>
       </div>
     </section>

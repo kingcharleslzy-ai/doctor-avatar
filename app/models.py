@@ -35,6 +35,10 @@ class MemoryEntryResponse(BaseModel):
     updated_at: str
 
 
+class MemoryEntryDeleteRequest(BaseModel):
+    entry_ids: list[int] = Field(min_length=1)
+
+
 class LiveAvatarSessionRequest(BaseModel):
     mode: str | None = None
     avatar_id: str | None = None

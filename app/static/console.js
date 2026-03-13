@@ -3,6 +3,7 @@ const state = {
   sessionToken: "",
   startedSession: null,
   conversation: [],
+  memorySummary: null,
 };
 
 function $(id) {
@@ -46,6 +47,15 @@ function setBusy(id, busy, text = "处理中...") {
   } else if (btn.dataset.originalText) {
     btn.textContent = btn.dataset.originalText;
   }
+}
+
+function escapeHtml(text) {
+  return String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function renderRemoteTrack(track) {
@@ -213,6 +223,156 @@ async function sendChat() {
   }
 }
 
+function resetMemoryForm() {
+  $("memoryKind").value = "";
+  $("memorySource").value = "manual:console";
+  $("memoryTitle").value = "";
+  $("memoryImportance").value = "1.0";
+  $("memoryTags").value = "";
+  $("memoryContent").value = "";
+  $("memorySaveResult").textContent = "表单已清空。";
+}
+
+function renderMemorySummary(data) {
+  state.memorySummary = data;
+  $("memoryCode").textContent = data.memory_code || "-";
+  $("memoryTotal").textContent = String(data.total || 0);
+  const topKinds = (data.kinds || []).slice(0, 3).map((item) => `${item.kind} (${item.count})`);
+  $("memoryTopKinds").textContent = topKinds.join(" / ") || "-";
+  $("memoryKindChips").innerHTML = (data.kinds || [])
+    .map((item) => `<div class="kind-chip">${escapeHtml(item.kind)}<span>${item.count}</span></div>`)
+    .join("");
+}
+
+async function loadMemorySummary() {
+  try {
+    const data = await getJson("/api/memory/summary");
+    renderMemorySummary(data);
+  } catch (error) {
+    $("memoryCode").textContent = "读取失败";
+    $("memoryTotal").textContent = "-";
+    $("memoryTopKinds").textContent = "-";
+    $("memoryKindChips").innerHTML = "";
+    log(`读取资料概览失败：${error.message}`);
+  }
+}
+
+function renderMemoryEntries(rows) {
+  const container = $("memoryList");
+  const stateEl = $("memoryListState");
+  if (!rows.length) {
+    container.innerHTML = "";
+    stateEl.textContent = "当前筛选条件下没有资料。";
+    return;
+  }
+
+  stateEl.textContent = `已载入 ${rows.length} 条资料。`;
+  container.innerHTML = rows
+    .map((row) => {
+      const tags = (row.tags || []).map((tag) => `<span class="kind-chip">${escapeHtml(tag)}</span>`).join("");
+      return `
+        <article class="memory-item">
+          <div class="memory-item-head">
+            <div>
+              <h4>${escapeHtml(row.title)}</h4>
+              <div class="memory-meta">
+                分类：${escapeHtml(row.kind)}<br />
+                来源：${escapeHtml(row.source)}<br />
+                重要度：${escapeHtml(row.importance)}<br />
+                更新时间：${escapeHtml(row.updated_at)}
+              </div>
+            </div>
+            <div class="memory-item-actions">
+              <button class="button-ghost" data-copy-memory="${row.id}">复制</button>
+              <button class="button-danger" data-delete-memory="${row.id}">删除</button>
+            </div>
+          </div>
+          ${tags ? `<div class="kind-list">${tags}</div>` : ""}
+          <div class="memory-content">${escapeHtml(row.content)}</div>
+        </article>
+      `;
+    })
+    .join("");
+
+  container.querySelectorAll("[data-copy-memory]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const row = rows.find((item) => String(item.id) === button.dataset.copyMemory);
+      if (!row) return;
+      await navigator.clipboard.writeText(`${row.title}\n${row.content}`);
+      log(`已复制资料：${row.title}`);
+    });
+  });
+
+  container.querySelectorAll("[data-delete-memory]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const row = rows.find((item) => String(item.id) === button.dataset.deleteMemory);
+      if (!row) return;
+      if (!window.confirm(`确认删除这条资料？\n\n${row.title}`)) {
+        return;
+      }
+      try {
+        await postJson("/api/memory/entries/delete", { entry_ids: [row.id] });
+        log(`已删除资料：${row.title}`);
+        await Promise.all([loadMemorySummary(), loadMemoryList()]);
+      } catch (error) {
+        log(`删除资料失败：${error.message}`);
+      }
+    });
+  });
+}
+
+async function loadMemoryList() {
+  const query = $("memoryQuery").value.trim();
+  const kind = $("memoryKindFilter").value.trim();
+  const limit = $("memoryLimit").value.trim() || "40";
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (kind) params.set("kind", kind);
+  params.set("limit", limit);
+  $("memoryListState").textContent = "读取中...";
+  try {
+    const rows = await getJson(`/api/memory/entries?${params.toString()}`);
+    renderMemoryEntries(rows);
+  } catch (error) {
+    $("memoryList").innerHTML = "";
+    $("memoryListState").textContent = error.message;
+    log(`读取资料列表失败：${error.message}`);
+  }
+}
+
+async function saveMemory() {
+  const kind = $("memoryKind").value.trim();
+  const title = $("memoryTitle").value.trim();
+  const content = $("memoryContent").value.trim();
+  if (!kind || !title || !content) {
+    $("memorySaveResult").textContent = "请至少填写分类、标题和正文。";
+    return;
+  }
+
+  setBusy("saveMemoryBtn", true, "保存中...");
+  try {
+    const payload = {
+      kind,
+      title,
+      content,
+      source: $("memorySource").value.trim() || "manual:console",
+      importance: Number($("memoryImportance").value.trim() || "1.0"),
+      tags: $("memoryTags").value.split(",").map((item) => item.trim()).filter(Boolean),
+    };
+    const row = await postJson("/api/memory/entries", payload);
+    $("memorySaveResult").textContent = `已保存：${row.title}`;
+    log(`已新增资料：${row.title}`);
+    resetMemoryForm();
+    $("memorySaveResult").textContent = `已保存：${row.title}`;
+    await Promise.all([loadMemorySummary(), loadMemoryList()]);
+  } catch (error) {
+    $("memorySaveResult").textContent = error.message;
+    log(`保存资料失败：${error.message}`);
+  } finally {
+    setBusy("saveMemoryBtn", false);
+  }
+}
+
 async function disconnectRoom() {
   if (state.room) {
     await state.room.disconnect();
@@ -241,6 +401,7 @@ async function loadAppConfig() {
       `医生：${doctor.name || "-"} ${doctor.title ? ` / ${doctor.title}` : ""}`,
       `医院：${doctor.hospital || "-"}`,
       `科室：${doctor.department || "-"}`,
+      `资料库暗号：${(data.doctor_memory && data.doctor_memory.memory_code) || "-"}`,
       `OpenAI 已配置：${data.openai_configured ? "是" : "否"}`,
       `HeyGen 已配置：${data.heygen_configured ? "是" : "否"}`,
       `模式：${liveavatar.mode || "-"}`,
@@ -265,7 +426,19 @@ function wireUi() {
   $("listSessionsBtn").addEventListener("click", listSessions);
   $("disconnectBtn").addEventListener("click", disconnectRoom);
   $("sendBtn").addEventListener("click", sendChat);
+  $("saveMemoryBtn").addEventListener("click", saveMemory);
+  $("resetMemoryBtn").addEventListener("click", resetMemoryForm);
+  $("refreshMemoryBtn").addEventListener("click", loadMemoryList);
+  $("clearMemoryFiltersBtn").addEventListener("click", () => {
+    $("memoryQuery").value = "";
+    $("memoryKindFilter").value = "";
+    $("memoryLimit").value = "40";
+    loadMemoryList();
+  });
 }
 
 wireUi();
 loadAppConfig();
+resetMemoryForm();
+loadMemorySummary();
+loadMemoryList();
