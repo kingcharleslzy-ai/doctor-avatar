@@ -16,6 +16,13 @@ jobs:
       FRP_VERSION: "0.67.0"
       FRP_AUTH_TOKEN: ${{ secrets.FRP_AUTH_TOKEN }}
     steps:
+      - name: Sync repo on server
+        run: |
+          cd /root/doctor-avatar
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
+
       - name: Validate secret presence
         run: |
           if [ -z "${FRP_AUTH_TOKEN}" ]; then
