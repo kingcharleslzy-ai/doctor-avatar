@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-03-13T15:47:38",
+  "exported_at": "2026-03-13T16:03:20",
   "row_count": 102,
   "entries": [
     {
@@ -15,7 +15,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.1,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 35,
@@ -30,7 +30,7 @@
       "source": "web:hz-hospital skull-base clinic",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 51,
@@ -45,7 +45,7 @@
       "source": "ppt:复发性鼻咽癌的治疗策略.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 33,
@@ -61,7 +61,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 34,
@@ -76,7 +76,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.3,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 75,
@@ -91,7 +91,7 @@
       "source": "web:hz-hospital inverted papilloma article",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 14,
@@ -109,7 +109,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.0,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 15,
@@ -127,7 +127,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.0,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 16,
@@ -145,7 +145,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.0,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 79,
@@ -160,7 +160,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.8,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 77,
@@ -175,7 +175,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 78,
@@ -190,7 +190,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 96,
@@ -205,7 +205,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 42,
@@ -220,7 +220,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 61,
@@ -235,7 +235,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 46,
@@ -250,7 +250,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 95,
@@ -265,7 +265,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 43,
@@ -280,7 +280,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 54,
@@ -295,7 +295,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 83,
@@ -310,7 +310,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 44,
@@ -325,7 +325,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.3,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 45,
@@ -340,7 +340,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.3,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 81,
@@ -355,7 +355,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 82,
@@ -370,7 +370,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 60,
@@ -385,7 +385,7 @@
       "source": "ppt:过敏性鼻炎诊治新概念-2.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 88,
@@ -400,7 +400,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 52,
@@ -415,7 +415,7 @@
       "source": "ppt:复发性鼻咽癌的治疗策略.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 66,
@@ -430,7 +430,7 @@
       "source": "ppt:过敏性鼻炎诊治新概念-2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 58,
@@ -445,7 +445,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.3,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 39,
@@ -460,7 +460,7 @@
       "source": "web:haodf allergic rhinitis article",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 73,
@@ -475,7 +475,7 @@
       "source": "web:haodf articles and talks",
       "importance": 1.2,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 68,
@@ -490,7 +490,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.0,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 40,
@@ -505,7 +505,7 @@
       "source": "web:haodf probiotics article",
       "importance": 0.9,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 12,
@@ -519,7 +519,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 13,
@@ -533,7 +533,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 102,
@@ -548,7 +548,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 92,
@@ -563,7 +563,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 101,
@@ -578,7 +578,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 70,
@@ -593,7 +593,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 93,
@@ -608,7 +608,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 71,
@@ -623,7 +623,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.1,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 8,
@@ -637,7 +637,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 9,
@@ -651,7 +651,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 10,
@@ -665,7 +665,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 11,
@@ -679,7 +679,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.5,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 17,
@@ -697,7 +697,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 18,
@@ -715,7 +715,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 19,
@@ -733,7 +733,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 20,
@@ -751,7 +751,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 21,
@@ -769,7 +769,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 22,
@@ -787,7 +787,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 23,
@@ -805,7 +805,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 24,
@@ -823,7 +823,7 @@
       "source": "common_faq.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 25,
@@ -841,7 +841,7 @@
       "source": "style_examples.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 26,
@@ -859,7 +859,7 @@
       "source": "style_examples.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 27,
@@ -877,7 +877,7 @@
       "source": "style_examples.md",
       "importance": 0.9,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 94,
@@ -892,7 +892,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 85,
@@ -907,7 +907,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 67,
@@ -922,7 +922,7 @@
       "source": "ppt:过敏性鼻炎诊治新概念-2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 89,
@@ -937,7 +937,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 72,
@@ -952,7 +952,7 @@
       "source": "web:haodf child allergic rhinitis article",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 74,
@@ -967,7 +967,7 @@
       "source": "web:public lecture on NPC screening",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 76,
@@ -982,7 +982,7 @@
       "source": "web:haodf articles and talks",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 38,
@@ -997,7 +997,7 @@
       "source": "web:haodf articles",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 64,
@@ -1012,7 +1012,7 @@
       "source": "ppt:过敏性鼻炎四位一体(1).pptx",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 80,
@@ -1027,7 +1027,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.2,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 104,
@@ -1042,7 +1042,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.2,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 62,
@@ -1057,7 +1057,7 @@
       "source": "ppt:过敏性鼻炎四位一体(1).pptx",
       "importance": 1.1,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 63,
@@ -1072,7 +1072,7 @@
       "source": "ppt:过敏性鼻炎四位一体(1).pptx",
       "importance": 1.1,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 30,
@@ -1087,7 +1087,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.3,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 1,
@@ -1101,7 +1101,7 @@
       "source": "doctor_profile.yaml",
       "importance": 0.8,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 2,
@@ -1115,7 +1115,7 @@
       "source": "doctor_profile.yaml",
       "importance": 0.8,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 3,
@@ -1129,7 +1129,7 @@
       "source": "doctor_profile.yaml",
       "importance": 0.8,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 4,
@@ -1143,7 +1143,7 @@
       "source": "doctor_profile.yaml",
       "importance": 0.8,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 37,
@@ -1158,7 +1158,7 @@
       "source": "web:hz-hospital sources",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 49,
@@ -1173,7 +1173,7 @@
       "source": "ppt:复发性鼻咽癌的治疗策略.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 56,
@@ -1188,7 +1188,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 57,
@@ -1203,7 +1203,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 97,
@@ -1218,7 +1218,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 47,
@@ -1233,7 +1233,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 41,
@@ -1248,7 +1248,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.0,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 32,
@@ -1263,7 +1263,7 @@
       "source": "web:hz-hospital expert page",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 36,
@@ -1279,7 +1279,7 @@
       "source": "web:hz-hospital department page",
       "importance": 1.2,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T08:03:20+00:00"
     },
     {
       "id": 5,
@@ -1293,7 +1293,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.2,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 6,
@@ -1307,7 +1307,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.2,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 7,
@@ -1321,7 +1321,7 @@
       "source": "doctor_profile.yaml",
       "importance": 1.2,
       "created_at": "2026-03-12T01:38:16+00:00",
-      "updated_at": "2026-03-12T01:38:16+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 84,
@@ -1336,7 +1336,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.8,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 90,
@@ -1351,7 +1351,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.8,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 59,
@@ -1366,7 +1366,7 @@
       "source": "ppt:过敏性鼻炎四位一体(1).pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 91,
@@ -1381,7 +1381,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 98,
@@ -1396,7 +1396,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 103,
@@ -1411,7 +1411,7 @@
       "source": "ppt:鼻咽癌早筛早诊.pptx",
       "importance": 1.7,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 48,
@@ -1426,7 +1426,7 @@
       "source": "ppt:复发性鼻咽癌的治疗策略.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 50,
@@ -1441,7 +1441,7 @@
       "source": "ppt:复发性鼻咽癌的治疗策略.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 55,
@@ -1456,7 +1456,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 100,
@@ -1471,7 +1471,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.6,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 53,
@@ -1486,7 +1486,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 65,
@@ -1501,7 +1501,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 69,
@@ -1516,7 +1516,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.5,
       "created_at": "2026-03-13T05:36:58+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 86,
@@ -1531,7 +1531,7 @@
       "source": "ppt:过敏性鼻炎四位一体2.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 99,
@@ -1546,7 +1546,7 @@
       "source": "ppt:儿童鼻窦炎抗生素使用共识.pptx",
       "importance": 1.4,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     },
     {
       "id": 87,
@@ -1561,7 +1561,7 @@
       "source": "ppt:过敏性鼻炎四位一体1.pptx",
       "importance": 1.3,
       "created_at": "2026-03-13T07:44:33+00:00",
-      "updated_at": "2026-03-13T07:44:33+00:00"
+      "updated_at": "2026-03-13T07:52:59+00:00"
     }
   ]
 }

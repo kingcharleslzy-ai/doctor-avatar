@@ -11,6 +11,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.db import delete_memory_entries, find_exact_duplicate_groups, init_memory_db, list_memory_entries
+from scripts.write_memory_snapshot import write_snapshot
 
 TEST_SOURCES = {"api-test", "manual-test"}
 
@@ -26,6 +27,12 @@ def parse_args() -> argparse.Namespace:
         "--report",
         default="tmp/memory_cleanup_report.md",
         help="Where to write the cleanup report.",
+    )
+    parser.add_argument(
+        "--refresh-snapshot",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Refresh research/doctor-memory-snapshot.json after safe cleanup.",
     )
     return parser.parse_args()
 
@@ -142,6 +149,10 @@ def main() -> None:
     print(f"Test-noise rows: {len(test_rows)}")
     print(f"Overlap groups: {len(overlap_groups)}")
     print(f"Report: {report_path}")
+    if args.apply_safe and args.refresh_snapshot:
+        count, out_path = write_snapshot(ROOT / "data" / "doctor_memory.db", ROOT / "research" / "doctor-memory-snapshot.json")
+        print(f"Snapshot rows: {count}")
+        print(f"Snapshot: {out_path}")
 
 
 if __name__ == "__main__":
