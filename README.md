@@ -227,6 +227,11 @@ cd D:\charles\Documents\doctor-avatar
 
 ### 2026-03-13（五）—— codex
 
+**生产容器补齐导入所需目录：支持在 Docker 容器内执行资料导入脚本**（by codex）
+
+- `Dockerfile`：新增复制 `scripts/` 与 `research/`，让容器内可以直接运行 `import_memory_draft.py` 并读取草稿 YAML
+- `.dockerignore`：移除对 `scripts` 的排除，避免镜像构建时把导入脚本漏掉
+
 **资料库批量导入能力：支持按草稿 YAML 幂等写入 SQLite**（by codex）
 
 - `app/db.py`：新增 `upsert_memory_entry()`，按 `kind + title + source` 幂等更新或插入资料条目

@@ -15,6 +15,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 COPY app ./app
 COPY knowledge ./knowledge
+COPY scripts ./scripts
+COPY research ./research
 
 RUN useradd -m -u 10001 appuser \
     && mkdir -p /app_cache /app_data \
