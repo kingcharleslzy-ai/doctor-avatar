@@ -120,6 +120,42 @@ npm run validate:console
 - `Memory Code`
 - 只读模式提示
 
+## 阿里云 SWAS 官方命令通道
+
+当前已经确认这台轻量应用服务器可以通过官方 SWAS OpenAPI 执行命令，不必再只依赖 GitHub 自动部署猜服务器状态。
+
+已确认信息：
+
+- 地域：`ap-southeast-3`
+- 实例 ID：`7c3a74523d1f49e192b158e0f919eed4`
+- endpoint：`swas.ap-southeast-3.aliyuncs.com`
+- 云助手状态：在线
+
+本地脚本：
+
+- `scripts/swas_run_command.py`
+
+先在本机设置环境变量：
+
+```powershell
+$env:ALIBABA_CLOUD_ACCESS_KEY_ID="你的RAM用户AK"
+$env:ALIBABA_CLOUD_ACCESS_KEY_SECRET="你的RAM用户SK"
+```
+
+然后执行：
+
+```powershell
+cd D:\charles\Documents\doctor-avatar
+python .\scripts\swas_run_command.py "hostname"
+python .\scripts\swas_run_command.py "docker compose -f /root/doctor-avatar/docker-compose.prod.yml ps"
+```
+
+脚本会：
+
+- 调用 SWAS `RunCommand`
+- 自动轮询执行结果
+- 打印命令输出、状态、退出码
+
 ## 需要填写的内容
 
 ### 1. `.env`
