@@ -81,6 +81,36 @@ public_search_entries:
     tags: [门诊信息, 风险边界, 易变信息]
     source: web:hz-hospital expert page
     importance: 1.0
+  - kind: patient_education
+    title: 儿童过敏性鼻炎不只是打喷嚏流鼻涕
+    content: 从公开科普标题和内容方向看，李勇把儿童过敏性鼻炎放在生长发育、睡眠、学习表现和气道共病的框架里理解，不把它当成单纯的鼻部小毛病。
+    tags: [儿童过敏性鼻炎, 生长发育, 科普]
+    source: web:haodf child allergic rhinitis article
+    importance: 1.3
+  - kind: doctor_thought
+    title: 公开科普强调先看病史再看化验
+    content: 结合公开文章和演讲主题，李勇的公开表达并不鼓励患者只盯着一张过敏原化验单，而是更强调症状、病史、诱因和专科评估要放在一起看。
+    tags: [病史采集, 过敏原检测, 医生思路]
+    source: web:haodf articles and talks
+    importance: 1.2
+  - kind: patient_education
+    title: 鼻咽癌早筛公开表达强调症状敏感性
+    content: 从公开讲题《鼻咽癌的筛查与早诊早治疗》看，李勇对公众教育的重点是提高对鼻塞、回吸鼻涕带血、单侧耳闷耳鸣、无痛性颈部包块等症状群的警觉。
+    tags: [鼻咽癌, 公众教育, 早筛]
+    source: web:public lecture on NPC screening
+    importance: 1.3
+  - kind: clinical_strength
+    title: 公开内容体现鼻腔鼻窦肿瘤内镜处理能力
+    content: 结合医院公开文章《鼻内镜手术治疗鼻腔内翻性乳头状瘤》与专家页信息，可以把李勇的公开能力画像进一步落到鼻腔鼻窦肿瘤的内镜处理与长期复查管理上。
+    tags: [鼻腔鼻窦肿瘤, 内镜手术, 长期复查]
+    source: web:hz-hospital inverted papilloma article
+    importance: 1.3
+  - kind: patient_education
+    title: 公开资料里的过敏管理偏长期慢病视角
+    content: 无论是公开文章还是演讲主题，李勇对过敏性鼻炎的公众教育都更偏向长期慢病管理，包括环境控制、规范用药、免疫治疗和持续宣教，而不是一次性速成治疗。
+    tags: [过敏性鼻炎, 慢病管理, 医患教育]
+    source: web:haodf articles and talks
+    importance: 1.3
 
 ppt_entries:
   - kind: diagnostic_principle
@@ -263,3 +293,171 @@ ppt_entries:
     tags: [互联网随访, 慢病管理, 医患协作]
     source: ppt:过敏性鼻炎四位一体2.pptx
     importance: 1.1
+  - kind: diagnostic_principle
+    title: 过敏性鼻炎诊断必须满足症状与过敏证据两条线
+    content: 四位一体 PPT 里的诊断框架非常明确：仅有症状不够，仅有过敏原阳性也不够，需将典型病史、临床表现、体征与皮肤点刺或血清特异性 IgE 等客观证据结合起来判断。
+    tags: [过敏性鼻炎, 诊断框架, 过敏原检测]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.7
+  - kind: diagnostic_principle
+    title: 过敏性鼻炎病史采集要覆盖上下气道和全身表现
+    content: 李勇在 PPT 中给出的病史采集范围并不局限于鼻部，还包括眼部、咽部、耳部、皮肤、下呼吸道哮喘表现，以及专科检查、肺功能、免疫功能和维生素 D 等资料。
+    tags: [病史采集, 上下气道, 全身表现]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.7
+  - kind: diagnostic_principle
+    title: 儿童过敏性鼻炎要主动追问非典型伴随症状
+    content: 四位一体 PPT 特别提醒儿童病例不能只问鼻痒喷嚏鼻塞流涕，还要主动追问揉鼻、吸鼻、咳嗽、打鼾、声嘶、眨眼、面部多动、夜间磨牙、流口水、遗尿和注意力不集中等表现。
+    tags: [儿童过敏性鼻炎, 问诊重点, 非典型症状]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.8
+  - kind: patient_education
+    title: 过敏体征可以帮助家长理解并非孩子装出来
+    content: PPT 把鼻黏膜苍白水肿、水样分泌物、过敏性黑眼圈、过敏性皱褶和“过敏脸”等体征系统列出，这有助于向家长解释孩子的症状和行为有明确疾病基础。
+    tags: [过敏体征, 家长教育, 儿童]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.2
+  - kind: diagnostic_principle
+    title: 鼻内镜在过敏性鼻炎专科评估中的权重上升
+    content: PPT 反复强调鼻内镜检查在过敏性鼻炎诊断和鉴别中的作用越来越重要，说明李勇对过敏性鼻炎的看法不是只靠问答和化验，而是重视专科可视化检查。
+    tags: [鼻内镜, 专科评估, 鉴别诊断]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.3
+  - kind: doctor_thought
+    title: 分型的意义在于精准问诊和精准组合用药
+    content: 李勇在 PPT 中把症状分型的意义讲得很实：不是为了学术分类，而是为了根据主诉快速定位、减少误诊、指导更有针对性的问诊和组合用药。
+    tags: [症状分型, 精准问诊, 组合用药]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.6
+  - kind: diagnostic_principle
+    title: 过敏性鼻炎首先要判断间歇性还是持续性
+    content: 四位一体 PPT 沿用指南框架，先按症状持续时间区分间歇性和持续性，再结合轻度与中重度判断病情强弱，这是后续治疗分层的基础。
+    tags: [间歇性, 持续性, 严重度分层]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.4
+  - kind: treatment_principle
+    title: 鼻喷激素是一线而且应强调规律使用
+    content: 四位一体 PPT 不是只说鼻喷激素有效，而是进一步强调其是一线治疗，并且规律用药优于按需用药；轻中度至少连续 2 周，中重度持续性患者通常需要更长疗程。
+    tags: [鼻喷激素, 一线治疗, 规律用药]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.8
+  - kind: patient_education
+    title: 鼻喷激素需要向患者解释疗程而不是只给药
+    content: 从 PPT 的用药表述看，李勇会特别强调患者理解鼻喷激素不是喷几下就结束，而是需要按疗程、按频次坚持使用，才能得到稳定控制。
+    tags: [鼻喷激素, 患者教育, 依从性]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.5
+  - kind: treatment_principle
+    title: 鼻减充血剂在部分患者中承担开路作用
+    content: 四位一体2中明确把鼻减充血剂描述为帮助扩大鼻腔、改善药物分布范围的“开路”工具，说明其价值更多在于短程辅助，而非长期主治。
+    tags: [鼻减充血剂, 辅助治疗, 药物分布]
+    source: ppt:过敏性鼻炎四位一体2.pptx
+    importance: 1.4
+  - kind: treatment_principle
+    title: 鼻喷激素目标不只是止症状还包括修复黏膜屏障
+    content: 关于糠酸莫米松等内容的 PPT 强调，规范鼻喷激素治疗除了控制炎症，还涉及恢复鼻黏膜屏障和改善组织学表现，这会影响其长期慢病管理定位。
+    tags: [黏膜屏障, 糠酸莫米松, 长期管理]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.3
+  - kind: doctor_thought
+    title: 过敏原回避要考虑中国南北差异和现实可行性
+    content: 李勇在 PPT 中没有把“避免过敏原”说成一个空口号，而是结合尘螨、花粉、食物和南北差异讨论哪些过敏原难避免、哪些需要转向耐受和长期管理。
+    tags: [过敏原回避, 南北差异, 现实可行性]
+    source: ppt:过敏性鼻炎四位一体2.pptx
+    importance: 1.5
+  - kind: patient_education
+    title: 尘螨过敏管理要提前告诉患者难完全回避
+    content: 在尘螨相关内容里，PPT 反复强调它是中国最主要吸入性过敏原且现实中难完全避免，因此患者教育应从一开始就设定“控制和耐受”而不是“彻底隔绝”的预期。
+    tags: [尘螨, 患者预期, 过敏管理]
+    source: ppt:过敏性鼻炎四位一体2.pptx
+    importance: 1.4
+  - kind: treatment_principle
+    title: AIT不应等到药物失败后才考虑
+    content: 李勇在 PPT 中把这一点讲得很明确：免疫治疗在过敏性鼻炎治疗体系中占有一线地位，早期开展对预后更有意义，并不需要以药物完全失败为前提。
+    tags: [AIT, 一线治疗, 早期启动]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.8
+  - kind: treatment_principle
+    title: 儿童过敏性鼻炎应更早考虑免疫治疗窗口
+    content: 四位一体 PPT 援引儿童指南和共识，强调儿童一旦明确过敏性鼻炎，宜在较早年龄阶段评估并启动特异性免疫治疗，以减少过敏原种类增多带来的治疗难度。
+    tags: [儿童, 免疫治疗, 早期窗口]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.7
+  - kind: follow_up_rule
+    title: SCIT需要区分增量期与维持期长期管理
+    content: AIT 给药部分把皮下注射分成增量期和维持期两个阶段，说明随访管理不能只记录“有没有打针”，而要追踪当前阶段、耐受情况和是否进入维持治疗。
+    tags: [SCIT, 增量期, 维持期]
+    source: ppt:过敏性鼻炎四位一体1.pptx
+    importance: 1.5
+  - kind: follow_up_rule
+    title: AIT随访应记录疗效与不良反应而不只看化验
+    content: 从免疫治疗与长期疗效部分看，李勇的管理思路更重视症状改善、依从性、全身不良反应和长期控制效果，而不是单纯盯着一次化验单变化。
+    tags: [AIT随访, 疗效评估, 不良反应]
+    source: ppt:过敏性鼻炎四位一体2.pptx
+    importance: 1.4
+  - kind: patient_education
+    title: 医患教育的本质是把过敏性鼻炎当慢病管理
+    content: 四位一体2开头直接把“医患教育的具体内容和本质”摆出来，后文又多次提到互联网平台协作，说明李勇把教育理解为慢病管理系统的一部分，而不是诊后附带叮嘱几句。
+    tags: [医患教育, 慢病管理, 互联网协作]
+    source: ppt:过敏性鼻炎四位一体2.pptx
+    importance: 1.7
+  - kind: diagnostic_principle
+    title: 儿童慢性鼻窦炎过敏因素需要主动纳入评估
+    content: 儿童鼻窦炎 PPT 明确把过敏因素列为重要背景，提示在儿童慢性鼻窦炎病例里应主动追问过敏史，并对合适人群安排变应原检测，而不是只看感染。
+    tags: [儿童鼻窦炎, 过敏史, 变应原检测]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.5
+  - kind: diagnostic_principle
+    title: 儿童慢性鼻窦炎CT应严格控制适应证
+    content: 李勇在 PPT 中对 CT 使用边界非常谨慎：怀疑肿瘤、颅底疾病、眶颅并发症、难治性病例或合并鼻息肉时才更有价值，不主张轻易把 CT 当常规筛查。
+    tags: [儿童鼻窦炎, CT, 检查边界]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.7
+  - kind: risk_rule
+    title: 儿童鼻窦炎不能只根据CT密度增高下结论
+    content: PPT 提醒正常儿童中也可见鼻窦 CT 密度增高，且难以单凭影像区分急慢性炎症，因此影像不能脱离症状和临床过程单独下诊断。
+    tags: [CT解读, 影像边界, 儿童鼻窦炎]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.5
+  - kind: treatment_principle
+    title: 儿童鼻窦炎治疗目标是减水肿促引流恢复纤毛功能
+    content: 儿童鼻窦炎 PPT 反复强调治疗关键是减轻黏膜水肿、促进引流并恢复纤毛运动，而不是把抗生素当成默认主角。
+    tags: [黏膜水肿, 引流, 纤毛功能]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.7
+  - kind: treatment_principle
+    title: 局部抗生素冲洗更适合术后开放鼻窦而非闭塞窦腔
+    content: 儿童鼻窦炎 PPT 对局部抗生素冲洗的态度较谨慎：对闭塞、未开放的鼻窦药物并不容易进入，更多价值可能体现在术后开放窦腔或特定细菌学背景下。
+    tags: [局部抗生素冲洗, 术后开放鼻窦, 适应证]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.4
+  - kind: treatment_principle
+    title: 腺样体切除在部分儿童CRS中有明确位置
+    content: 李勇在 PPT 中明确引用证据支持腺样体切除在儿童 CRS 外科治疗中的价值，尤其适用于影像改变不重但腺样体因素突出的患儿。
+    tags: [腺样体切除, 儿童CRS, 外科位置]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.6
+  - kind: follow_up_rule
+    title: 儿童鼻窦炎随访要区分稳定期和急性加重期
+    content: 从 PPT 的抗生素边界可以看出，李勇会把稳定期与急性加重期分开管理：稳定期更看局部抗炎和冲洗，急性加重且有并发症证据时才提高抗感染强度。
+    tags: [儿童鼻窦炎, 稳定期, 急性加重]
+    source: ppt:儿童鼻窦炎抗生素使用共识.pptx
+    importance: 1.5
+  - kind: follow_up_rule
+    title: 鼻咽癌血清学异常而内镜阴性也要持续随诊
+    content: 鼻咽癌早筛 PPT 明确提示，对 EB 病毒血清学达到可疑阈值但鼻咽部暂未见异常者，仍应在高发部位做脱落细胞或活检评估，并在未确诊时持续随访甚至多次复查。
+    tags: [鼻咽癌, 血清学, 持续随诊]
+    source: ppt:鼻咽癌早筛早诊.pptx
+    importance: 1.6
+  - kind: treatment_principle
+    title: 鼻咽癌总体原则仍是放疗为主化疗为辅特殊情况手术
+    content: 在鼻咽癌早筛早诊 PPT 中，李勇把总体治疗原则概括为“放疗为主，化疗为辅，特殊情况下选择手术”，这可作为回答鼻咽癌总体策略时的稳定骨架。
+    tags: [鼻咽癌, 总体治疗原则, 手术边界]
+    source: ppt:鼻咽癌早筛早诊.pptx
+    importance: 1.7
+  - kind: patient_education
+    title: 鼻咽癌公众教育应讲清高危因素与高发人群
+    content: 从早筛早诊 PPT 的铺垫结构看，李勇在公众沟通中会先解释鼻咽癌在中国南方和东南亚的高发背景、EB 病毒等高危因素，再转入症状和筛查手段。
+    tags: [鼻咽癌, 高危因素, 公众教育]
+    source: ppt:鼻咽癌早筛早诊.pptx
+    importance: 1.2
