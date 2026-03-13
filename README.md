@@ -460,6 +460,30 @@ cd D:\charles\Documents\doctor-avatar
   - `/api/ditto/generate`
 - 用户应先听到回答，再看到视频切换，而不是只看到一张静态医生照片
 
+### 2026-03-14（六）—— codex 搭好 Ditto 流式服务骨架（4090D）
+
+**为什么改**：当前公网用户页已经能跑 `TTS + Ditto mp4`，但那还是“先生成整段视频，再播放”的短视频模式。为了给 Claude 接网站侧实时流式链路，4090D 端需要先具备一个稳定的在线帧服务。
+
+**改了什么**（`deploy/ditto/ditto_stream_service.py`、`deploy/ditto/ditto-stream.service`）：
+- 新增 `deploy/ditto/ditto_stream_service.py`：基于 Ditto 官方 `stream_pipeline_online.py` 和 `v0.4_hubert_cfg_trt_online.pkl` 搭了一个 `ws://127.0.0.1:8002/ws` 的本地流式服务
+- 服务协议当前固定为：
+  - 客户端持续发送二进制 `pcm_s16le / 16kHz mono` 音频块（约 `0.4s` 一块）；当前也兼容带 `RIFF` 头的 WAV 块，便于本地调试
+  - 服务端持续返回 JPEG 帧（二进制）
+  - 客户端发字符串 `END` 或二进制 `b"END"` 后，服务端会继续吐完剩余帧，并最终返回 `{"done":true}`
+- 新增 `deploy/ditto/ditto-stream.service`：把 4090D 侧流式服务注册成独立 systemd 单元，避免影响现有 `8001` 的离线 `mp4` 服务
+
+**远端落地结果**：
+- 4090D 上 `ditto-stream.service` 已启用并运行
+- 反向 SSH 隧道已新增：
+  - `-R 127.0.0.1:8002:127.0.0.1:8002`
+- 阿里云服务器本机已实测：
+  - `http://127.0.0.1:8002/health` 返回 `200`
+
+**实测结论**：
+- 4090D 本机通过 WebSocket 客户端发送 `6` 段 `0.4s` PCM 音频后，流式服务实际回出了多帧 JPEG，并在结束时返回 `{"type":"complete"}`
+- 这说明 4090D 端“在线收音频块 -> Ditto 在线推理 -> 吐帧”这条链路已经成立
+- 下一步只剩网站侧把浏览器 / ECS / 4090D 这三段 WebSocket 串起来
+
 ### 2026-03-14（六）—— codex 服务器轻量优化与温和防护
 
 **为什么改**：服务器本身并没有爆内存，但仍有 4 个值得先收掉的小问题：
