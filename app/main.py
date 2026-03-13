@@ -488,12 +488,18 @@ async def ditto_ws_stream(ws: WebSocket) -> None:
                             await ws.send_json({"done": True})
                             return
 
-            await asyncio.gather(_send(), _recv())
+            results = await asyncio.gather(_send(), _recv(), return_exceptions=True)
+            for r in results:
+                if isinstance(r, BaseException) and not isinstance(r, asyncio.CancelledError):
+                    raise r
 
     except WebSocketDisconnect:
         pass
-    except Exception:
-        pass
+    except Exception as exc:
+        try:
+            await ws.send_json({"error": str(exc)})
+        except Exception:
+            pass
     finally:
         try:
             await ws.close()
