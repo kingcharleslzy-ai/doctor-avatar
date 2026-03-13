@@ -241,6 +241,18 @@ cd D:\charles\Documents\doctor-avatar
 - 先完成低成本的主流程上线
 - 后续如果要重新接入视频分身，只需补齐 HeyGen 参数并把 `ENABLE_VIDEO_AVATAR=true`
 
+如果要进入“真人视频分身二期”，请先看：
+
+- [docs/VIDEO_AVATAR_PHASE2.md](D:\charles\Documents\doctor-avatar\docs\VIDEO_AVATAR_PHASE2.md)
+
+当前推荐方向不是把 `Live2D` 当主路线，而是：
+
+- 阿里云继续负责网页、问答、资料库、调度
+- 家里 `4090D` 作为视频渲染 worker
+- 优先评估 `Ditto`
+- 备选 `MuseTalk 1.5`
+- 产品上先做“音频先响应，视频后补上”
+
 ## 控制台保护
 
 当前默认启用控制台 Basic Auth：
@@ -348,6 +360,11 @@ cd D:\charles\Documents\doctor-avatar
 - `app/db.py`：删除多余空行
 
 ### 2026-03-13（五）—— codex
+
+**视频分身二期技术方案落地：明确不走 Live2D 主线，优先家里 4090D + Ditto / MuseTalk 1.5**（by codex）
+
+- `docs/VIDEO_AVATAR_PHASE2.md`：新增二期视频分身方案，系统整理了当前项目在阿里云 `2核2G` + 家里 `4090D` 条件下的推荐路线、模型优先级、网络架构和分阶段落地方式
+- `README.md`：补充二期方案入口，并把当前建议收敛为“阿里云负责网页与调度，家里 GPU 负责真人视频渲染 worker”
 
 **资料库清洗工具：安全删除测试噪音与完全重复项**（by codex）
 
