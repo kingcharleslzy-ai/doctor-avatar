@@ -48,10 +48,15 @@ uvicorn app.main:app --reload
 
 - `CONSOLE_USERNAME`
 - `CONSOLE_PASSWORD`
+- `CONSOLE_MEMORY_WRITE_ENABLED`
 - `DOCTOR_MEMORY_DB_PATH`
 - `DOCTOR_MEMORY_BOOTSTRAP`
 
 如果你要保护公网控制台，这两个必须填写。
+
+如果你不希望后台误改资料库，保持：
+
+- `CONSOLE_MEMORY_WRITE_ENABLED=false`
 
 ### 2. `knowledge/doctor_profile.yaml`
 
@@ -128,6 +133,26 @@ uvicorn app.main:app --reload
 
 返回当前资料库总条数、各分类分布，以及当前资料库暗号 `memory_code`。这个暗号会跟随快照一起进入 Git 和服务器，可用来快速核对线上是否已经同步到最新资料。
 
+### `GET /api/ops/overview`
+
+返回控制台监控台需要的只读运行状态，包含：
+
+- CPU / 内存 / 磁盘占用
+- 网络累计收发流量
+- 最近活跃用户数
+- 请求总量 / 错误数 / 平均延迟
+- OpenAI 调用次数与累计 token
+- 当前资料库总数、分类分布、暗号、只读/写入模式
+
+说明：
+
+- 这是站内监控统计，不是阿里云账单口径
+- OpenAI 消耗是当前应用进程统计值，不等于官方计费后台最终数字
+
+### `POST /api/ops/presence`
+
+用户端浏览器会定时上报轻量心跳，用来估算最近活跃的真实用户数。
+
 ### `POST /api/memory/entries/delete`
 
 按 `entry_ids` 删除误录或明显错误的资料条目。删除后会自动刷新资料库暗号，并让统一检索索引立即失效重建。
@@ -202,7 +227,13 @@ cd D:\charles\Documents\doctor-avatar
 - 单独调试 OpenAI 问答层
 - 直接查看当前资料库暗号与分类分布
 - 按关键词 / 分类筛选资料条目
-- 手动新增、复制、删除资料条目，减少脚本操作
+- 查看服务器负载、网络累计流量、请求量、平均延迟、OpenAI 调用统计
+
+当前控制台策略已经调整为：
+
+- 以“系统监控 + 问答验证 + 只读资料检索”为主
+- 默认禁用后台资料写入
+- 即使保留写接口，只要 `CONSOLE_MEMORY_WRITE_ENABLED=false`，控制台写入和删除也会返回 `403`
 
 ## 资料库暗号校验
 
@@ -360,6 +391,15 @@ cd D:\charles\Documents\doctor-avatar
 - `app/db.py`：删除多余空行
 
 ### 2026-03-13（五）—— codex
+
+**控制台转向只读监控台：默认禁用资料写入，新增服务器与 API 运行监控**（by codex）
+
+- `app/ops.py`：新增轻量运行监控模块，统计 CPU 负载、内存、磁盘、网络累计流量、请求总量、错误数、平均延迟、OpenAI 调用与 token
+- `app/main.py`：新增 `GET /api/ops/overview` 与 `POST /api/ops/presence`；同时让资料写入/删除在 `CONSOLE_MEMORY_WRITE_ENABLED=false` 时直接返回 `403`
+- `app/static/user.js`：新增轻量浏览器心跳，上报最近活跃用户数
+- `app/templates/console.html` + `app/static/console.js`：把控制台右侧从“资料增删改”改成“系统监控 + 问答验证 + 只读资料检索”
+- `.env.example`：新增 `CONSOLE_MEMORY_WRITE_ENABLED=false`
+- `README.md`：补充监控接口和控制台只读模式说明
 
 **视频分身二期技术方案落地：明确不走 Live2D 主线，优先家里 4090D + Ditto / MuseTalk 1.5**（by codex）
 

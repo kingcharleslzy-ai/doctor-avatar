@@ -9,6 +9,7 @@ from openai import OpenAI
 from .config import settings
 from .memory_snapshot import get_memory_marker, get_memory_status
 from .knowledge import load_doctor_profile, search_knowledge
+from .ops import record_openai_error, record_openai_usage
 from .prompts import build_system_prompt, build_user_prompt
 
 
@@ -30,14 +31,20 @@ class ChatService:
         snippets = [hit.snippet for hit in hits]
         citations = [hit.source for hit in hits]
 
-        response = self.client.responses.create(
-            model=settings.openai_model,
-            input=[
-                {"role": "system", "content": build_system_prompt(self.profile)},
-                *conversation,
-                {"role": "user", "content": build_user_prompt(message, snippets)},
-            ],
-        )
+        try:
+            response = self.client.responses.create(
+                model=settings.openai_model,
+                input=[
+                    {"role": "system", "content": build_system_prompt(self.profile)},
+                    *conversation,
+                    {"role": "user", "content": build_user_prompt(message, snippets)},
+                ],
+            )
+        except Exception:
+            record_openai_error()
+            raise
+
+        record_openai_usage(settings.openai_model, getattr(response, "usage", None))
 
         return {
             "answer": response.output_text.strip(),

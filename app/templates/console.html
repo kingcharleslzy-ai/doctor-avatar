@@ -548,6 +548,33 @@
       flex-shrink: 0;
     }
 
+    .monitor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .monitor-card {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .monitor-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 24px;
+      letter-spacing: -.03em;
+    }
+
+    .monitor-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
     @media (max-width: 1180px) {
       .masthead,
       .workspace,
@@ -557,7 +584,9 @@
       .memory-filter-grid,
       .masthead-grid,
       .compact-grid,
-      .ops-grid {
+      .ops-grid,
+      .monitor-grid,
+      .monitor-detail-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -679,10 +708,10 @@
         <section class="panel">
           <div class="panel-head">
             <div>
-              <h2 class="panel-title">知识与资料工作区</h2>
-              <p class="panel-subtitle">右侧只处理两件事：验证当前回答像不像你爸，以及维护资料库本身。把资料暗号和分类概览收成统一的顶部信息带。</p>
+              <h2 class="panel-title">系统监控与知识校验</h2>
+              <p class="panel-subtitle">右侧改成只读监控台。重点看服务器负载、接口消耗、在线用户、资料库版本和问答效果，不再在这里提供危险的资料写删入口。</p>
             </div>
-            <div class="pill">Memory Admin</div>
+            <div class="pill">Read-only Monitor</div>
           </div>
 
           <div class="memory-header-strip">
@@ -705,8 +734,74 @@
 
           <div class="kind-list" id="memoryKindChips"></div>
 
+          <div class="monitor-grid" style="margin-top: 18px;">
+            <div class="monitor-card">
+              <div class="label">CPU Load</div>
+              <strong id="cpuUsage">读取中...</strong>
+              <div class="desc">按 1 分钟负载折算的当前 CPU 占用趋势。</div>
+            </div>
+            <div class="monitor-card">
+              <div class="label">Memory Usage</div>
+              <strong id="memoryUsage">读取中...</strong>
+              <div class="desc">当前应用所在机器的内存使用率。</div>
+            </div>
+            <div class="monitor-card">
+              <div class="label">Disk Usage</div>
+              <strong id="diskUsage">读取中...</strong>
+              <div class="desc">数据目录所在磁盘占用。</div>
+            </div>
+            <div class="monitor-card">
+              <div class="label">Active Users</div>
+              <strong id="activeUsers">读取中...</strong>
+              <div class="desc">最近心跳仍活跃的浏览器会话数。</div>
+            </div>
+            <div class="monitor-card">
+              <div class="label">Requests Total</div>
+              <strong id="requestTotal">读取中...</strong>
+              <div class="desc">当前进程启动以来的站内请求总量。</div>
+            </div>
+            <div class="monitor-card">
+              <div class="label">OpenAI Calls</div>
+              <strong id="openaiCalls">读取中...</strong>
+              <div class="desc">当前进程统计到的 OpenAI 调用次数。</div>
+            </div>
+          </div>
+
           <div class="memory-layout" style="margin-top: 18px;">
             <div class="stack">
+              <div class="subpanel">
+                <h3>系统细节</h3>
+                <div class="monitor-detail-grid">
+                  <div>
+                    <div class="label">Network RX</div>
+                    <div class="value" id="networkRx" style="font-size:20px">读取中...</div>
+                  </div>
+                  <div>
+                    <div class="label">Network TX</div>
+                    <div class="value" id="networkTx" style="font-size:20px">读取中...</div>
+                  </div>
+                  <div>
+                    <div class="label">Avg Latency</div>
+                    <div class="value" id="avgLatency" style="font-size:20px">读取中...</div>
+                  </div>
+                  <div>
+                    <div class="label">Request Errors</div>
+                    <div class="value" id="requestErrors" style="font-size:20px">读取中...</div>
+                  </div>
+                  <div>
+                    <div class="label">Uptime</div>
+                    <div class="value" id="uptimeValue" style="font-size:20px">读取中...</div>
+                  </div>
+                  <div>
+                    <div class="label">Write Mode</div>
+                    <div class="value" id="writeMode" style="font-size:20px">读取中...</div>
+                  </div>
+                </div>
+                <div class="memory-toolbar">
+                  <button id="refreshOpsBtn" class="button-primary">刷新监控</button>
+                </div>
+              </div>
+
               <div class="subpanel">
                 <h3>问答验证</h3>
                 <p class="caption">直接用实际问题验证当前知识库和医生风格是否已经对齐。这里保留必要功能，不再堆额外调试信息。</p>
@@ -726,48 +821,23 @@
                 <h3>知识命中摘要</h3>
                 <div id="context" class="output muted">尚未检索知识内容。</div>
               </div>
+              <div class="subpanel">
+                <h3>接口消耗</h3>
+                <div id="apiTokenInfo" class="output muted">读取中...</div>
+              </div>
             </div>
 
             <div class="stack">
               <div class="subpanel">
-                <h3>新增资料</h3>
-                <p class="caption">录入你爸真实会说的话、问诊顺序、治疗偏好和随访原则。保存后会自动刷新资料库暗号。</p>
-                <div class="memory-form-grid">
-                  <div>
-                    <label class="field-label" for="memoryKind">资料分类</label>
-                    <input id="memoryKind" placeholder="例如：doctor_thought / thinking_style" />
-                  </div>
-                  <div>
-                    <label class="field-label" for="memorySource">来源</label>
-                    <input id="memorySource" placeholder="例如：manual:family-review" />
-                  </div>
-                  <div>
-                    <label class="field-label" for="memoryTitle">标题</label>
-                    <input id="memoryTitle" placeholder="例如：鼻炎复诊时先追问用药依从性" />
-                  </div>
-                  <div>
-                    <label class="field-label" for="memoryImportance">重要度</label>
-                    <input id="memoryImportance" placeholder="默认 1.0，建议 0.8 - 2.0" value="1.0" />
-                  </div>
-                </div>
-                <div style="margin-top: 12px;">
-                  <label class="field-label" for="memoryTags">标签</label>
-                  <input id="memoryTags" placeholder="用逗号分隔，例如：鼻炎, 随访, 问诊" />
-                </div>
-                <div style="margin-top: 12px;">
-                  <label class="field-label" for="memoryContent">正文内容</label>
-                  <textarea id="memoryContent" placeholder="尽量写成你爸真实会说的话，或明确的判断与处理原则。"></textarea>
-                </div>
-                <div class="memory-toolbar">
-                  <button id="saveMemoryBtn" class="button-primary">保存资料</button>
-                  <button id="resetMemoryBtn" class="button-secondary">清空表单</button>
-                </div>
-                <div class="inline-note" id="memorySaveResult">尚未新增资料。</div>
+                <h3>资源与路由</h3>
+                <div id="resourceInfo" class="output muted">读取中...</div>
+                <div class="inline-note">下方列出当前进程内最常被访问的接口路径，便于判断请求热点。</div>
+                <div id="topPaths" class="output muted" style="margin-top:10px">读取中...</div>
               </div>
 
               <div class="subpanel">
-                <h3>资料检索</h3>
-                <p class="caption">先筛选再看，能更快判断数据库内容是否合适。删除按钮只用于误录和明显错误条目。</p>
+                <h3>资料检索（只读）</h3>
+                <p class="caption">这里只读查看资料库，不再提供保存和删除入口。真正需要改库时，优先走本地审阅和受控脚本流程。</p>
                 <div class="memory-filter-grid">
                   <div>
                     <label class="field-label" for="memoryQuery">关键词</label>
@@ -779,7 +849,7 @@
                   </div>
                   <div>
                     <label class="field-label" for="memoryLimit">数量</label>
-                    <input id="memoryLimit" value="40" />
+                    <input id="memoryLimit" value="100" />
                   </div>
                 </div>
                 <div class="memory-toolbar">

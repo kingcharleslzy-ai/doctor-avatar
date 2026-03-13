@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import time
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
@@ -23,7 +24,9 @@ from .models import (
     MemoryEntryCreate,
     MemoryEntryDeleteRequest,
     MemoryEntryResponse,
+    PresenceHeartbeatRequest,
 )
+from .ops import monitor_snapshot, record_presence, record_request
 from .services import ChatService, HeyGenService
 
 
@@ -105,6 +108,20 @@ def startup() -> None:
     init_memory_db()
 
 
+@app.middleware("http")
+async def request_metrics(request: Request, call_next):
+    started = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception:
+        duration_ms = (time.perf_counter() - started) * 1000
+        record_request(request.url.path, 500, duration_ms)
+        raise
+    duration_ms = (time.perf_counter() - started) * 1000
+    record_request(request.url.path, response.status_code, duration_ms)
+    return response
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -125,6 +142,7 @@ def app_config() -> dict[str, object]:
             "bootstrap_enabled": settings.doctor_memory_bootstrap,
             "has_entries": bool(memory_entries),
             "memory_code": memory_code,
+            "write_enabled": settings.console_memory_write_enabled,
         },
         "doctor": {
             "name": doctor_profile.get("name"),
@@ -190,8 +208,30 @@ def memory_summary(_: str = Depends(require_console_auth)) -> dict[str, object]:
     }
 
 
+@app.get("/api/ops/overview")
+def ops_overview(_: str = Depends(require_console_auth)) -> dict[str, object]:
+    rows = [row for row in list_memory_entries(limit=None) if row["kind"] != MARKER_KIND]
+    counts = [item for item in memory_kind_counts() if item["kind"] != MARKER_KIND]
+    snapshot = monitor_snapshot(Path(settings.doctor_memory_db_path))
+    snapshot["doctor_memory"] = {
+        "total": len(rows),
+        "kinds": counts,
+        "memory_code": get_memory_status(Path(settings.doctor_memory_db_path))[0] if rows else None,
+        "write_enabled": settings.console_memory_write_enabled,
+    }
+    return snapshot
+
+
+@app.post("/api/ops/presence")
+def ops_presence(payload: PresenceHeartbeatRequest, request: Request) -> dict[str, str]:
+    record_presence(payload.session_id, request.headers.get("user-agent"))
+    return {"status": "ok"}
+
+
 @app.post("/api/memory/entries", response_model=MemoryEntryResponse)
 def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_auth)) -> MemoryEntryResponse:
+    if not settings.console_memory_write_enabled:
+        raise HTTPException(status_code=403, detail="当前控制台处于只读模式，已禁用资料写入。")
     row = create_memory_entry(
         kind=payload.kind,
         title=payload.title,
@@ -207,6 +247,8 @@ def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_a
 
 @app.post("/api/memory/entries/delete")
 def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_console_auth)) -> dict[str, int | str]:
+    if not settings.console_memory_write_enabled:
+        raise HTTPException(status_code=403, detail="当前控制台处于只读模式，已禁用资料删除。")
     protected_ids = {
         row["id"]
         for row in list_memory_entries(kind=MARKER_KIND, limit=None)

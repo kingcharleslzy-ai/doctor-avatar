@@ -4,6 +4,9 @@ const state = {
   startedSession: null,
   conversation: [],
   memorySummary: null,
+  opsSnapshot: null,
+  networkBaseline: null,
+  opsTimer: null,
 };
 
 function $(id) {
@@ -58,6 +61,30 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
+function formatBytes(bytes) {
+  const value = Number(bytes || 0);
+  if (value >= 1024 ** 3) return `${(value / 1024 ** 3).toFixed(2)} GB`;
+  if (value >= 1024 ** 2) return `${(value / 1024 ** 2).toFixed(1)} MB`;
+  if (value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${value} B`;
+}
+
+function formatSpeed(bytesPerSec) {
+  const value = Number(bytesPerSec || 0);
+  if (value <= 0) return "0 B/s";
+  return `${formatBytes(value)}/s`;
+}
+
+function formatUptime(seconds) {
+  const total = Number(seconds || 0);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days > 0) return `${days}天 ${hours}小时 ${minutes}分钟`;
+  if (hours > 0) return `${hours}小时 ${minutes}分钟`;
+  return `${minutes}分钟`;
+}
+
 function renderRemoteTrack(track) {
   const container = $("videoStage");
   container.innerHTML = "";
@@ -92,10 +119,6 @@ function attachRoomListeners(room) {
   });
   room.on(RoomEvent.TrackUnsubscribed, (track) => {
     log(`取消订阅轨道：${track.kind}`);
-  });
-  room.on(RoomEvent.DataReceived, (payload, participant, kind, topic) => {
-    const text = new TextDecoder().decode(payload);
-    log(`数据事件(${topic || "no-topic"})：${text}`);
   });
 }
 
@@ -132,7 +155,6 @@ async function createToken() {
   setBusy("createTokenBtn", true);
   try {
     const data = await postJson("/api/liveavatar/token", {});
-
     state.sessionToken = data.data.session_token || "";
     $("sessionToken").value = state.sessionToken;
     $("apiResult").textContent = JSON.stringify(data, null, 2);
@@ -202,9 +224,7 @@ async function listSessions() {
 
 async function sendChat() {
   const message = $("message").value.trim();
-  if (!message) {
-    return;
-  }
+  if (!message) return;
   $("answer").textContent = "生成中...";
 
   try {
@@ -221,16 +241,6 @@ async function sendChat() {
     $("answer").textContent = error.message;
     log(`问答失败：${error.message}`);
   }
-}
-
-function resetMemoryForm() {
-  $("memoryKind").value = "";
-  $("memorySource").value = "manual:console";
-  $("memoryTitle").value = "";
-  $("memoryImportance").value = "1.0";
-  $("memoryTags").value = "";
-  $("memoryContent").value = "";
-  $("memorySaveResult").textContent = "表单已清空。";
 }
 
 function renderMemorySummary(data) {
@@ -260,13 +270,14 @@ async function loadMemorySummary() {
 function renderMemoryEntries(rows) {
   const container = $("memoryList");
   const stateEl = $("memoryListState");
+  const total = state.memorySummary?.total || rows.length;
   if (!rows.length) {
     container.innerHTML = "";
     stateEl.textContent = "当前筛选条件下没有资料。";
     return;
   }
 
-  stateEl.textContent = `已载入 ${rows.length} 条资料。`;
+  stateEl.textContent = `当前显示 ${rows.length} / ${total} 条资料。`;
   container.innerHTML = rows
     .map((row) => {
       const tags = (row.tags || []).map((tag) => `<span class="kind-chip">${escapeHtml(tag)}</span>`).join("");
@@ -278,13 +289,11 @@ function renderMemoryEntries(rows) {
               <div class="memory-meta">
                 分类：${escapeHtml(row.kind)}<br />
                 来源：${escapeHtml(row.source)}<br />
-                重要度：${escapeHtml(row.importance)}<br />
                 更新时间：${escapeHtml(row.updated_at)}
               </div>
             </div>
             <div class="memory-item-actions">
               <button class="button-ghost" data-copy-memory="${row.id}">复制</button>
-              <button class="button-danger" data-delete-memory="${row.id}">删除</button>
             </div>
           </div>
           ${tags ? `<div class="kind-list">${tags}</div>` : ""}
@@ -302,29 +311,12 @@ function renderMemoryEntries(rows) {
       log(`已复制资料：${row.title}`);
     });
   });
-
-  container.querySelectorAll("[data-delete-memory]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const row = rows.find((item) => String(item.id) === button.dataset.deleteMemory);
-      if (!row) return;
-      if (!window.confirm(`确认删除这条资料？\n\n${row.title}`)) {
-        return;
-      }
-      try {
-        await postJson("/api/memory/entries/delete", { entry_ids: [row.id] });
-        log(`已删除资料：${row.title}`);
-        await Promise.all([loadMemorySummary(), loadMemoryList()]);
-      } catch (error) {
-        log(`删除资料失败：${error.message}`);
-      }
-    });
-  });
 }
 
 async function loadMemoryList() {
   const query = $("memoryQuery").value.trim();
   const kind = $("memoryKindFilter").value.trim();
-  const limit = $("memoryLimit").value.trim() || "40";
+  const limit = $("memoryLimit").value.trim() || "100";
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   if (kind) params.set("kind", kind);
@@ -340,36 +332,83 @@ async function loadMemoryList() {
   }
 }
 
-async function saveMemory() {
-  const kind = $("memoryKind").value.trim();
-  const title = $("memoryTitle").value.trim();
-  const content = $("memoryContent").value.trim();
-  if (!kind || !title || !content) {
-    $("memorySaveResult").textContent = "请至少填写分类、标题和正文。";
-    return;
-  }
+function renderOpsOverview(data) {
+  state.opsSnapshot = data;
+  const cpu = data.server?.cpu || {};
+  const memory = data.server?.memory || {};
+  const disk = data.server?.disk || {};
+  const network = data.server?.network || {};
+  const traffic = data.traffic || {};
+  const apiUsage = data.api_usage || {};
+  const doctorMemory = data.doctor_memory || {};
 
-  setBusy("saveMemoryBtn", true, "保存中...");
+  $("cpuUsage").textContent = `${cpu.load_percent ?? 0}%`;
+  $("memoryUsage").textContent = `${memory.used_percent ?? 0}%`;
+  $("diskUsage").textContent = `${disk.used_percent ?? 0}%`;
+  $("activeUsers").textContent = String(traffic.active_users ?? 0);
+  $("requestTotal").textContent = String(traffic.requests_total ?? 0);
+  $("openaiCalls").textContent = String(apiUsage.openai_calls ?? 0);
+  $("avgLatency").textContent = `${traffic.avg_latency_ms ?? 0} ms`;
+  $("requestErrors").textContent = String(traffic.request_errors ?? 0);
+  $("uptimeValue").textContent = formatUptime(data.uptime_seconds ?? 0);
+  $("writeMode").textContent = doctorMemory.write_enabled ? "已开启（危险）" : "只读模式";
+  $("apiTokenInfo").textContent = [
+    `OpenAI 调用：${apiUsage.openai_calls ?? 0}`,
+    `OpenAI 错误：${apiUsage.openai_errors ?? 0}`,
+    `输入 tokens：${apiUsage.openai_input_tokens ?? 0}`,
+    `输出 tokens：${apiUsage.openai_output_tokens ?? 0}`,
+    `总 tokens：${apiUsage.openai_total_tokens ?? 0}`,
+    `最近模型：${apiUsage.openai_last_model || "-"}`
+  ].join("\n");
+  $("resourceInfo").textContent = [
+    `CPU：${cpu.cpu_count ?? "-"} 核 / 1m 负载 ${cpu.load_1m ?? "-"}`,
+    `内存：已用 ${memory.used_mb ?? "-"} MB / ${memory.total_mb ?? "-"} MB`,
+    `磁盘：已用 ${disk.used_gb ?? "-"} GB / ${disk.total_gb ?? "-"} GB`,
+    `路径：${disk.path || "-"}`
+  ].join("\n");
+  $("topPaths").textContent = (traffic.top_paths || [])
+    .map((item) => `${item.path} · ${item.count}`)
+    .join("\n") || "暂无数据。";
+
+  updateNetworkSpeed(network.rx_bytes || 0, network.tx_bytes || 0);
+}
+
+function updateNetworkSpeed(rxBytes, txBytes) {
+  const now = Date.now();
+  if (state.networkBaseline) {
+    const seconds = Math.max(1, (now - state.networkBaseline.at) / 1000);
+    const rxRate = (rxBytes - state.networkBaseline.rx) / seconds;
+    const txRate = (txBytes - state.networkBaseline.tx) / seconds;
+    $("networkRx").textContent = `${formatBytes(rxBytes)} / ${formatSpeed(rxRate)}`;
+    $("networkTx").textContent = `${formatBytes(txBytes)} / ${formatSpeed(txRate)}`;
+  } else {
+    $("networkRx").textContent = `${formatBytes(rxBytes)} / 计算中`;
+    $("networkTx").textContent = `${formatBytes(txBytes)} / 计算中`;
+  }
+  state.networkBaseline = { rx: rxBytes, tx: txBytes, at: now };
+}
+
+async function loadOpsOverview() {
   try {
-    const payload = {
-      kind,
-      title,
-      content,
-      source: $("memorySource").value.trim() || "manual:console",
-      importance: Number($("memoryImportance").value.trim() || "1.0"),
-      tags: $("memoryTags").value.split(",").map((item) => item.trim()).filter(Boolean),
-    };
-    const row = await postJson("/api/memory/entries", payload);
-    $("memorySaveResult").textContent = `已保存：${row.title}`;
-    log(`已新增资料：${row.title}`);
-    resetMemoryForm();
-    $("memorySaveResult").textContent = `已保存：${row.title}`;
-    await Promise.all([loadMemorySummary(), loadMemoryList()]);
+    const data = await getJson("/api/ops/overview");
+    renderOpsOverview(data);
   } catch (error) {
-    $("memorySaveResult").textContent = error.message;
-    log(`保存资料失败：${error.message}`);
-  } finally {
-    setBusy("saveMemoryBtn", false);
+    $("cpuUsage").textContent = "读取失败";
+    $("memoryUsage").textContent = "读取失败";
+    $("diskUsage").textContent = "读取失败";
+    $("activeUsers").textContent = "-";
+    $("requestTotal").textContent = "-";
+    $("openaiCalls").textContent = "-";
+    $("avgLatency").textContent = "-";
+    $("requestErrors").textContent = "-";
+    $("uptimeValue").textContent = "-";
+    $("writeMode").textContent = "-";
+    $("networkRx").textContent = "-";
+    $("networkTx").textContent = "-";
+    $("apiTokenInfo").textContent = error.message;
+    $("resourceInfo").textContent = error.message;
+    $("topPaths").textContent = error.message;
+    log(`读取系统监控失败：${error.message}`);
   }
 }
 
@@ -402,6 +441,7 @@ async function loadAppConfig() {
       `医院：${doctor.hospital || "-"}`,
       `科室：${doctor.department || "-"}`,
       `资料库暗号：${(data.doctor_memory && data.doctor_memory.memory_code) || "-"}`,
+      `资料写入：${data.doctor_memory?.write_enabled ? "已开启（危险）" : "只读模式"}`,
       `OpenAI 已配置：${data.openai_configured ? "是" : "否"}`,
       `HeyGen 已配置：${data.heygen_configured ? "是" : "否"}`,
       `模式：${liveavatar.mode || "-"}`,
@@ -426,19 +466,28 @@ function wireUi() {
   $("listSessionsBtn").addEventListener("click", listSessions);
   $("disconnectBtn").addEventListener("click", disconnectRoom);
   $("sendBtn").addEventListener("click", sendChat);
-  $("saveMemoryBtn").addEventListener("click", saveMemory);
-  $("resetMemoryBtn").addEventListener("click", resetMemoryForm);
   $("refreshMemoryBtn").addEventListener("click", loadMemoryList);
+  $("refreshOpsBtn").addEventListener("click", async () => {
+    await Promise.all([loadOpsOverview(), loadMemorySummary(), loadMemoryList()]);
+  });
   $("clearMemoryFiltersBtn").addEventListener("click", () => {
     $("memoryQuery").value = "";
     $("memoryKindFilter").value = "";
-    $("memoryLimit").value = "40";
+    $("memoryLimit").value = "100";
     loadMemoryList();
   });
 }
 
+function startPolling() {
+  if (state.opsTimer) clearInterval(state.opsTimer);
+  state.opsTimer = setInterval(() => {
+    loadOpsOverview();
+  }, 10000);
+}
+
 wireUi();
 loadAppConfig();
-resetMemoryForm();
 loadMemorySummary();
 loadMemoryList();
+loadOpsOverview();
+startPolling();

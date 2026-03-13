@@ -39,6 +39,10 @@ class MemoryEntryDeleteRequest(BaseModel):
     entry_ids: list[int] = Field(min_length=1)
 
 
+class PresenceHeartbeatRequest(BaseModel):
+    session_id: str = Field(min_length=8, max_length=120)
+
+
 class LiveAvatarSessionRequest(BaseModel):
     mode: str | None = None
     avatar_id: str | None = None

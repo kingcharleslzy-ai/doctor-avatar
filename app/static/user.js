@@ -6,6 +6,7 @@ const state = {
   appConfig: null,
   recognition: null,
   recognitionAvailable: false,
+  presenceSessionId: "",
 };
 
 function $(id) {
@@ -17,6 +18,23 @@ function setText(id, value) {
   if (el) {
     el.textContent = value;
   }
+}
+
+function ensurePresenceSessionId() {
+  if (state.presenceSessionId) return state.presenceSessionId;
+  const storageKey = "doctor-avatar-presence-id";
+  let value = "";
+  try {
+    value = window.localStorage.getItem(storageKey) || "";
+    if (!value) {
+      value = `presence-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      window.localStorage.setItem(storageKey, value);
+    }
+  } catch (_) {
+    value = `presence-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+  state.presenceSessionId = value;
+  return value;
 }
 
 // 只更新按钮内有实际内容的文字节点，保留 SVG 图标不被清除
@@ -185,6 +203,18 @@ async function postJson(url, body) {
     throw new Error(detail);
   }
   return response.json();
+}
+
+async function sendPresenceHeartbeat() {
+  const sessionId = ensurePresenceSessionId();
+  try {
+    await postJson("/api/ops/presence", { session_id: sessionId });
+  } catch (_) {}
+}
+
+function startPresenceHeartbeat() {
+  sendPresenceHeartbeat();
+  window.setInterval(sendPresenceHeartbeat, 45000);
 }
 
 async function getJson(url) {
@@ -584,6 +614,7 @@ function wireUi() {
 
 wireUi();
 initRecognition();
+startPresenceHeartbeat();
 loadAppConfig().catch((error) => {
   setText("answer", error.message);
 });

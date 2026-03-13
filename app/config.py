@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     embed_cache_dir: str = Field(default="", alias="EMBED_CACHE_DIR")
     doctor_memory_db_path: str = Field(default=str(BASE_DIR / "data" / "doctor_memory.db"), alias="DOCTOR_MEMORY_DB_PATH")
     doctor_memory_bootstrap: bool = Field(default=True, alias="DOCTOR_MEMORY_BOOTSTRAP")
+    console_memory_write_enabled: bool = Field(default=False, alias="CONSOLE_MEMORY_WRITE_ENABLED")
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
