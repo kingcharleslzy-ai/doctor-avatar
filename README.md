@@ -237,6 +237,14 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-13（五）—— windows-claude 按钮文字重复修复
+
+**为什么改**：`setBtnText` 把第一个空白文字节点改成"视频通话"，但 HTML 原有的文字节点还在，导致显示两遍。
+
+**改了什么**（`app/static/user.js`、`app/templates/index.html`）：
+- `setBtnText` 改为只匹配有实际内容的文字节点（`.trim()` 过滤空白）
+- HTML 按钮 SVG 与文字紧邻写，消除空白文字节点
+
 ### 2026-03-13（五）—— windows-claude 视频按钮图标修复 + 信息面板精简
 
 **为什么改**：user.js 用 `textContent` 覆盖按钮时会把 SVG 图标一起清掉；专注领域标签蓝色加粗不和谐；官方来源用处不大需删除。
