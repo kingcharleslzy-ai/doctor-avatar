@@ -214,6 +214,13 @@ uvicorn app.main:app --reload
 
 ### 2026-03-11（四）
 
+**李勇医生资料整理首版：公开资料深搜 + 本地 PPT 提炼 + 可入库草稿**（by codex）
+
+- `research/doctor-li-public-materials.md`：整理了公开搜索资料、来源链接、稳定职业画像与可转化知识块
+- `research/doctor-li-ppt-materials.md`：整理了桌面 `doctor li` 文件夹中 7 份 PPT 的核心主题、稳定观点和推荐入库方向
+- `research/doctor-li-memory-draft.yaml`：按 `doctor_memory_entries` 字段结构产出第一版可入库草稿，分为 `public_search_entries` 和 `ppt_entries`
+- `tmp/ppt_summary.md` 与 `tmp/ppt_raw_extract.md`：保留本轮 PPT 文字层抽取结果，便于后续继续精炼与校对
+
 **统一 embedding 检索修复：新增资料即时生效，取消 500 条数据库截断**（by codex）
 
 - `app/main.py`：新增“医生想法资料”后会主动失效进程内索引，避免聊天继续命中旧 embedding 结果直到重启
