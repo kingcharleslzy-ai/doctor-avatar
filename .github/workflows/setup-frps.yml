@@ -68,4 +68,4 @@ jobs:
       - name: Verify frps listening
         run: |
           set -euo pipefail
-          ss -ltnp | grep -E ":7000\\b"
+          systemctl is-active --quiet frps

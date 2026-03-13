@@ -1,0 +1,47 @@
+name: Setup reverse SSH server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/setup-reverse-ssh-server.yml"
+      - "deploy/reverse-ssh/**"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  setup-reverse-ssh:
+    runs-on: self-hosted
+    steps:
+      - name: Sync repo on server
+        run: |
+          cd /root/doctor-avatar
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
+
+      - name: Create tunnel user and authorized key
+        run: |
+          set -euo pipefail
+          id -u gpu-tunnel >/dev/null 2>&1 || useradd -m -s /bin/bash gpu-tunnel
+          install -d -m 700 -o gpu-tunnel -g gpu-tunnel /home/gpu-tunnel/.ssh
+          install -m 600 -o gpu-tunnel -g gpu-tunnel /root/doctor-avatar/deploy/reverse-ssh/gpu-tunnel-authorized-key.pub /home/gpu-tunnel/.ssh/authorized_keys
+
+      - name: Install sshd drop-in and validate config
+        run: |
+          set -euo pipefail
+          install -d -m 755 /etc/ssh/sshd_config.d
+          install -m 644 /root/doctor-avatar/deploy/reverse-ssh/gpu-tunnel-sshd.conf /etc/ssh/sshd_config.d/gpu-tunnel.conf
+          sshd -t
+
+      - name: Allow tunnel port when ufw is active
+        run: |
+          if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
+            ufw allow 6000/tcp
+          fi
+
+      - name: Restart ssh service
+        run: |
+          set -euo pipefail
+          systemctl restart ssh
+          systemctl --no-pager --lines=20 status ssh

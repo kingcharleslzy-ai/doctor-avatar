@@ -66,6 +66,28 @@ ssh -p 6000 charles@47.250.168.45
 
 从外网进入家里的 4090D 机器。
 
+## 4090D 外网 SSH（反向隧道）
+
+为了避免家里 4090D 机器对阿里云 `7000` 端口偶发不可达，当前还额外准备了一条更稳的 SSH 方案：
+
+- 4090D 主机主动连阿里云 `22/tcp`
+- 阿里云创建专用用户：`gpu-tunnel`
+- 通过反向 SSH 把阿里云 `6000/tcp` 映射回家里机器的 `22/tcp`
+
+仓库内文件：
+
+- `deploy/reverse-ssh/gpu-tunnel-authorized-key.pub`
+- `deploy/reverse-ssh/gpu-tunnel-sshd.conf`
+- `.github/workflows/setup-reverse-ssh-server.yml`
+
+如果服务器端 workflow 已成功运行，家里 4090D 机器再启动反向隧道服务后，就可以通过：
+
+```bash
+ssh -p 6000 charles@47.250.168.45
+```
+
+从外网进入 4090D 机器。
+
 ## 本机前端验收工具
 
 项目现在已经固定安装了本地 Node + Playwright 工具链，不需要每次再临时下载：
