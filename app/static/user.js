@@ -645,8 +645,21 @@ function startDittoStream(text) {
     ws.send(JSON.stringify({ text }));
   };
 
+  // 10 秒内未收到首帧视为超时，回退占位
+  const firstFrameTimeout = setTimeout(() => {
+    if (!canvas && state.dittoWs === ws) {
+      ws.close();
+      renderVideoPlaceholder();
+      if (isChatMode()) {
+        const row = appendChatMessage("ai", "视频连接超时，请稍后重试。");
+        if (row) setTimeout(() => row.remove(), 4000);
+      }
+    }
+  }, 10000);
+
   ws.onmessage = (event) => {
     if (event.data instanceof ArrayBuffer) {
+      clearTimeout(firstFrameTimeout);
       // 首帧时挂载 Canvas
       if (!canvas) {
         stage.innerHTML = "";
@@ -667,24 +680,32 @@ function startDittoStream(text) {
       try {
         const payload = JSON.parse(event.data);
         if (payload.done) {
+          clearTimeout(firstFrameTimeout);
           ws.close();
           setTimeout(() => renderVideoPlaceholder(), 1500);
         }
         if (payload.error) {
+          clearTimeout(firstFrameTimeout);
           console.warn("Ditto stream error:", payload.error);
           ws.close();
           renderVideoPlaceholder();
+          if (isChatMode()) {
+            const row = appendChatMessage("ai", `视频生成失败：${payload.error}`);
+            if (row) setTimeout(() => row.remove(), 5000);
+          }
         }
       } catch (_) {}
     }
   };
 
   ws.onerror = () => {
+    clearTimeout(firstFrameTimeout);
     renderVideoPlaceholder();
     state.dittoWs = null;
   };
 
   ws.onclose = () => {
+    clearTimeout(firstFrameTimeout);
     state.dittoWs = null;
   };
 }

@@ -548,6 +548,30 @@ cd D:\charles\Documents\doctor-avatar
 - 控制台里的 `openai_input_tokens / openai_output_tokens / openai_total_tokens` 现在能正确反映 DeepSeek 这类兼容接口的 usage
 - 控制台里的请求量、错误量、活跃用户、OpenAI 调用次数不再因为多 worker 随机漂移
 
+### 2026-03-14（六）—— windows-claude 流式 Canvas 体验细节
+
+**为什么改**：主链路验通后（公网 wss 实测 30 帧），有两个细节影响真实用户感知：
+- `startDittoStream()` 立即创建空 Canvas，用户等待首帧的 1-2 秒会看到黑屏而非明确的加载提示
+- WebSocket 建立后如果 4090D 长时间不返回首帧（网络抖动/排队），前端会永久卡在空 Canvas，无任何超时保护
+
+**改了什么**（`app/static/user.js`）：
+- `startDittoStream()`：先调用 `renderVideoLoading("实时视频准备中，首帧约 1-2 秒…")` 给用户明确等待反馈；Canvas 懒挂载，首帧到达时才替换 loading 占位
+- 新增 `firstFrameTimeout`（10 秒）：10 秒内未收到首帧则关闭连接，恢复占位图，聊天模式下追加"视频连接超时"提示气泡（4 秒后自动移除）
+- 错误帧（`payload.error`）时聊天模式下也追加错误提示气泡（5 秒后移除），而不是静默回退
+- 所有超时/完成/错误路径都调用 `clearTimeout(firstFrameTimeout)` 防止重复触发
+
+**影响**：
+- 用户不再看到黑屏等待，而是看到和批量 Ditto 相同的"AI VIDEO PREPARING"过渡页
+- 网络异常时有明确超时提示而非永久卡住
+
+### 2026-03-14（六）—— windows-claude 流式 WebSocket 异常透传
+
+**为什么改**：`/ws/ditto/stream` 端点原来在 `except Exception: pass` 处吞掉所有错误，前端只能看到连接静默关闭，无法判断是 TTS 失败、ffmpeg 失败还是 4090D 连接失败。
+
+**改了什么**（`app/main.py`）：
+- `except Exception as exc`：捕获后调用 `ws.send_json({"error": str(exc)})` 把错误文本发回浏览器
+- `asyncio.gather(_send(), _recv())` 改为 `return_exceptions=True`：两个任务都跑完后再统一检查异常，避免一个任务异常立即取消另一个，导致部分帧丢失
+
 ### 2026-03-14（六）—— windows-claude DeepSeek 接入
 
 **为什么改**：用户切换到 DeepSeek API（中文更强、更聪明），原 `responses.create` 是 OpenAI 专有接口，DeepSeek 不支持。
