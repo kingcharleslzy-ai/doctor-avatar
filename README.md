@@ -225,7 +225,7 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
-### 2026-03-13（五）
+### 2026-03-13（五）—— codex
 
 **资料库批量导入能力：支持按草稿 YAML 幂等写入 SQLite**（by codex）
 
@@ -240,14 +240,74 @@ cd D:\charles\Documents\doctor-avatar
 - `research/doctor-li-memory-draft.yaml`：按 `doctor_memory_entries` 字段结构产出第一版可入库草稿，分为 `public_search_entries` 和 `ppt_entries`
 - `tmp/ppt_summary.md` 与 `tmp/ppt_raw_extract.md`：保留本轮 PPT 文字层抽取结果，便于后续继续精炼与校对
 
-### 2026-03-12（四）
+### 2026-03-12（四）—— codex 白天改动
 
-**统一 embedding 检索修复：新增资料即时生效，取消 500 条数据库截断**（by codex）
+**桌面端按移动端风格重写**（by codex, 09:31）
 
-- `app/main.py`：新增“医生想法资料”后会主动失效进程内索引，避免聊天继续命中旧 embedding 结果直到重启
-- `app/knowledge.py`：统一索引现在会校验文件内容和 SQLite 指纹，不再因为 `_index_ready` 命中过早返回旧索引
-- `app/knowledge.py`：数据库资料块改为全量参与统一 embedding 检索，不再只取前 `500` 条
-- `app/db.py`：`list_memory_entries()` 支持不设 `limit` 的全量读取，保留其他接口的轻量分页能力
+- `app/templates/user_desktop.html`：统一浅色主题和相同 CSS 变量，两列布局（左视频、右聊天），全屏高度
+- 移除科幻装饰（扫描线动画、HUD 卡片、深色背景），按钮/气泡/卡片样式与移动端对齐
+- 医生信息折叠内嵌聊天卡片底部
+
+**SQLite 医生记忆库上线**（by codex, 09:40）
+
+- `app/db.py`：新增 SQLite 记忆层，初始化 + 种子导入 + CRUD + 全量列表
+- `app/main.py`：新增 `/api/memory/entries` 读写接口，启动时自动初始化数据库
+- `docker-compose.prod.yml`：新增持久化卷，避免容器重建后丢失数据
+
+**SQLite 容器权限热修**（by codex, 09:44）
+
+- `Dockerfile`：预创建并授权 `/app_data` 与 `/app_cache`，避免挂载卷不可写导致 SQLite 启动失败
+
+**3D 矢量动画头像替换医生照片**（by codex, 09:51）
+
+- `app/templates/user_desktop.html` + `app/templates/user_mobile.html`：内联 SVG 立绘（白大褂、听诊器、医疗十字、脉冲环动画、漂浮粒子），渐变实现 3D 立体感
+
+**修复 3D 头像被 JS 覆盖**（by codex, 09:55）
+
+- `app/static/user.js`：提取 `avatarSvg()` 公共函数，`renderVideoPlaceholder()` 不再用 innerHTML 替换 SVG
+
+**统一 embedding 检索管道**（by codex, 10:13）
+
+- `app/knowledge.py`：合并文件+SQLite 两路来源为一套 embedding 管道；缓存失效同时校验文件内容和 SQLite 指纹（COUNT+MAX updated_at）；新增 `invalidate_index()` 供 DB 写入后调用
+- `app/db.py`：移除重复的 `search_memory_entries`，只保留 CRUD 和全量 `list_memory_entries`
+- `app/services.py`：简化为单次 `search_knowledge()` 调用；`app/prompts.py` 合并两段 context
+
+**统一索引刷新修复**（by codex, 10:28）
+
+- `app/main.py`：新增资料后主动调用 `invalidate_index()`，避免聊天命中旧 embedding 直到重启
+- `app/knowledge.py`：修复 `_index_ready` 过早返回旧索引；数据库资料块改为全量参与，不再只取前 500 条
+
+---
+
+### 2026-03-11 深夜（五 00:02）—— windows-claude 移动端重构
+
+**移动端完整重写**（by windows-claude, commit 9adcbee）
+
+- `app/templates/user_mobile.html`：完整重写，视频区+聊天区合并为单张 `.main-card`（视频上、聊天下）
+- 去掉 hero/intro 大区块，顶栏只保留精简 topbar
+- 医生简介/来源折叠进 `<details class="card details-section">`，默认收起
+- 触屏按钮尺寸规范：send-btn 44×44px，aux-btn min-height 36px，video-btn min-height 38px
+- keepAliveBtn / disconnectBtn 默认 `display:none`，视频未启用时隐藏
+- 保留所有 JS 兼容 ID 为隐藏 span，不破坏 user.js 逻辑
+
+### 2026-03-11（四）—— windows-claude 夜间修复
+
+**nginx 缓存与部署修复**（by windows-claude, 22:27~22:36）
+
+- `deploy/nginx/default.conf`：JS/CSS 新增 `proxy_hide_header Cache-Control` + `add_header Cache-Control "no-cache, must-revalidate" always`，确保部署后浏览器立即加载新版本
+- `.github/workflows/deploy.yml`：nginx 重启从 `nginx -s reload` 改为 `docker compose restart nginx`，原命令在容器内静默失败
+
+**前端错误处理与 LiveKit 修复**（by windows-claude, 22:56~23:11）
+
+- `app/static/user.js`：`postJson`/`getJson` 先检查 `response.ok` 再 `.json()`，避免 500 时 SyntaxError 掩盖真实错误；resize 加 150ms debounce 防抖
+- LiveKit CDN 脚本改用 `defer` 加载，防止阻塞页面渲染
+
+**移动端聊天气泡 UI**（by windows-claude, 23:45）
+
+- `app/static/user.js`：新增 `appendChatMessage(role, text)` / `updateChatMessage(row, text)` 工具函数
+- `askQuestion()` 按 `isChatMode()` 分支：移动端走聊天气泡，桌面端走 answer div
+
+### 2026-03-11（四）—— codex 桌面端迭代（多轮）
 
 ### 2026-03-11（三）
 
@@ -285,21 +345,6 @@ cd D:\charles\Documents\doctor-avatar
 - `app/templates/user_desktop.html`：把舞台右侧四宫格小卡片改成一组更轻的胶囊状态，减少 dashboard 感
 - `app/templates/user_desktop.html`：新增“快速提问”胶囊，让右侧提问舱在首屏更像真实入口，而不是一块空白聊天面板
 - `app/static/user.js`：接入快速提问交互，点击后直接填充并发送问题，提升首屏可用性
-
-**数据库上线：新增“医生想法资料库”SQLite 层**（by codex）
-
-- `app/db.py`：新增 SQLite 记忆层，负责初始化、首轮种子导入、条目新增、列表查询与检索
-- `app/main.py`：新增 `/api/memory/entries` 读写接口，并在启动时自动初始化数据库
-- `app/services.py`：聊天时同时检索静态知识库和“医生想法资料库”，让回答能用上你爸的想法资料
-- `app/prompts.py`：把“医生想法与口吻资料”单独注入提示词，不再和普通知识片段混成一层
-- `docker-compose.prod.yml`：新增数据库持久化卷，避免容器重建后资料丢失
-
-**数据库上线热修：修正容器写权限与控制台认证旁路**（by codex）
-
-- `Dockerfile`：预创建并授权 `/app_data` 与 `/app_cache`，避免生产容器因挂载卷不可写导致 SQLite 启动失败
-- `app/main.py`：修正 `CONSOLE_AUTH_MODE=off` 时的认证旁路逻辑，避免 `HTTPBasic` 先一步把无凭据请求拦掉
-
-### 2026-03-11（三）
 
 **桌面端二次重构：一屏主视窗 + 未来感医疗终端**（by codex）
 
