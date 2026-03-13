@@ -484,6 +484,18 @@ cd D:\charles\Documents\doctor-avatar
 - 这说明 4090D 端“在线收音频块 -> Ditto 在线推理 -> 吐帧”这条链路已经成立
 - 下一步只剩网站侧把浏览器 / ECS / 4090D 这三段 WebSocket 串起来
 
+### 2026-03-14（六）—— codex 补齐 Ditto 流式前置依赖（ffmpeg）
+
+**为什么改**：Claude 在 ECS 侧已经把 `/ws/ditto/stream` 接好了，但我复核线上环境时发现 app 容器里并没有 `ffmpeg`。当前流式链路是 `edge-tts -> ffmpeg -> PCM -> Ditto WebSocket`，如果缺这个二进制，`ENABLE_DITTO_STREAM=true` 后只会在运行时直接报错。
+
+**改了什么**（`Dockerfile`）：
+- 在运行镜像的系统依赖里补装 `ffmpeg`
+- 这样容器内的 `/ws/ditto/stream` 才能把 edge-tts 产出的 MP3 实时转成 `16kHz / mono / PCM` 音频块，再分段送给 4090D 的 `8002` 流式服务
+
+**实测发现**：
+- 变更前，阿里云 app 容器里执行 `which ffmpeg` 返回 `no-ffmpeg`
+- 这也是为什么当前 `app-config` 里 `ditto_stream.enabled` 还没敢打开：缺依赖会让流式视频接口在第一次调用时直接失败
+
 ### 2026-03-14（六）—— codex 服务器轻量优化与温和防护
 
 **为什么改**：服务器本身并没有爆内存，但仍有 4 个值得先收掉的小问题：
