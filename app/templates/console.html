@@ -7,24 +7,23 @@
   <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
-      --bg: #060b12;
-      --bg-2: #09111a;
-      --panel: rgba(9, 17, 26, 0.86);
-      --panel-strong: rgba(10, 18, 29, 0.94);
+      --bg: #071019;
+      --bg-soft: #0b1520;
+      --panel: rgba(10, 18, 29, 0.88);
       --panel-soft: rgba(255, 255, 255, 0.03);
-      --line: rgba(147, 180, 210, 0.12);
-      --line-strong: rgba(147, 180, 210, 0.22);
-      --text: #edf4fa;
-      --muted: #8ca0b1;
-      --accent: #78d8dd;
-      --accent-2: #8ea7ff;
-      --ok: #8ce0b6;
-      --warn: #ffce8d;
-      --radius-xl: 28px;
-      --radius-lg: 22px;
-      --radius-md: 18px;
-      --radius-sm: 14px;
-      --shadow: 0 20px 80px rgba(0, 0, 0, 0.34);
+      --line: rgba(144, 171, 198, 0.14);
+      --line-strong: rgba(144, 171, 198, 0.24);
+      --text: #edf5fb;
+      --muted: #90a5b7;
+      --accent: #7edee1;
+      --accent-strong: #5dbfc5;
+      --ok: #8bdcb5;
+      --danger: #ffb0b0;
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 22px 70px rgba(0, 0, 0, 0.3);
     }
 
     * { box-sizing: border-box; }
@@ -35,10 +34,9 @@
       color: var(--text);
       font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(120, 216, 221, 0.12), transparent 24%),
-        radial-gradient(circle at top right, rgba(142, 167, 255, 0.12), transparent 22%),
-        linear-gradient(180deg, #04080d 0%, #09111a 52%, #060b12 100%);
-      overflow: hidden;
+        radial-gradient(circle at 15% 0%, rgba(126, 222, 225, 0.14), transparent 24%),
+        radial-gradient(circle at 100% 0%, rgba(120, 145, 255, 0.12), transparent 20%),
+        linear-gradient(180deg, #05090f 0%, #08111a 54%, #060c13 100%);
     }
 
     body::before {
@@ -47,22 +45,21 @@
       inset: 0;
       pointer-events: none;
       background:
-        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
-      background-size: 32px 32px;
-      mask-image: radial-gradient(circle at center, black 34%, transparent 82%);
+        linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: radial-gradient(circle at center, black 35%, transparent 82%);
       opacity: .28;
     }
 
     main {
-      height: 100vh;
+      max-width: 1500px;
+      margin: 0 auto;
       padding: 18px;
     }
 
     .shell {
-      height: 100%;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
       gap: 16px;
     }
 
@@ -70,158 +67,144 @@
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
-      backdrop-filter: blur(22px);
+      backdrop-filter: blur(20px);
       box-shadow: var(--shadow);
     }
 
     .topbar {
       padding: 18px 22px;
       display: grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1.15fr .85fr;
       gap: 16px;
       align-items: center;
     }
 
-    .topbar-left {
+    .brand {
       display: flex;
       align-items: center;
       gap: 16px;
       min-width: 0;
     }
 
-    .avatar-mark {
-      width: 56px;
-      height: 56px;
+    .logo {
+      width: 54px;
+      height: 54px;
       border-radius: 18px;
       display: grid;
       place-items: center;
       font-weight: 700;
       font-size: 22px;
       letter-spacing: -.04em;
-      background:
-        linear-gradient(145deg, rgba(120,216,221,.16), rgba(142,167,255,.2)),
-        linear-gradient(145deg, #111c29, #0a111a);
+      background: linear-gradient(145deg, rgba(126,222,225,.16), rgba(120,145,255,.18));
       border: 1px solid rgba(255,255,255,.08);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
     }
 
     .eyebrow {
       display: inline-flex;
-      align-items: center;
-      gap: 8px;
       padding: 7px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(120,216,221,.16);
+      border: 1px solid rgba(126,222,225,.16);
+      background: rgba(126,222,225,.08);
       color: var(--accent);
-      background: rgba(120,216,221,.08);
       font-size: 11px;
-      letter-spacing: .18em;
+      letter-spacing: .16em;
       text-transform: uppercase;
     }
 
-    .topbar-left h1 {
+    h1 {
       margin: 10px 0 6px;
       font-size: 30px;
-      line-height: 1.06;
+      line-height: 1.05;
       letter-spacing: -.05em;
     }
 
-    .topbar-left p {
+    .topbar p,
+    .caption {
       margin: 0;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.7;
     }
 
-    .topbar-right {
+    .top-metrics {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
-    .top-stat {
-      padding: 14px 16px;
+    .mini-metric {
+      padding: 14px;
       border-radius: var(--radius-md);
       background: var(--panel-soft);
       border: 1px solid rgba(255,255,255,.05);
-      min-width: 0;
     }
 
-    .top-stat .k {
+    .mini-metric .k {
       display: block;
       color: var(--muted);
       font-size: 11px;
-      letter-spacing: .1em;
+      letter-spacing: .08em;
       text-transform: uppercase;
       margin-bottom: 6px;
     }
 
-    .top-stat strong {
+    .mini-metric strong {
       display: block;
       font-size: 18px;
       letter-spacing: -.04em;
+      overflow-wrap: anywhere;
     }
 
     .workspace {
-      min-height: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1.42fr) 430px;
+      grid-template-columns: minmax(0, 1.45fr) 400px;
       gap: 16px;
+      align-items: start;
     }
 
-    .main-stage,
-    .side-rail {
-      min-height: 0;
+    .main-column,
+    .side-column {
       display: grid;
       gap: 16px;
+      min-width: 0;
     }
 
-    .main-stage {
-      grid-template-rows: auto minmax(0, 1fr) auto;
+    .main-column .panel,
+    .side-column .panel {
       padding: 18px;
     }
 
-    .stage-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 20px;
+    .section-title {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -.04em;
     }
 
     .section-kicker {
       color: var(--accent);
       font-size: 11px;
-      letter-spacing: .18em;
+      letter-spacing: .16em;
       text-transform: uppercase;
+      margin-bottom: 8px;
     }
 
-    .stage-head h2,
-    .side-section h2 {
-      margin: 8px 0 0;
-      font-size: 24px;
-      line-height: 1.15;
-      letter-spacing: -.04em;
+    .head-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
     }
 
-    .stage-head p,
-    .side-section p,
-    .caption {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.75;
-    }
-
-    .status-cluster {
+    .chips {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-end;
-      gap: 10px;
-      max-width: 360px;
+      gap: 8px;
     }
 
     .chip {
-      padding: 9px 12px;
+      padding: 8px 12px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.08);
       background: rgba(255,255,255,.035);
@@ -232,215 +215,108 @@
 
     .chip.ok {
       color: var(--ok);
-      border-color: rgba(140, 224, 182, .18);
-      background: rgba(140, 224, 182, .08);
+      border-color: rgba(139,220,181,.18);
+      background: rgba(139,220,181,.08);
     }
 
-    .stage-canvas {
-      min-height: 0;
-      border-radius: calc(var(--radius-xl) - 6px);
+    .video-shell {
+      border-radius: 24px;
       border: 1px solid rgba(255,255,255,.06);
       background:
-        radial-gradient(circle at 50% 0%, rgba(120,216,221,.18), transparent 28%),
-        linear-gradient(180deg, #0a121c 0%, #0c1621 100%);
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 280px;
-      gap: 18px;
-      padding: 18px;
+        radial-gradient(circle at 50% 0%, rgba(126,222,225,.18), transparent 24%),
+        linear-gradient(180deg, #08121a 0%, #0a131c 100%);
       overflow: hidden;
-      position: relative;
     }
 
-    .stage-canvas::after {
-      content: "";
-      position: absolute;
-      inset: 16px;
-      border-radius: 24px;
-      border: 1px solid rgba(255,255,255,.04);
-      pointer-events: none;
-    }
-
-    .video-surface {
-      min-height: 0;
-      border-radius: 24px;
-      background:
-        radial-gradient(circle at 50% 24%, rgba(120,216,221,.08), transparent 28%),
-        linear-gradient(180deg, #081119 0%, #09131d 100%);
-      border: 1px solid rgba(255,255,255,.06);
-      overflow: hidden;
-      position: relative;
+    .video-stage {
+      min-height: 480px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 24px;
+      background:
+        radial-gradient(circle at center, rgba(120,145,255,.08), transparent 18%),
+        linear-gradient(180deg, #081119 0%, #09131d 100%);
     }
 
-    .stage-label {
+    .stage-badge {
       position: absolute;
       top: 18px;
       left: 18px;
-      z-index: 2;
       padding: 7px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(6, 11, 18, .56);
+      background: rgba(4, 10, 16, .55);
+      border: 1px solid rgba(255,255,255,.06);
       color: var(--muted);
       font-size: 11px;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
 
-    .video-stage {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 420px;
-      position: relative;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(142,167,255,.09), transparent 18%),
-        linear-gradient(180deg, #08131c 0%, #0a1118 100%);
-    }
-
-    .video-stage::before {
-      content: "";
-      position: absolute;
-      inset: 20px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.04);
-    }
-
     .placeholder {
-      width: min(440px, 80%);
+      width: min(420px, 100%);
       text-align: center;
-      color: #e4eef7;
-      line-height: 1.85;
-      font-size: 15px;
+      color: var(--text);
       z-index: 1;
     }
 
     .placeholder-visual {
-      width: 170px;
-      height: 170px;
-      margin: 0 auto 22px;
+      width: 180px;
+      height: 180px;
+      margin: 0 auto 24px;
       border-radius: 999px;
       position: relative;
       background:
-        radial-gradient(circle at 50% 50%, rgba(120,216,221,.18), rgba(142,167,255,.08) 42%, transparent 68%),
-        linear-gradient(145deg, rgba(120,216,221,.08), rgba(142,167,255,.04));
+        radial-gradient(circle, rgba(255,255,255,.12), rgba(126,222,225,.08) 44%, transparent 70%),
+        linear-gradient(145deg, rgba(126,222,225,.1), rgba(120,145,255,.08));
       border: 1px solid rgba(255,255,255,.08);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.08),
-        0 0 50px rgba(120,216,221,.08);
-      overflow: hidden;
     }
 
     .placeholder-visual::before,
     .placeholder-visual::after {
       content: "";
       position: absolute;
-      inset: 18px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.08);
     }
 
-    .placeholder-visual::after {
-      inset: 52px;
-      background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,.04));
-      border-color: rgba(120,216,221,.12);
-    }
+    .placeholder-visual::before { inset: 18px; }
+    .placeholder-visual::after { inset: 54px; }
 
     .scanline {
       position: absolute;
       left: 24px;
       right: 24px;
-      top: 82px;
+      top: 84px;
       height: 10px;
       border-radius: 999px;
-      background: linear-gradient(90deg, transparent, rgba(120,216,221,.35), transparent);
-      box-shadow: 0 0 24px rgba(120,216,221,.18);
+      background: linear-gradient(90deg, transparent, rgba(126,222,225,.35), transparent);
     }
 
     .placeholder strong {
       display: block;
       margin-bottom: 10px;
-      font-size: 24px;
+      font-size: 25px;
       letter-spacing: -.04em;
     }
 
-    .stage-note {
-      padding: 16px 18px;
-      border-top: 1px solid rgba(255,255,255,.05);
+    .stage-footer {
       display: flex;
       justify-content: space-between;
       gap: 16px;
+      padding: 16px 18px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      background: rgba(255,255,255,.02);
       color: var(--muted);
       font-size: 13px;
       line-height: 1.7;
-      background: rgba(255,255,255,.02);
     }
 
-    .canvas-sidebar {
+    .control-row {
       display: grid;
-      grid-template-rows: auto auto 1fr;
-      gap: 14px;
-      min-height: 0;
-    }
-
-    .glass-box {
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.035);
-      border: 1px solid rgba(255,255,255,.06);
-    }
-
-    .glass-box .label {
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
-    .glass-box .value {
-      margin-top: 8px;
-      font-size: 26px;
-      letter-spacing: -.05em;
-      font-weight: 600;
-    }
-
-    .metric-stack {
-      display: grid;
-      gap: 10px;
-    }
-
-    .metric-mini {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      padding: 13px 14px;
-      border-radius: 16px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.05);
-    }
-
-    .metric-mini strong {
-      font-size: 15px;
-      letter-spacing: -.03em;
-    }
-
-    .metric-mini span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .bottom-grid {
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
       gap: 16px;
-      min-height: 0;
-    }
-
-    .bottom-grid > .subpanel {
-      align-self: start;
     }
 
     .subpanel {
@@ -448,20 +324,12 @@
       border-radius: var(--radius-lg);
       background: rgba(255,255,255,.025);
       border: 1px solid rgba(255,255,255,.05);
-      min-height: 0;
     }
 
     .subpanel h3 {
-      margin: 0;
+      margin: 0 0 6px;
       font-size: 16px;
       letter-spacing: -.03em;
-    }
-
-    .subpanel p,
-    .inline-note {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.75;
     }
 
     .field-label {
@@ -483,18 +351,10 @@
       color: var(--text);
       font: inherit;
       outline: none;
-      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
-    }
-
-    input:focus,
-    textarea:focus {
-      border-color: var(--line-strong);
-      box-shadow: 0 0 0 3px rgba(120,216,221,.1);
-      background: rgba(255,255,255,.05);
     }
 
     textarea {
-      min-height: 112px;
+      min-height: 120px;
       resize: vertical;
     }
 
@@ -512,16 +372,12 @@
       padding: 11px 15px;
       font: inherit;
       cursor: pointer;
-      transition: transform .18s ease, opacity .18s ease;
     }
 
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: .65; cursor: wait; transform: none; }
-
     .button-primary {
-      color: #061319;
+      color: #061318;
       font-weight: 600;
-      background: linear-gradient(135deg, var(--accent) 0%, #5fbfd4 100%);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
     }
 
     .button-secondary {
@@ -544,58 +400,42 @@
 
     .output {
       white-space: pre-wrap;
-      line-height: 1.78;
-      color: var(--text);
+      line-height: 1.8;
       font-size: 13px;
+      color: var(--text);
     }
-
-    .muted { color: var(--muted); }
 
     .scroll-box {
-      max-height: 220px;
+      max-height: 180px;
       overflow: auto;
       padding-right: 4px;
     }
 
-    .side-rail {
-      padding: 18px;
-      overflow: hidden;
-    }
-
-    .side-scroll {
-      min-height: 0;
-      overflow: auto;
-      display: grid;
-      gap: 16px;
-      padding-right: 4px;
-    }
-
-    .side-section {
-      padding: 18px;
-      border-radius: var(--radius-lg);
-      background: rgba(255,255,255,.025);
-      border: 1px solid rgba(255,255,255,.05);
-    }
-
-    .monitor-hero {
-      display: grid;
-      gap: 12px;
-    }
-
-    .hero-stat {
+    .hero-metric {
       padding: 16px;
       border-radius: 18px;
       background:
-        linear-gradient(145deg, rgba(120,216,221,.1), rgba(142,167,255,.08)),
+        linear-gradient(145deg, rgba(126,222,225,.1), rgba(120,145,255,.08)),
         rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.06);
+      margin-bottom: 14px;
     }
 
-    .hero-stat strong {
+    .hero-metric .label,
+    .stat-card .label,
+    .metric-line .name {
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .hero-metric strong {
       display: block;
       margin-top: 8px;
       font-size: 28px;
       letter-spacing: -.05em;
+      overflow-wrap: anywhere;
     }
 
     .stat-grid {
@@ -604,83 +444,78 @@
       gap: 10px;
     }
 
-    .stat-cell {
+    .stat-card {
       padding: 14px;
       border-radius: 16px;
       background: rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.05);
     }
 
-    .stat-cell strong {
+    .stat-card strong {
       display: block;
-      margin-top: 6px;
+      margin-top: 7px;
       font-size: 20px;
       letter-spacing: -.04em;
     }
 
-    .kind-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .kind-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.06);
-      color: var(--text);
-      font-size: 12px;
-      line-height: 1.2;
-    }
-
-    .kind-chip span { color: var(--muted); }
-
     .metric-list {
       display: grid;
       gap: 10px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
-    .metric-row {
+    .metric-line {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 12px;
-      align-items: start;
-      padding: 10px 0;
+      gap: 10px;
+      align-items: center;
+      padding-top: 10px;
       border-top: 1px solid rgba(255,255,255,.05);
     }
 
-    .metric-row:first-child { border-top: 0; padding-top: 0; }
+    .metric-line:first-child { padding-top: 0; border-top: 0; }
 
-    .metric-row .name {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-
-    .metric-row .data {
+    .metric-line .data {
       text-align: right;
       font-size: 14px;
-      line-height: 1.5;
+    }
+
+    details.fold {
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.05);
+      overflow: hidden;
+    }
+
+    details.fold summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    details.fold summary::-webkit-details-marker { display: none; }
+
+    details.fold .fold-body {
+      padding: 0 18px 18px;
+      border-top: 1px solid rgba(255,255,255,.05);
     }
 
     .memory-filter-grid {
       display: grid;
       grid-template-columns: 1fr .8fr .42fr;
       gap: 10px;
+      margin-top: 14px;
     }
 
     .memory-list {
       display: grid;
       gap: 10px;
-      margin-top: 12px;
-      max-height: 360px;
+      margin-top: 14px;
+      max-height: 340px;
       overflow: auto;
       padding-right: 4px;
     }
@@ -714,9 +549,8 @@
 
     .memory-content {
       margin-top: 10px;
-      color: var(--text);
       font-size: 13px;
-      line-height: 1.8;
+      line-height: 1.75;
       white-space: pre-wrap;
       display: -webkit-box;
       -webkit-line-clamp: 4;
@@ -724,25 +558,32 @@
       overflow: hidden;
     }
 
-    @media (max-width: 1380px) {
-      .workspace {
-        grid-template-columns: 1fr;
-      }
-
-      .side-rail {
-        max-height: 42vh;
-      }
+    .kind-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
     }
 
-    @media (max-width: 1120px) {
-      html, body { overflow: auto; }
-      main { height: auto; }
-      .shell { height: auto; }
+    .kind-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .kind-chip span { color: var(--muted); }
+
+    @media (max-width: 1250px) {
       .workspace,
       .topbar,
-      .topbar-right,
-      .stage-canvas,
-      .bottom-grid,
+      .top-metrics,
+      .control-row,
       .memory-filter-grid,
       .stat-grid {
         grid-template-columns: 1fr;
@@ -754,24 +595,24 @@
   <main>
     <div class="shell">
       <section class="panel topbar">
-        <div class="topbar-left">
-          <div class="avatar-mark">LY</div>
+        <div class="brand">
+          <div class="logo">LY</div>
           <div>
             <div class="eyebrow">Doctor Avatar Console</div>
             <h1>李勇医生数字分身控制台</h1>
-            <p>只保留真正有用的东西：实时舞台、系统状态、问答校验和资料核对。少一点联调感，多一点高可信的内部运营终端。</p>
+            <p>只做三件事：看主舞台、看系统状态、验证回答。其余内容全部折叠处理，避免后台互相打架。</p>
           </div>
         </div>
-        <div class="topbar-right">
-          <div class="top-stat">
+        <div class="top-metrics">
+          <div class="mini-metric">
             <span class="k">资料暗号</span>
             <strong id="memoryCode">读取中...</strong>
           </div>
-          <div class="top-stat">
+          <div class="mini-metric">
             <span class="k">资料总数</span>
             <strong id="memoryTotal">-</strong>
           </div>
-          <div class="top-stat">
+          <div class="mini-metric">
             <span class="k">线上版本</span>
             <strong id="runtimeShortSha">读取中...</strong>
           </div>
@@ -779,78 +620,41 @@
       </section>
 
       <section class="workspace">
-        <section class="panel main-stage">
-          <div class="stage-head">
-            <div>
-              <div class="section-kicker">Primary Stage</div>
-              <h2>实时会话舞台</h2>
-              <p>主区只负责两件事：看远端画面，判断当前会话链路是否正常。其余说明和细节全部降噪到侧边。</p>
+        <section class="main-column">
+          <section class="panel">
+            <div class="head-row">
+              <div>
+                <div class="section-kicker">Primary Stage</div>
+                <h2 class="section-title">实时会话舞台</h2>
+                <p class="caption">这里永远是首屏主角。会话操作与状态只能围着它服务，不能反过来压它。</p>
+              </div>
+              <div class="chips">
+                <div class="chip" id="connectionState">未连接</div>
+                <div class="chip">写入 <span id="writeModeChip">只读</span></div>
+                <div class="chip ok">监控开启</div>
+              </div>
             </div>
-            <div class="status-cluster">
-              <div class="chip" id="connectionState">未连接</div>
-              <div class="chip">资料写入 <span id="writeModeChip">只读</span></div>
-              <div class="chip ok">运营监控已启用</div>
-            </div>
-          </div>
 
-          <div class="stage-canvas">
-            <div class="video-surface">
-              <div class="stage-label">Remote Video Stage</div>
+            <div class="video-shell">
               <div class="video-stage" id="videoStage">
+                <div class="stage-badge">Remote Video Stage</div>
                 <div class="placeholder">
-                  <div class="placeholder-visual">
-                    <div class="scanline"></div>
-                  </div>
+                  <div class="placeholder-visual"><div class="scanline"></div></div>
                   <strong>等待视频会话启动</strong>
-                  令牌创建、会话启动、房间接入完成后，远端数字分身会直接落在这里。
+                  令牌创建、房间接入与远端推流完成后，数字分身会直接落在这里。
                 </div>
               </div>
-              <div class="stage-note">
-                <span>当前控制台默认以“先观测、再操作”的节奏工作，避免误触和过载。</span>
+              <div class="stage-footer">
+                <span>当前控制台已收缩成单主舞台结构，避免后台模块互相抢空间。</span>
                 <span id="memoryListState">资料状态读取中...</span>
               </div>
             </div>
+          </section>
 
-            <div class="canvas-sidebar">
-              <div class="glass-box">
-                <div class="label">Doctor Profile</div>
-                <div class="value">李勇 / ENT</div>
-                <p class="caption">杭州市第一人民医院耳鼻咽喉科。围绕鼻科微创、规范管理和高风险识别展开数字化沉淀。</p>
-              </div>
-
-              <div class="metric-stack">
-                <div class="metric-mini">
-                  <div>
-                    <span>当前模式</span>
-                    <strong id="modeBadge">读取中...</strong>
-                  </div>
-                </div>
-                <div class="metric-mini">
-                  <div>
-                    <span>活跃用户</span>
-                    <strong id="activeUsersMini">读取中...</strong>
-                  </div>
-                </div>
-                <div class="metric-mini">
-                  <div>
-                    <span>OpenAI 调用</span>
-                    <strong id="openaiCallsMini">读取中...</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div class="glass-box">
-                <div class="label">Top Kinds</div>
-                <div id="memoryTopKinds" class="output muted">读取中...</div>
-                <div class="kind-list" id="memoryKindChips"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="bottom-grid">
-            <div class="subpanel">
+          <div class="control-row">
+            <section class="subpanel">
               <h3>会话控制</h3>
-              <p class="caption">保留必要的令牌与会话动作，但不让它喧宾夺主。</p>
+              <p class="caption">只保留必要动作，不再把按钮铺满一整页。</p>
               <label class="field-label" for="sessionToken">Session Token</label>
               <input id="sessionToken" placeholder="创建会话令牌后自动显示" />
               <div class="toolbar">
@@ -860,141 +664,126 @@
                 <button id="listSessionsBtn" class="button-secondary">会话列表</button>
                 <button id="disconnectBtn" class="button-danger">断开连接</button>
               </div>
-            </div>
+            </section>
 
-            <div class="subpanel">
+            <section class="subpanel">
               <h3>系统事件</h3>
               <div id="eventLog" class="output muted scroll-box">等待操作。</div>
-            </div>
-
-            <div class="subpanel">
-              <h3>线上版本</h3>
-              <div id="runtimeInfo" class="output muted">读取中...</div>
-            </div>
-
-            <div class="subpanel">
-              <h3>后端预设</h3>
-              <div id="backendConfig" class="output muted">读取中...</div>
-            </div>
-
-            <div class="subpanel">
-              <h3>会话返回</h3>
-              <div id="sessionInfo" class="output muted">尚未启动会话。</div>
-            </div>
-
-            <div class="subpanel">
-              <h3>接口响应</h3>
-              <div id="apiResult" class="output muted">尚无调用记录。</div>
-            </div>
+            </section>
           </div>
+
+          <details class="fold">
+            <summary>
+              <div>
+                <div class="section-kicker">Collapsed Details</div>
+                <strong>版本、预设、接口回执</strong>
+              </div>
+              <span class="chip">按需展开</span>
+            </summary>
+            <div class="fold-body">
+              <div class="control-row" style="margin-top:16px;">
+                <section class="subpanel">
+                  <h3>线上版本</h3>
+                  <div id="runtimeInfo" class="output muted">读取中...</div>
+                </section>
+                <section class="subpanel">
+                  <h3>后端预设</h3>
+                  <div id="backendConfig" class="output muted">读取中...</div>
+                </section>
+                <section class="subpanel">
+                  <h3>会话返回</h3>
+                  <div id="sessionInfo" class="output muted">尚未启动会话。</div>
+                </section>
+                <section class="subpanel">
+                  <h3>接口响应</h3>
+                  <div id="apiResult" class="output muted">尚无调用记录。</div>
+                </section>
+              </div>
+            </div>
+          </details>
         </section>
 
-        <aside class="panel side-rail">
-          <div class="side-scroll">
-            <section class="side-section">
-              <div class="section-kicker">Ops Rail</div>
-              <h2>系统概览</h2>
-              <p>右侧只保留监控、问答核验和资料抽查。把运营者真正会看的东西压成一条清晰的侧边轨道。</p>
-              <div class="monitor-hero" style="margin-top:14px;">
-                <div class="hero-stat">
-                  <div class="label">Memory Code</div>
-                  <strong id="memoryCodeHero">读取中...</strong>
-                  <p class="caption">用于核对线上资料库是否已经同步到最新版本。</p>
-                </div>
-                <div class="stat-grid">
-                  <div class="stat-cell">
-                    <div class="label">CPU</div>
-                    <strong id="cpuUsage">读取中...</strong>
-                  </div>
-                  <div class="stat-cell">
-                    <div class="label">Memory</div>
-                    <strong id="memoryUsage">读取中...</strong>
-                  </div>
-                  <div class="stat-cell">
-                    <div class="label">Disk</div>
-                    <strong id="diskUsage">读取中...</strong>
-                  </div>
-                  <div class="stat-cell">
-                    <div class="label">Requests</div>
-                    <strong id="requestTotal">读取中...</strong>
-                  </div>
-                </div>
-              </div>
-              <div class="metric-list">
-                <div class="metric-row">
-                  <div class="name">Active Users</div>
-                  <div class="data" id="activeUsers">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">OpenAI Calls</div>
-                  <div class="data" id="openaiCalls">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Network RX</div>
-                  <div class="data" id="networkRx">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Network TX</div>
-                  <div class="data" id="networkTx">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Avg Latency</div>
-                  <div class="data" id="avgLatency">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Request Errors</div>
-                  <div class="data" id="requestErrors">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Uptime</div>
-                  <div class="data" id="uptimeValue">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">Write Mode</div>
-                  <div class="data" id="writeMode">读取中...</div>
-                </div>
-              </div>
-              <div class="memory-toolbar">
-                <button id="refreshOpsBtn" class="button-primary">刷新监控</button>
-              </div>
-            </section>
+        <aside class="side-column">
+          <section class="panel">
+            <div class="section-kicker">Ops Rail</div>
+            <h2 class="section-title">系统概览</h2>
+            <p class="caption">右侧不再堆模块，只留一条监控轨道。</p>
 
-            <section class="side-section">
-              <div class="section-kicker">Validation</div>
-              <h2>问答验证</h2>
-              <label class="field-label" for="message" style="margin-top:14px;">验证问题</label>
-              <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，门诊应先补哪几项病史？"></textarea>
-              <div class="toolbar">
-                <button id="sendBtn" class="button-primary">生成回答</button>
-              </div>
-              <div style="margin-top:14px;" class="output muted" id="answer">尚未生成回答。</div>
-            </section>
+            <div class="hero-metric">
+              <div class="label">Memory Code</div>
+              <strong id="memoryCodeHero">读取中...</strong>
+              <p class="caption">用于核对线上资料库是否已同步到最新版本。</p>
+            </div>
 
-            <section class="side-section">
-              <div class="section-kicker">Context</div>
-              <h2>命中与资源</h2>
-              <div class="output muted" id="context">尚未检索知识内容。</div>
+            <div class="subpanel" style="margin-bottom:14px;">
+              <h3>资料结构</h3>
+              <div class="output muted" id="memoryTopKinds">读取中...</div>
+              <div class="kind-list" id="memoryKindChips"></div>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat-card"><div class="label">CPU</div><strong id="cpuUsage">读取中...</strong></div>
+              <div class="stat-card"><div class="label">Memory</div><strong id="memoryUsage">读取中...</strong></div>
+              <div class="stat-card"><div class="label">Disk</div><strong id="diskUsage">读取中...</strong></div>
+              <div class="stat-card"><div class="label">Requests</div><strong id="requestTotal">读取中...</strong></div>
+            </div>
+
+            <div class="metric-list">
+              <div class="metric-line"><div class="name">Active Users</div><div class="data" id="activeUsers">读取中...</div></div>
+              <div class="metric-line"><div class="name">OpenAI Calls</div><div class="data" id="openaiCalls">读取中...</div></div>
+              <div class="metric-line"><div class="name">Network RX</div><div class="data" id="networkRx">读取中...</div></div>
+              <div class="metric-line"><div class="name">Network TX</div><div class="data" id="networkTx">读取中...</div></div>
+              <div class="metric-line"><div class="name">Avg Latency</div><div class="data" id="avgLatency">读取中...</div></div>
+              <div class="metric-line"><div class="name">Request Errors</div><div class="data" id="requestErrors">读取中...</div></div>
+              <div class="metric-line"><div class="name">Uptime</div><div class="data" id="uptimeValue">读取中...</div></div>
+              <div class="metric-line"><div class="name">Write Mode</div><div class="data" id="writeMode">读取中...</div></div>
+            </div>
+
+            <div class="memory-toolbar">
+              <button id="refreshOpsBtn" class="button-primary">刷新监控</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="section-kicker">Validation</div>
+            <h2 class="section-title">问答验证</h2>
+            <label class="field-label" for="message" style="margin-top:14px;">验证问题</label>
+            <textarea id="message" placeholder="例如：慢性鼻窦炎反复发作，门诊应先补哪几项病史？"></textarea>
+            <div class="toolbar">
+              <button id="sendBtn" class="button-primary">生成回答</button>
+            </div>
+            <div class="output muted" id="answer" style="margin-top:14px;">尚未生成回答。</div>
+          </section>
+
+          <details class="fold">
+            <summary>
+              <div>
+                <div class="section-kicker">Context</div>
+                <strong>命中、资源与路由</strong>
+              </div>
+              <span class="chip">按需展开</span>
+            </summary>
+            <div class="fold-body">
+              <div class="output muted" id="context" style="margin-top:14px;">尚未检索知识内容。</div>
               <div class="metric-list" style="margin-top:14px;">
-                <div class="metric-row">
-                  <div class="name">API 消耗</div>
-                  <div class="data" id="apiTokenInfo">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">资源情况</div>
-                  <div class="data" id="resourceInfo">读取中...</div>
-                </div>
-                <div class="metric-row">
-                  <div class="name">热点路由</div>
-                  <div class="data" id="topPaths">读取中...</div>
-                </div>
+                <div class="metric-line"><div class="name">API 消耗</div><div class="data" id="apiTokenInfo">读取中...</div></div>
+                <div class="metric-line"><div class="name">资源情况</div><div class="data" id="resourceInfo">读取中...</div></div>
+                <div class="metric-line"><div class="name">热点路由</div><div class="data" id="topPaths">读取中...</div></div>
               </div>
-            </section>
+            </div>
+          </details>
 
-            <section class="side-section">
-              <div class="section-kicker">Memory Browser</div>
-              <h2>资料抽查</h2>
-              <p>这里只做快速抽查和复制，不再把它做成危险的后台编辑器。</p>
-              <div class="memory-filter-grid" style="margin-top:14px;">
+          <details class="fold">
+            <summary>
+              <div>
+                <div class="section-kicker">Memory Browser</div>
+                <strong>资料抽查</strong>
+              </div>
+              <span class="chip">按需展开</span>
+            </summary>
+            <div class="fold-body">
+              <p class="caption" style="margin-top:14px;">这里只做快速抽查和复制，不再让资料列表挤占首屏。</p>
+              <div class="memory-filter-grid">
                 <div>
                   <label class="field-label" for="memoryQuery">关键词</label>
                   <input id="memoryQuery" placeholder="按标题、正文、标签搜索" />
@@ -1013,8 +802,8 @@
                 <button id="clearMemoryFiltersBtn" class="button-secondary">清空筛选</button>
               </div>
               <div class="memory-list" id="memoryList"></div>
-            </section>
-          </div>
+            </div>
+          </details>
         </aside>
       </section>
     </div>

@@ -348,6 +348,12 @@ cd D:\charles\Documents\doctor-avatar
 - `app/static/console.js`：补齐新布局所需状态映射（顶部版本、主舞台状态胶囊、侧栏关键指标）
 - `scripts/validate_console_ui.mjs`：同步适配新版控制台文案，保证 Playwright 本机验收不再因旧关键词误报失败
 
+**控制台三次收束：强制单主舞台，折叠次要模块，避免元素互相挤压**（by codex）
+
+- `app/templates/console.html`：进一步删掉首屏里会抢空间的次要模块，把版本/预设/接口回执、命中详情、资料抽查全部改成折叠区
+- `app/templates/console.html`：主区保留“视频舞台 + 会话控制 + 系统事件”，右侧只保留“系统概览 + 问答验证”，避免一屏出现多个主角
+- `app/static/console.js`：继续兼容收缩后的 DOM 结构，保留统计刷新和状态写入
+
 **控制台视觉重构：从联调堆叠页收成内部工作台**（by codex）
 
 - `app/templates/console.html`：整体布局改为“顶部概览 + 左侧实时会话 + 右侧知识与资料”两栏工作台，移除原来过多的并列区块和重复说明
