@@ -14,6 +14,8 @@ services:
       - doctor_memory:/app_data
     expose:
       - "8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - doctor_avatar_net
 
