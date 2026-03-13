@@ -319,17 +319,17 @@
     }
 
     .vbtn {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 12px 18px; border: none; border-radius: var(--radius-md);
-      font-size: 14px; font-weight: 600; cursor: pointer;
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 16px 22px; border: none; border-radius: var(--radius-md);
+      font-size: 16px; font-weight: 700; cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
     }
 
     #startConsultBtn {
-      background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
-      color: #fff; box-shadow: 0 4px 16px var(--accent-glow);
+      background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+      color: #fff; box-shadow: 0 4px 20px rgba(7,193,96,0.4);
     }
-    #startConsultBtn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--accent-glow); }
+    #startConsultBtn:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(7,193,96,0.5); }
 
     #keepAliveBtn {
       background: var(--surface-solid); color: var(--text-primary);
@@ -381,8 +381,8 @@
     }
 
     .bubble {
-      padding: 12px 16px; border-radius: 18px;
-      font-size: 14px; line-height: 1.65;
+      padding: 14px 18px; border-radius: 18px;
+      font-size: 16px; line-height: 1.75;
       white-space: pre-wrap; word-break: break-word;
       animation: msgIn 0.3s ease-out;
     }
@@ -441,12 +441,12 @@
     .input-row { display: flex; gap: 10px; align-items: flex-end; }
 
     #message {
-      flex: 1; padding: 12px 18px;
+      flex: 1; padding: 14px 18px;
       border: 1.5px solid rgba(26,39,68,0.1); border-radius: var(--radius-md);
-      font-size: 14px; font-family: inherit; outline: none;
+      font-size: 16px; font-family: inherit; outline: none;
       resize: none; max-height: 120px; overflow-y: auto;
       background: var(--surface-solid); color: var(--text-primary);
-      line-height: 1.5; transition: border-color 0.3s, box-shadow 0.3s;
+      line-height: 1.6; transition: border-color 0.3s, box-shadow 0.3s;
     }
 
     #message::placeholder { color: var(--text-secondary); }
@@ -457,10 +457,10 @@
     }
 
     #askBtn {
-      width: 46px; height: 46px; flex-shrink: 0;
+      width: 52px; height: 52px; flex-shrink: 0;
       border: none; border-radius: 50%; cursor: pointer;
       background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
-      color: #fff; font-size: 16px;
+      color: #fff; font-size: 18px;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 12px var(--accent-glow);
       transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -472,10 +472,10 @@
     .action-row { display: flex; gap: 8px; margin-top: 10px; }
 
     .aux-btn {
-      padding: 7px 13px; min-height: 34px;
+      padding: 9px 16px; min-height: 40px;
       background: var(--surface-solid); color: var(--text-secondary);
       border: 1px solid rgba(26,39,68,0.1); border-radius: var(--radius-sm);
-      font-size: 12px; font-weight: 500; cursor: pointer;
+      font-size: 14px; font-weight: 500; cursor: pointer;
       transition: all 0.2s ease;
     }
 
@@ -727,10 +727,10 @@
     <!-- ══ 移动端操作栏 ══ -->
     <div class="mob-actions">
       <button class="mob-btn mob-btn-primary" onclick="document.getElementById('startConsultBtn').click()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/>
         </svg>
-        视频分身
+        视频通话
       </button>
     </div>
 
@@ -771,7 +771,7 @@
       </div>
       <div class="status-badge">
         <span id="connDot"></span>
-        <span id="connectionState">AI 在线</span>
+        <span id="connectionState">在线问诊</span>
       </div>
     </header>
 
@@ -842,10 +842,11 @@
         <!-- 视频操作按钮（始终在底部） -->
         <div class="video-actions">
           <button id="startConsultBtn" class="vbtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+            <!-- 微信风格视频通话图标 -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/>
             </svg>
-            视频分身
+            视频通话
           </button>
           <button id="keepAliveBtn" class="vbtn" style="display:none">保持会话</button>
           <button id="disconnectBtn" class="vbtn" style="display:none">断开</button>
@@ -901,9 +902,9 @@
     </section>
   </div>
 
-  <!-- 视频分身面板切换：点开始→显示视频框，点断开→还原信息面板 -->
   <script>
     (function () {
+      // ── 视频框切换 ──
       document.addEventListener('DOMContentLoaded', function () {
         var startBtn = document.getElementById('startConsultBtn');
         var discBtn  = document.getElementById('disconnectBtn');
@@ -913,6 +914,31 @@
         if (discBtn) discBtn.addEventListener('click', function () {
           document.body.classList.remove('video-active');
         });
+
+        // ── 状态文字适老化重映射：把 user.js 写入的技术性文字改成患者友好文字 ──
+        var stateMap = {
+          '未启用': '在线问诊',
+          '未连接': '在线问诊',
+          'AI 在线': '在线问诊',
+          '等待会话启动': '在线问诊',
+          '图文问答主流程': '在线问诊',
+          '连接中...': '连接中…',
+          '已连接': '通话中',
+        };
+        var stateEl = document.getElementById('connectionState');
+        if (stateEl) {
+          function remapState() {
+            var t = stateEl.textContent.trim();
+            if (stateMap[t] !== undefined) {
+              obs.disconnect();
+              stateEl.textContent = stateMap[t];
+              obs.observe(stateEl, { childList: true, subtree: true, characterData: true });
+            }
+          }
+          var obs = new MutationObserver(remapState);
+          obs.observe(stateEl, { childList: true, subtree: true, characterData: true });
+          remapState(); // 处理初始值
+        }
       });
     })();
   </script>
