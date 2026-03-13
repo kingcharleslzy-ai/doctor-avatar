@@ -237,6 +237,17 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-13（五）—— windows-claude MiniMax 设计前端上线
+
+**MiniMax 2.5 设计稿落地：响应式统一模板全面重写**（by windows-claude）
+
+- `app/templates/index.html`：基于 MiniMax 2.5 设计的蓝紫玻璃拟态（glassmorphism）风格全面重写，统一替代原 `user_desktop.html` + `user_mobile.html` 的 `/` 路由
+- 视觉设计：CSS 变量（`--accent: #2563eb`、`--ai-color: #7c3aed`）、动态背景光球动画、医生头像悬浮效果、渐变按钮、深色模式自适应（`prefers-color-scheme: dark`）
+- 响应式布局：`@media (max-width: 899px)` 移动端（全屏聊天 + 底部操作栏）/ 桌面端双列网格（左侧医生卡 + 右侧视频舱），单文件零重复
+- **关键兼容修复**：`startConsultBtn`、`keepAliveBtn`、`disconnectBtn`、`connDot` 等视频控件仅存在于 `avatar-section`（桌面卡），移动端操作按钮通过 `onclick` 委托（`document.getElementById('startConsultBtn').click()`）避免 DOM 重复 ID 问题
+- 保留 `user.js` 所需全部 ID：`chatHistory`、`message`、`askBtn`、`connDot`、`connectionState`、`voiceInputBtn`、`speakAnswerBtn`、`stopSpeechBtn`、`voiceStatus`、`heroTitle`、`deptState`、`doctorBio`、`focusTags`、`focusList`、`officialSources`、`clinicNote`、`hospitalValue`、`brandSubtitle`、`answer`（隐藏）
+- CSS 类名完全对齐 `user.js`：`.msg-row`、`.ai-label`、`.bubble`、`.typing-dots` 全部就位
+
 ### 2026-03-13（五）—— windows-claude 审查与优化
 
 **接入统一响应式模板（index.html）**（by windows-claude）
