@@ -1,0 +1,64 @@
+name: Setup frps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/setup-frps.yml"
+      - "deploy/frp/**"
+      - "README.md"
+  workflow_dispatch:
+
+jobs:
+  setup-frps:
+    runs-on: self-hosted
+    env:
+      FRP_VERSION: "0.67.0"
+      FRP_AUTH_TOKEN: ${{ secrets.FRP_AUTH_TOKEN }}
+    steps:
+      - name: Validate secret presence
+        run: |
+          if [ -z "${FRP_AUTH_TOKEN}" ]; then
+            echo "FRP_AUTH_TOKEN secret is missing."
+            exit 1
+          fi
+
+      - name: Download and install frps
+        run: |
+          set -euo pipefail
+          cd /tmp
+          curl -fsSL -o frp.tar.gz "https://github.com/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_amd64.tar.gz"
+          rm -rf /tmp/frp-install
+          mkdir -p /tmp/frp-install
+          tar -xzf frp.tar.gz -C /tmp/frp-install
+          install -d -m 755 /usr/local/frp
+          install -m 755 "/tmp/frp-install/frp_${FRP_VERSION}_linux_amd64/frps" /usr/local/frp/frps
+
+      - name: Write frps config and token
+        run: |
+          set -euo pipefail
+          install -d -m 755 /etc/frp
+          install -m 644 /root/doctor-avatar/deploy/frp/frps.toml /etc/frp/frps.toml
+          printf "%s" "${FRP_AUTH_TOKEN}" > /etc/frp/server_token
+          chmod 600 /etc/frp/server_token
+          install -m 644 /root/doctor-avatar/deploy/frp/frps.service /etc/systemd/system/frps.service
+
+      - name: Allow firewall ports when ufw is active
+        run: |
+          if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
+            ufw allow 7000/tcp
+            ufw allow 6000/tcp
+          fi
+
+      - name: Enable and restart frps
+        run: |
+          set -euo pipefail
+          systemctl daemon-reload
+          systemctl enable frps
+          systemctl restart frps
+          systemctl --no-pager --lines=20 status frps
+
+      - name: Verify frps listening
+        run: |
+          set -euo pipefail
+          ss -ltnp | grep -E ":7000\\b"

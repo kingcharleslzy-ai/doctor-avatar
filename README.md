@@ -34,6 +34,38 @@ uvicorn app.main:app --reload
 - 用户端手机版：`/mobile`
 - 控制台：`/console`
 
+## 4090D 远程接入（frp）
+
+当前已为“阿里云主站 + 家里 4090D 渲染机”准备了 `frp` 的 SSH 通道方案：
+
+- 阿里云服务器运行 `frps`
+- 家里 4090D 机器运行 `frpc`
+- 默认端口：
+  - `7000/tcp`：`frps` 控制通道
+  - `6000/tcp`：映射后的家里机器 `ssh`
+
+仓库内文件：
+
+- `deploy/frp/frps.toml`
+- `deploy/frp/frps.service`
+- `.github/workflows/setup-frps.yml`
+
+注意：
+
+- 真正的 `FRP_AUTH_TOKEN` 不会写进仓库，而是放在 GitHub Secret：
+  - `FRP_AUTH_TOKEN`
+- 阿里云安全组还需要放行：
+  - `7000/tcp`
+  - `6000/tcp`
+
+如果 `setup-frps.yml` 已成功运行，后续只要家里机器的 `frpc` 也连上，就可以通过：
+
+```bash
+ssh -p 6000 charles@47.250.168.45
+```
+
+从外网进入家里的 4090D 机器。
+
 ## 本机前端验收工具
 
 项目现在已经固定安装了本地 Node + Playwright 工具链，不需要每次再临时下载：

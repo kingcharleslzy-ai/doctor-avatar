@@ -1,0 +1,12 @@
+bindPort = 7000
+
+transport.tls.force = true
+
+allowPorts = [
+  { single = 6000 }
+]
+
+auth.method = "token"
+auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+auth.tokenSource.type = "file"
+auth.tokenSource.file.path = "/etc/frp/server_token"
