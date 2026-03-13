@@ -41,6 +41,16 @@ jobs:
           cd /root/doctor-avatar
           docker compose -f docker-compose.prod.yml up -d --build
 
+      - name: Sync doctor memory snapshot
+        run: |
+          cd /root/doctor-avatar
+          docker compose -f docker-compose.prod.yml exec -T app python scripts/sync_memory_snapshot.py --prune-missing
+
+      - name: Restart app after memory sync
+        run: |
+          cd /root/doctor-avatar
+          docker compose -f docker-compose.prod.yml restart app
+
       - name: Restart nginx to apply config
         run: |
           docker compose -f /root/doctor-avatar/docker-compose.prod.yml restart nginx
