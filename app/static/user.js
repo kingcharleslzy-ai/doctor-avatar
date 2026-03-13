@@ -157,7 +157,7 @@ function avatarSvg() {
 function desktopPlaceholderMarkup() {
   return `
     <div class="avatar-wrap">
-      ${avatarSvg()}
+      <img src="/static/doctor-photo-desktop.png" alt="${profileName()}医生" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;border-radius:inherit;">
       <div class="avatar-info">
         <div class="av-badge">AI AVATAR · STANDBY</div>
         <div class="av-name">${profileName()}医生</div>
@@ -170,7 +170,7 @@ function desktopPlaceholderMarkup() {
 function mobilePlaceholderMarkup() {
   return `
     <div class="avatar-wrap">
-      ${avatarSvg()}
+      <img src="/static/doctor-photo-mobile.png" alt="${profileName()}医生" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block;border-radius:inherit;">
       <div class="avatar-info">
         <div class="av-badge">AI AVATAR · STANDBY</div>
         <div class="av-name">${profileName()}医生</div>
