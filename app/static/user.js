@@ -6,6 +6,7 @@ const state = {
   appConfig: null,
   recognition: null,
   recognitionAvailable: false,
+  microphonePrimed: false,
   presenceSessionId: "",
 };
 
@@ -196,6 +197,22 @@ function renderVideoPlaceholder() {
   stage.innerHTML = isMobileLayout() ? mobilePlaceholderMarkup() : desktopPlaceholderMarkup();
 }
 
+function renderVideoLoading(message = "视频生成中，请稍候…") {
+  const stage = $("videoStage");
+  if (!stage || state.room) {
+    return;
+  }
+  stage.innerHTML = `
+    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top, rgba(68,151,255,.22), rgba(4,10,24,.96));border-radius:inherit;padding:24px;box-sizing:border-box;">
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;">
+        <div style="font-size:13px;letter-spacing:.12em;color:rgba(188,224,255,.78);">AI VIDEO PREPARING</div>
+        <div style="font-size:16px;font-weight:600;color:#eef6ff;">${message}</div>
+        <div style="font-size:12px;color:rgba(188,224,255,.62);">语音会先开始播放，随后自动切换到视频画面</div>
+      </div>
+    </div>
+  `;
+}
+
 function updateVideoModeUi() {
   const startBtn = $("startConsultBtn");
   const keepAliveBtn = $("keepAliveBtn");
@@ -345,14 +362,17 @@ async function startConsultation() {
   }
 
   if (!hasLiveAvatarMode() && hasDittoMode()) {
-    setVoiceStatus("已进入语音视频模式。请直接说出问题，或先输入文字后发送，系统会自动朗读并生成视频。");
+    setVoiceStatus("已进入语音视频模式。正在准备麦克风权限；你也可以直接输入文字并发送。");
     const message = $("message");
     if (message) {
       message.focus();
       message.placeholder = "先说出或输入问题，发送后将自动生成语音和视频…";
     }
+    await prepareMicrophoneAccess();
     if (state.recognitionAvailable) {
-      startVoiceInput();
+      await startVoiceInput();
+    } else if (state.microphonePrimed) {
+      setVoiceStatus("麦克风权限已准备好。当前浏览器不支持原生语音识别，请直接输入文字后发送。");
     }
     return;
   }
@@ -427,7 +447,8 @@ async function askQuestion() {
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
-      if (state.appConfig?.ditto_enabled) generateDittoVideo(data.answer);
+      void speakAnswer(data.answer);
+      if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
       updateChatMessage(loadingRow, `出错了：${error.message}`);
@@ -440,7 +461,8 @@ async function askQuestion() {
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
-      if (state.appConfig?.ditto_enabled) generateDittoVideo(data.answer);
+      void speakAnswer(data.answer);
+      if (state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
     }
@@ -449,6 +471,25 @@ async function askQuestion() {
 
 function setVoiceStatus(message) {
   setText("voiceStatus", message);
+}
+
+async function prepareMicrophoneAccess() {
+  if (state.microphonePrimed) {
+    return true;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    return false;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((track) => track.stop());
+    state.microphonePrimed = true;
+    return true;
+  } catch (error) {
+    const denied = error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError";
+    setVoiceStatus(denied ? "你拒绝了麦克风权限，可以先改用文字输入。" : "当前浏览器未能获取麦克风权限，可先使用文字输入。");
+    return false;
+  }
 }
 
 function initRecognition() {
@@ -488,11 +529,12 @@ function initRecognition() {
   state.recognitionAvailable = true;
 }
 
-function startVoiceInput() {
+async function startVoiceInput() {
   if (!state.recognitionAvailable || !state.recognition) {
     setVoiceStatus("当前浏览器不支持原生语音输入，请改用手动输入。");
     return;
   }
+  await prepareMicrophoneAccess();
   try {
     state.recognition.start();
   } catch (_) {
@@ -502,8 +544,8 @@ function startVoiceInput() {
 
 let _currentAudio = null;
 
-async function speakAnswer() {
-  const answer = $("answer")?.textContent.trim();
+async function speakAnswer(textOverride) {
+  const answer = (textOverride || $("answer")?.textContent || "").trim();
   if (!answer || answer === "尚未生成回答。") {
     setVoiceStatus("还没有可朗读的回答。");
     return;
@@ -541,6 +583,7 @@ async function generateDittoVideo(text) {
   if (!stage || state.room) return;
   try {
     setText("modeState", "视频生成中…");
+    renderVideoLoading();
     const response = await fetch("/api/ditto/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -558,13 +601,17 @@ async function generateDittoVideo(text) {
     video.autoplay = true;
     video.playsInline = true;
     video.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit;";
-    const restore = () => { URL.revokeObjectURL(url); renderVideoPlaceholder(); setText("modeState", "图文问答主流程"); };
+    const restore = () => {
+      URL.revokeObjectURL(url);
+      renderVideoPlaceholder();
+      updateVideoModeUi();
+    };
     video.onended = restore;
     video.onerror = restore;
     stage.appendChild(video);
     setText("modeState", "视频播放中");
   } catch (exc) {
-    setText("modeState", "图文问答主流程");
+    updateVideoModeUi();
     console.warn("Ditto:", exc.message);
   }
 }
