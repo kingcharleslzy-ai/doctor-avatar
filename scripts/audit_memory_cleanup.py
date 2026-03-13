@@ -150,9 +150,10 @@ def main() -> None:
     print(f"Overlap groups: {len(overlap_groups)}")
     print(f"Report: {report_path}")
     if args.apply_safe and args.refresh_snapshot:
-        count, out_path = write_snapshot(ROOT / "data" / "doctor_memory.db", ROOT / "research" / "doctor-memory-snapshot.json")
+        count, out_path, code = write_snapshot(ROOT / "data" / "doctor_memory.db", ROOT / "research" / "doctor-memory-snapshot.json")
         print(f"Snapshot rows: {count}")
         print(f"Snapshot: {out_path}")
+        print(f"Memory code: {code}")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DB_PATH = ROOT / "data" / "doctor_memory.db"
 DEFAULT_OUTPUT_DIR = ROOT / "exports"
+EXCLUDED_KINDS = {"system_marker"}
 
 KIND_LABELS = {
     "academic_role": "学术身份",
@@ -132,7 +133,7 @@ def load_rows(db_path: Path) -> list[dict]:
                 "updated_at": row["updated_at"],
             }
         )
-    return result
+    return [row for row in result if row["kind"] not in EXCLUDED_KINDS]
 
 
 def render_markdown(rows: list[dict], db_path: Path) -> str:

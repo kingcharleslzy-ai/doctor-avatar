@@ -264,7 +264,7 @@ def upsert_memory_entry(
     with closing(_connect()) as conn:
         existing = conn.execute(
             """
-            SELECT id, created_at
+            SELECT id, created_at, content, tags_json, importance
             FROM doctor_memory_entries
             WHERE kind = ? AND title = ? AND source = ?
             ORDER BY id ASC
@@ -274,20 +274,31 @@ def upsert_memory_entry(
         ).fetchone()
 
         if existing:
-            conn.execute(
-                """
-                UPDATE doctor_memory_entries
-                SET content = ?, tags_json = ?, importance = ?, updated_at = ?
-                WHERE id = ?
-                """,
-                (
-                    content.strip(),
-                    normalized_tags,
-                    float(importance),
-                    now,
-                    existing["id"],
-                ),
-            )
+            current_content = (existing["content"] or "").strip()
+            new_content = content.strip()
+            current_tags = existing["tags_json"] or "[]"
+            current_importance = float(existing["importance"])
+            new_importance = float(importance)
+
+            if (
+                current_content != new_content
+                or current_tags != normalized_tags
+                or current_importance != new_importance
+            ):
+                conn.execute(
+                    """
+                    UPDATE doctor_memory_entries
+                    SET content = ?, tags_json = ?, importance = ?, updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        new_content,
+                        normalized_tags,
+                        new_importance,
+                        now,
+                        existing["id"],
+                    ),
+                )
             row_id = existing["id"]
             created = False
         else:

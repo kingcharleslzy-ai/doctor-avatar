@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import httpx
 from openai import OpenAI
 
 from .config import settings
+from .memory_snapshot import get_memory_marker, get_memory_status
 from .knowledge import load_doctor_profile, search_knowledge
 from .prompts import build_system_prompt, build_user_prompt
 
@@ -18,6 +20,11 @@ class ChatService:
     def answer(self, message: str, conversation: list[dict[str, str]]) -> dict[str, Any]:
         if self.client is None:
             raise RuntimeError("OPENAI_API_KEY 未配置。")
+
+        if self._looks_like_memory_code_request(message):
+            code_answer = self._answer_memory_code()
+            if code_answer:
+                return code_answer
 
         hits = search_knowledge(message)
         snippets = [hit.snippet for hit in hits]
@@ -36,6 +43,33 @@ class ChatService:
             "answer": response.output_text.strip(),
             "citations": citations,
             "context_snippets": snippets,
+        }
+
+    def _looks_like_memory_code_request(self, message: str) -> bool:
+        lowered = message.lower()
+        direct_keywords = ("暗号", "口令", "memory code", "校验码")
+        if any(keyword in lowered for keyword in direct_keywords):
+            return True
+        return (
+            ("资料库" in lowered or "数据库" in lowered)
+            and any(keyword in lowered for keyword in ("更新", "版本", "同步", "校验"))
+        )
+
+    def _answer_memory_code(self) -> dict[str, Any] | None:
+        db_path = Path(settings.doctor_memory_db_path)
+        code, row_count = get_memory_status(db_path)
+        marker = get_memory_marker(Path(db_path))
+        if not marker:
+            return None
+        answer = (
+            f"当前资料库暗号：{code}\n"
+            f"当前有效资料条数：{row_count}。\n"
+            "提醒：以上内容仅供健康科普与就医参考，不替代面诊。"
+        )
+        return {
+            "answer": answer,
+            "citations": [f"memory:{marker['kind']}"],
+            "context_snippets": [marker["content"]],
         }
 
 

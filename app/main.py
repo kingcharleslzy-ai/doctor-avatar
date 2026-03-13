@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from .config import settings
 from .db import create_memory_entry, init_memory_db, list_memory_entries
 from .knowledge import invalidate_index, load_doctor_profile
+from .memory_snapshot import get_memory_status
 from .models import (
     ChatRequest,
     ChatResponse,
@@ -112,6 +113,7 @@ def health() -> dict[str, str]:
 def app_config() -> dict[str, object]:
     build_meta = load_build_meta()
     memory_entries = list_memory_entries(limit=1)
+    memory_code = get_memory_status(Path(settings.doctor_memory_db_path))[0] if memory_entries else None
     return {
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
@@ -121,6 +123,7 @@ def app_config() -> dict[str, object]:
             "db_path": settings.doctor_memory_db_path,
             "bootstrap_enabled": settings.doctor_memory_bootstrap,
             "has_entries": bool(memory_entries),
+            "memory_code": memory_code,
         },
         "doctor": {
             "name": doctor_profile.get("name"),
@@ -182,6 +185,7 @@ def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_a
         source=payload.source,
         importance=payload.importance,
     )
+    get_memory_status(Path(settings.doctor_memory_db_path))
     invalidate_index()
     return MemoryEntryResponse(**row)
 
