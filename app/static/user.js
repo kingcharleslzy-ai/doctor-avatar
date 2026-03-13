@@ -19,10 +19,10 @@ function setText(id, value) {
   }
 }
 
-// 只更新按钮内的文字节点，保留 SVG 图标不被清除
+// 只更新按钮内有实际内容的文字节点，保留 SVG 图标不被清除
 function setBtnText(btn, text) {
   if (!btn) return;
-  let tn = [...btn.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+  let tn = [...btn.childNodes].find(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
   if (tn) { tn.textContent = "\u00a0" + text; }
   else { btn.appendChild(document.createTextNode("\u00a0" + text)); }
 }
