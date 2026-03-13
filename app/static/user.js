@@ -633,15 +633,11 @@ function startDittoStream(text) {
   const ws = new WebSocket(`${proto}://${location.host}/ws/ditto/stream`);
   state.dittoWs = ws;
 
-  // Canvas 占位
-  stage.innerHTML = "";
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  canvas.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;";
-  stage.appendChild(canvas);
-  const ctx = canvas.getContext("2d");
-  setText("modeState", "实时视频流中…");
+  // 先显示 loading，首帧到达后再换成 Canvas，避免黑屏
+  renderVideoLoading("实时视频准备中，首帧约 1-2 秒…");
+
+  let canvas = null;
+  let ctx = null;
 
   ws.binaryType = "arraybuffer";
 
@@ -651,6 +647,16 @@ function startDittoStream(text) {
 
   ws.onmessage = (event) => {
     if (event.data instanceof ArrayBuffer) {
+      // 首帧时挂载 Canvas
+      if (!canvas) {
+        stage.innerHTML = "";
+        canvas = document.createElement("canvas");
+        canvas.width = 512;
+        canvas.height = 512;
+        canvas.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;";
+        stage.appendChild(canvas);
+        ctx = canvas.getContext("2d");
+      }
       // JPEG 帧 → 画到 Canvas
       const blob = new Blob([event.data], { type: "image/jpeg" });
       const url = URL.createObjectURL(blob);
@@ -662,13 +668,12 @@ function startDittoStream(text) {
         const payload = JSON.parse(event.data);
         if (payload.done) {
           ws.close();
-          setTimeout(() => { renderVideoPlaceholder(); setText("modeState", "图文问答主流程"); }, 1500);
+          setTimeout(() => renderVideoPlaceholder(), 1500);
         }
         if (payload.error) {
-          console.warn("Ditto stream:", payload.error);
+          console.warn("Ditto stream error:", payload.error);
           ws.close();
           renderVideoPlaceholder();
-          setText("modeState", "图文问答主流程");
         }
       } catch (_) {}
     }
@@ -676,7 +681,6 @@ function startDittoStream(text) {
 
   ws.onerror = () => {
     renderVideoPlaceholder();
-    setText("modeState", "图文问答主流程");
     state.dittoWs = null;
   };
 
