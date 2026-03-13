@@ -9,6 +9,14 @@ const state = {
   presenceSessionId: "",
 };
 
+function hasLiveAvatarMode() {
+  return Boolean(state.appConfig?.video_avatar_enabled);
+}
+
+function hasDittoMode() {
+  return Boolean(state.appConfig?.ditto_enabled);
+}
+
 function $(id) {
   return document.getElementById(id);
 }
@@ -188,6 +196,45 @@ function renderVideoPlaceholder() {
   stage.innerHTML = isMobileLayout() ? mobilePlaceholderMarkup() : desktopPlaceholderMarkup();
 }
 
+function updateVideoModeUi() {
+  const startBtn = $("startConsultBtn");
+  const keepAliveBtn = $("keepAliveBtn");
+  const disconnectBtn = $("disconnectBtn");
+  const connDot = $("connDot");
+
+  const liveEnabled = hasLiveAvatarMode();
+  const dittoEnabled = hasDittoMode();
+
+  if (startBtn) {
+    if (liveEnabled) setBtnText(startBtn, "视频通话");
+    else if (dittoEnabled) setBtnText(startBtn, "语音视频");
+    else setBtnText(startBtn, "视频分身");
+  }
+
+  if (keepAliveBtn) {
+    keepAliveBtn.disabled = !liveEnabled;
+    keepAliveBtn.style.display = liveEnabled ? "" : "none";
+  }
+  if (disconnectBtn) {
+    disconnectBtn.style.display = liveEnabled ? "" : "none";
+  }
+
+  if (connDot) {
+    connDot.classList.toggle("live", liveEnabled || dittoEnabled);
+  }
+
+  if (liveEnabled) {
+    setText("connectionState", "未连接");
+    setText("modeState", "等待会话启动");
+  } else if (dittoEnabled) {
+    setText("connectionState", "本地待命");
+    setText("modeState", "提问后自动生成视频");
+  } else {
+    setText("connectionState", "未启用");
+    setText("modeState", "图文问答主流程");
+  }
+}
+
 async function postJson(url, body) {
   const response = await fetch(url, {
     method: "POST",
@@ -253,8 +300,7 @@ function attachRoomListeners(room) {
     setText("modeState", "实时视频会话");
   });
   room.on(RoomEvent.Disconnected, () => {
-    setText("connectionState", state.appConfig?.video_avatar_enabled ? "未连接" : "未启用");
-    setText("modeState", state.appConfig?.video_avatar_enabled ? "等待会话启动" : "图文问答主流程");
+    updateVideoModeUi();
     renderVideoPlaceholder();
   });
   room.on(RoomEvent.TrackSubscribed, (track) => {
@@ -294,8 +340,25 @@ async function connectLiveKit(startData) {
 }
 
 async function startConsultation() {
-  if (!state.appConfig || !state.appConfig.video_avatar_enabled) {
-    setText("answer", "视频分身能力当前未启用，现阶段请先使用文本问答。相关接口已保留，后续可随时接回。");
+  if (!state.appConfig) {
+    return;
+  }
+
+  if (!hasLiveAvatarMode() && hasDittoMode()) {
+    setVoiceStatus("已进入语音视频模式。请直接说出问题，或先输入文字后发送，系统会自动朗读并生成视频。");
+    const message = $("message");
+    if (message) {
+      message.focus();
+      message.placeholder = "先说出或输入问题，发送后将自动生成语音和视频…";
+    }
+    if (state.recognitionAvailable) {
+      startVoiceInput();
+    }
+    return;
+  }
+
+  if (!hasLiveAvatarMode()) {
+    setVoiceStatus("视频分身能力当前未启用，现阶段请先使用文本问答。");
     return;
   }
 
@@ -318,7 +381,7 @@ async function startConsultation() {
   } finally {
     if (startBtn) {
       startBtn.disabled = false;
-      setBtnText(startBtn, "视频通话");
+      updateVideoModeUi();
     }
   }
 }
@@ -341,8 +404,7 @@ async function disconnectRoom() {
     await state.room.disconnect();
     state.room = null;
   }
-  setText("connectionState", state.appConfig?.video_avatar_enabled ? "未连接" : "未启用");
-  setText("modeState", state.appConfig?.video_avatar_enabled ? "等待会话启动" : "图文问答主流程");
+  updateVideoModeUi();
   renderVideoPlaceholder();
 }
 
@@ -591,25 +653,7 @@ async function loadProfile() {
 async function loadAppConfig() {
   const config = await getJson("/api/app-config");
   state.appConfig = config;
-
-  const enabled = Boolean(config.video_avatar_enabled);
-  const startBtn = $("startConsultBtn");
-  const keepAliveBtn = $("keepAliveBtn");
-
-  if (startBtn && !enabled) {
-    setBtnText(startBtn, "视频通话");
-  }
-  if (keepAliveBtn) {
-    keepAliveBtn.disabled = !enabled;
-    keepAliveBtn.style.display = enabled ? "" : "none";
-  }
-  const disconnectBtn = $("disconnectBtn");
-  if (disconnectBtn) {
-    disconnectBtn.style.display = enabled ? "" : "none";
-  }
-
-  setText("connectionState", enabled ? "未连接" : "未启用");
-  setText("modeState", enabled ? "等待会话启动" : "图文问答主流程");
+  updateVideoModeUi();
   renderVideoPlaceholder();
 }
 
