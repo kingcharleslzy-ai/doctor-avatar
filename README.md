@@ -237,6 +237,20 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-13（五）—— windows-claude 审查与优化
+
+**接入统一响应式模板（index.html）**（by windows-claude）
+
+- `app/main.py`：`/` 路由改为直接返回 `index.html`（CSS 媒体查询自动适配移动/平板/桌面），移除冗余的 User-Agent 检测逻辑和 `MOBILE_MARKERS` 常量
+- `app/templates/index.html`：修复 CSS 类名与 `user.js` 不一致（`.message` → `.msg-row`，`.message-label` → `.ai-label`，`.message-bubble` → `.bubble`），补充 `.typing-dots` 兼容，修复静态初始消息的 HTML 类名
+
+**知识库索引性能优化**（by windows-claude）
+
+- `app/knowledge.py`：`_build_index_signature` 改用 SHA256 哈希，避免把全量文本内容存入内存做巨型字符串比较（O(N·字符) → O(64)）
+- `app/knowledge.py`：`_get_index` 新增快路径 `_compute_fast_sig()`，用 SQLite COUNT/MAX 指纹 + 文件 mtime 做轻量变更检测，命中时直接返回缓存，无需每次请求都重读文件和数据库
+- `app/knowledge.py`：磁盘缓存格式更新（`signature` 字段替代原 `texts` 字段，大幅减小缓存文件体积）
+- `app/db.py`：删除多余空行
+
 ### 2026-03-13（五）—— codex
 
 **资料库清洗工具：安全删除测试噪音与完全重复项**（by codex）
