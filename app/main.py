@@ -466,7 +466,7 @@ async def ditto_ws_stream(ws: WebSocket) -> None:
             await ws.close(code=1011)
             return
 
-        async with ditto_conn:
+        try:
             CHUNK = int(0.4 * 16000 * 2)  # 0.4s × 16kHz × 2bytes = 12800 bytes
 
             async def _send() -> None:
@@ -492,6 +492,8 @@ async def ditto_ws_stream(ws: WebSocket) -> None:
             for r in results:
                 if isinstance(r, BaseException) and not isinstance(r, asyncio.CancelledError):
                     raise r
+        finally:
+            await ditto_conn.close()
 
     except WebSocketDisconnect:
         pass

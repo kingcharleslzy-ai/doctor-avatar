@@ -496,6 +496,19 @@ cd D:\charles\Documents\doctor-avatar
 - 变更前，阿里云 app 容器里执行 `which ffmpeg` 返回 `no-ffmpeg`
 - 这也是为什么当前 `app-config` 里 `ditto_stream.enabled` 还没敢打开：缺依赖会让流式视频接口在第一次调用时直接失败
 
+### 2026-03-14（六）—— codex 修掉 Ditto 流式代理的静默关闭 bug
+
+**为什么改**：在把 `ENABLE_DITTO_STREAM=true` 打开后，线上 `wss://liyong828.com/ws/ditto/stream` 仍然是“握手成功后立刻关闭”，没有任何帧。进一步实测发现，问题不是前端、不是 4090D、也不是隧道，而是网站代理层把 `await websockets.connect(...)` 返回的连接对象又错误地套了一层 `async with`。在 `websockets 13` 下这会直接抛 `TypeError`，而旧代码又把异常吞掉了，所以表面上看起来像“点了没反应”。
+
+**改了什么**（`app/main.py`）：
+- 去掉了 `await websockets.connect(...)` 之后那层错误的 `async with ditto_conn`
+- 改成显式 `try/finally`，在流式收发结束后手动 `await ditto_conn.close()`
+
+**定位证据**：
+- 在 app 容器里按网站当前同样的写法复现实验，真实返回：
+  - `TypeError: 'WebSocketClientProtocol' object does not support the asynchronous context manager protocol`
+- 同时，容器内直接跑“MP3 -> ffmpeg -> PCM -> host.docker.internal:8002/ws”这段逻辑是能收到 JPEG 帧和 `{"done":true}` 的，说明 4090D 流式服务本身没有问题
+
 ### 2026-03-14（六）—— codex 服务器轻量优化与温和防护
 
 **为什么改**：服务器本身并没有爆内存，但仍有 4 个值得先收掉的小问题：
