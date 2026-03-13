@@ -171,6 +171,18 @@ cd D:\charles\Documents\doctor-avatar
 - `--section ppt`
 - `--path research/doctor-li-memory-draft.yaml`
 
+如果要先做资料库清洗审计，再决定是否删除明显重复项和测试脏数据，可执行：
+
+```powershell
+cd D:\charles\Documents\doctor-avatar
+.\.venv\Scripts\python.exe .\scripts\audit_memory_cleanup.py
+.\.venv\Scripts\python.exe .\scripts\audit_memory_cleanup.py --apply-safe
+```
+
+会生成报告：
+
+- `tmp/memory_cleanup_report.md`
+
 控制台现在已经可以：
 
 - 创建 LiveAvatar token
@@ -226,6 +238,12 @@ cd D:\charles\Documents\doctor-avatar
 ## CHANGELOG
 
 ### 2026-03-13（五）—— codex
+
+**资料库清洗工具：安全删除测试噪音与完全重复项**（by codex）
+
+- `app/db.py`：新增完全重复组检测与批量删除能力
+- `scripts/audit_memory_cleanup.py`：新增清洗审计脚本，可输出报告，并在 `--apply-safe` 模式下删除测试脏数据和完全重复项
+- `README.md`：补充清洗审计命令与报告路径
 
 **生产容器补齐导入所需目录：支持在 Docker 容器内执行资料导入脚本**（by codex）
 

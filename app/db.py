@@ -324,6 +324,60 @@ def upsert_memory_entry(
     return _row_to_dict(row), created
 
 
+def delete_memory_entries(entry_ids: Iterable[int]) -> int:
+    ids = sorted({int(entry_id) for entry_id in entry_ids})
+    if not ids:
+        return 0
+
+    placeholders = ",".join("?" for _ in ids)
+    with closing(_connect()) as conn:
+        cursor = conn.execute(
+            f"DELETE FROM doctor_memory_entries WHERE id IN ({placeholders})",
+            ids,
+        )
+        conn.commit()
+        return cursor.rowcount
+
+
+def find_exact_duplicate_groups() -> list[dict]:
+    with closing(_connect()) as conn:
+        rows = conn.execute(
+            """
+            SELECT kind, title, content, source, COUNT(*) AS row_count
+            FROM doctor_memory_entries
+            GROUP BY kind, title, content, source
+            HAVING COUNT(*) > 1
+            ORDER BY row_count DESC, kind ASC, title ASC
+            """
+        ).fetchall()
+
+        groups: list[dict] = []
+        for row in rows:
+            dup_rows = conn.execute(
+                """
+                SELECT id, kind, title, content, tags_json, source, importance, created_at, updated_at
+                FROM doctor_memory_entries
+                WHERE kind = ? AND title = ? AND content = ? AND source = ?
+                ORDER BY id ASC
+                """,
+                (row["kind"], row["title"], row["content"], row["source"]),
+            ).fetchall()
+            entries = [_row_to_dict(dup_row) for dup_row in dup_rows]
+            groups.append(
+                {
+                    "kind": row["kind"],
+                    "title": row["title"],
+                    "source": row["source"],
+                    "count": row["row_count"],
+                    "keep_id": entries[0]["id"],
+                    "delete_ids": [entry["id"] for entry in entries[1:]],
+                    "entries": entries,
+                }
+            )
+
+    return groups
+
+
 def _row_to_dict(row: sqlite3.Row) -> dict:
     tags = []
     try:
