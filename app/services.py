@@ -15,7 +15,11 @@ from .prompts import build_system_prompt, build_user_prompt
 
 class ChatService:
     def __init__(self) -> None:
-        self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
+        self.client = (
+            OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url)
+            if settings.openai_api_key
+            else None
+        )
         self.profile = load_doctor_profile()
 
     def answer(self, message: str, conversation: list[dict[str, str]]) -> dict[str, Any]:
@@ -32,9 +36,9 @@ class ChatService:
         citations = [hit.source for hit in hits]
 
         try:
-            response = self.client.responses.create(
+            response = self.client.chat.completions.create(
                 model=settings.openai_model,
-                input=[
+                messages=[
                     {"role": "system", "content": build_system_prompt(self.profile)},
                     *conversation,
                     {"role": "user", "content": build_user_prompt(message, snippets)},
@@ -47,7 +51,7 @@ class ChatService:
         record_openai_usage(settings.openai_model, getattr(response, "usage", None))
 
         return {
-            "answer": response.output_text.strip(),
+            "answer": response.choices[0].message.content.strip(),
             "citations": citations,
             "context_snippets": snippets,
         }

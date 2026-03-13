@@ -392,6 +392,22 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-14（六）—— windows-claude DeepSeek 接入
+
+**为什么改**：用户切换到 DeepSeek API（中文更强、更聪明），原 `responses.create` 是 OpenAI 专有接口，DeepSeek 不支持。
+
+**改了什么**（`app/config.py`、`app/services.py`、`.env.example`）：
+- `app/config.py`：新增 `OPENAI_BASE_URL` 配置项（默认空，填 `https://api.deepseek.com` 即切换 DeepSeek）
+- `app/services.py`：OpenAI client 初始化加上 `base_url` 参数；API 调用从 `client.responses.create` 改为 `client.chat.completions.create`，响应取 `choices[0].message.content`（兼容所有 OpenAI 兼容接口）
+- `.env.example`：新增 `OPENAI_BASE_URL` 注释，说明 DeepSeek 切换方式
+
+**服务器 .env 需要更新**：
+```bash
+OPENAI_API_KEY=sk-6e43183c85a6408383758ebfffb9e2df
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_MODEL=deepseek-chat
+```
+
 ### 2026-03-13（五）—— codex
 
 **控制台二次视觉重构：收成一屏主舞台 + 窄侧监控轨道，去掉大片空白和低级联调感**（by codex）
