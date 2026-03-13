@@ -224,35 +224,62 @@
     /* ═══════════════════════ 医生信息面板（默认可见） ═══════════════════════ */
     #docInfoPanel {
       flex: 1; overflow-y: auto;
-      padding: 16px 24px;
-      display: flex; flex-direction: column; gap: 12px;
+      display: flex; flex-direction: column;
     }
 
-    .info-block-title {
+    /* 信息区段 */
+    .info-section {
+      padding: 14px 22px;
+      border-bottom: 1px solid rgba(26,39,68,0.06);
+    }
+    .info-section:last-child { border-bottom: none; padding-bottom: 20px; }
+
+    .info-section-label {
       font-size: 10px; font-weight: 700; color: var(--text-secondary);
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 2px;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 8px;
     }
 
     .notice-box {
-      padding: 9px 13px;
-      background: rgba(37,99,235,0.06); border-radius: var(--radius-sm);
-      border-left: 3px solid var(--accent);
-      font-size: 12px; color: var(--accent); line-height: 1.5;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(37,99,235,0.05), rgba(124,58,237,0.03));
+      border-radius: 10px; border-left: 3px solid var(--accent);
+      font-size: 12px; color: var(--accent); line-height: 1.6;
     }
 
-    .tag-list { display: flex; flex-wrap: wrap; gap: 5px; }
-    .tag {
-      padding: 3px 9px; background: var(--accent-light);
-      border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--accent);
+    /* 医生介绍：第一行（姓名/职称）加粗突出 */
+    #doctorBio {
+      font-size: 13px; color: var(--text-secondary);
+      line-height: 1.8; white-space: pre-line;
+    }
+    #doctorBio::first-line {
+      font-weight: 700; color: var(--text-primary); font-size: 14px;
     }
 
-    #doctorBio { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-    #focusList { padding-left: 16px; font-size: 13px; color: var(--text-secondary); }
-    #focusList li { margin-bottom: 3px; }
-    #officialSources { font-size: 12px; color: var(--text-secondary); }
-    #officialSources a { color: var(--accent); text-decoration: none; }
-    #officialSources a:hover { text-decoration: underline; }
+    /* 专注领域标签：user.js 注入 .chip */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip, .tag {
+      padding: 4px 12px;
+      background: linear-gradient(135deg, var(--accent-light), rgba(124,58,237,0.06));
+      border: 1px solid rgba(37,99,235,0.15);
+      border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--accent);
+    }
+
+    /* 官方来源：每条链接显示为卡片行 */
+    #officialSources { display: flex; flex-direction: column; gap: 6px; }
+    #officialSources a {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px;
+      background: rgba(37,99,235,0.04);
+      border: 1px solid rgba(37,99,235,0.1); border-radius: 10px;
+      color: var(--accent); font-size: 12px; font-weight: 500;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #officialSources a::before { content: "↗"; font-size: 12px; opacity: 0.55; flex-shrink: 0; }
+    #officialSources a:hover { background: rgba(37,99,235,0.09); border-color: rgba(37,99,235,0.22); }
+
+    #focusList { display: none; }
 
     /* ═══════════════════════ 视频框（视频分身激活后显示） ═══════════════════════ */
     #videoFrame {
@@ -785,18 +812,20 @@
 
         <!-- 医生信息面板（默认可见，视频激活时隐藏） -->
         <div id="docInfoPanel">
-          <div class="notice-box" id="clinicNote">⚠️ 仅供健康科普与就医参考，不替代面诊和处方。</div>
-          <div>
-            <div class="info-block-title">医生介绍</div>
+          <div class="info-section">
+            <div class="notice-box" id="clinicNote">⚠️ 仅供健康科普与就医参考，不替代面诊和处方。</div>
+          </div>
+          <div class="info-section">
+            <div class="info-section-label">医生介绍</div>
             <div id="doctorBio"></div>
           </div>
-          <div>
-            <div class="info-block-title">专注领域</div>
+          <div class="info-section">
+            <div class="info-section-label">专注领域</div>
             <div class="tag-list" id="focusTags"></div>
-            <ul id="focusList" style="display:none"></ul>
+            <ul id="focusList"></ul>
           </div>
-          <div>
-            <div class="info-block-title">官方资料来源</div>
+          <div class="info-section">
+            <div class="info-section-label">官方资料来源</div>
             <div id="officialSources"></div>
           </div>
         </div>

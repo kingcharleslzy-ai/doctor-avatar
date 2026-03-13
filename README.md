@@ -237,6 +237,19 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-13（五）—— windows-claude 信息面板视觉重设计
+
+**为什么改**：医生信息区字体不统一、内容平铺无层次，视觉像纯文字堆砌，缺乏设计感。
+
+**改了什么**（`app/templates/index.html`）：
+- 信息面板拆为独立 `.info-section` 区段，每段有细分隔线，内边距统一
+- 节标题改为全大写小号 label（`UPPERCASE + letter-spacing`），视觉层级清晰
+- `#doctorBio`：`white-space: pre-line` 保留换行，`::first-line` 伪类将第一行（姓名/职称）自动加粗加大
+- 专注领域标签补充 `.chip` CSS（user.js 实际注入的是 `.chip` 而非 `.tag`，之前标签完全没样式）
+- 官方来源每条链接改为带 `↗` 前缀的卡片行，有 hover 高亮，不再是裸链接
+- `clinicNote` 改用渐变底色 notice-box，视觉更轻
+- 隐藏重复的 `#focusList`（专注领域已有标签胶囊，列表冗余）
+
 ### 2026-03-13（五）—— windows-claude MiniMax 设计前端上线
 
 **MiniMax 2.5 设计稿落地：响应式统一模板全面重写**（by windows-claude）
