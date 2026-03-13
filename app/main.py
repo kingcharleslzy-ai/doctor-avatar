@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import secrets
 import time
@@ -7,7 +8,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -18,6 +19,7 @@ from .memory_snapshot import MARKER_KIND, get_memory_status
 from .models import (
     ChatRequest,
     ChatResponse,
+    DittoGenerateRequest,
     LiveAvatarSessionRequest,
     LiveAvatarStartRequest,
     LiveAvatarTokenResponse,
@@ -25,6 +27,7 @@ from .models import (
     MemoryEntryDeleteRequest,
     MemoryEntryResponse,
     PresenceHeartbeatRequest,
+    TTSRequest,
 )
 from .ops import monitor_snapshot, record_presence, record_request
 from .services import ChatService, HeyGenService
@@ -136,6 +139,7 @@ def app_config() -> dict[str, object]:
         "openai_configured": bool(settings.openai_api_key),
         "heygen_configured": bool(settings.heygen_api_key),
         "video_avatar_enabled": settings.enable_video_avatar,
+        "ditto_enabled": settings.ditto_enabled,
         "runtime": build_meta,
         "doctor_memory": {
             "db_path": settings.doctor_memory_db_path,
@@ -287,6 +291,47 @@ def chat(payload: ChatRequest) -> ChatResponse:
     except Exception as exc:  # pragma: no cover - runtime integration fallback
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return ChatResponse(**result)
+
+
+@app.post("/api/tts")
+async def text_to_speech(payload: TTSRequest) -> Response:
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(payload.text, payload.voice or settings.tts_voice)
+        buf = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                buf.write(chunk["data"])
+        buf.seek(0)
+        return Response(content=buf.read(), media_type="audio/mpeg")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"TTS 失败: {exc}") from exc
+
+
+@app.post("/api/ditto/generate")
+async def ditto_generate(payload: DittoGenerateRequest) -> Response:
+    if not settings.ditto_enabled:
+        raise HTTPException(status_code=409, detail="Ditto 视频生成未启用。")
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(payload.text, settings.tts_voice)
+        audio_buf = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_buf.write(chunk["data"])
+        audio_buf.seek(0)
+        async with __import__("httpx").AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{settings.ditto_service_url}/generate",
+                files={"audio": ("audio.mp3", audio_buf, "audio/mpeg")},
+            )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Ditto 服务错误: {resp.text[:300]}")
+        return Response(content=resp.content, media_type="video/mp4")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"视频生成失败: {exc}") from exc
 
 
 @app.post("/api/liveavatar/token", response_model=LiveAvatarTokenResponse)

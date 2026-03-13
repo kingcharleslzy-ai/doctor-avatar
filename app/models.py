@@ -59,3 +59,12 @@ class LiveAvatarTokenResponse(BaseModel):
 
 class LiveAvatarStartRequest(BaseModel):
     session_token: str = Field(min_length=1)
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    voice: str | None = None
+
+
+class DittoGenerateRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)

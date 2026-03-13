@@ -365,6 +365,7 @@ async function askQuestion() {
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
+      if (state.appConfig?.ditto_enabled) generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
       updateChatMessage(loadingRow, `出错了：${error.message}`);
@@ -377,6 +378,7 @@ async function askQuestion() {
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: data.answer });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
+      if (state.appConfig?.ditto_enabled) generateDittoVideo(data.answer);
     } catch (error) {
       setText("answer", error.message);
     }
@@ -436,33 +438,72 @@ function startVoiceInput() {
   }
 }
 
-function speakAnswer() {
+let _currentAudio = null;
+
+async function speakAnswer() {
   const answer = $("answer")?.textContent.trim();
   if (!answer || answer === "尚未生成回答。") {
     setVoiceStatus("还没有可朗读的回答。");
     return;
   }
-
-  if (!("speechSynthesis" in window)) {
-    setVoiceStatus("当前浏览器不支持原生语音朗读。");
-    return;
+  try {
+    setVoiceStatus("语音合成中…");
+    if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+    const response = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: answer }),
+    });
+    if (!response.ok) throw new Error(`TTS HTTP ${response.status}`);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    _currentAudio = audio;
+    audio.onplay = () => setVoiceStatus("正在朗读回答。");
+    audio.onended = () => { setVoiceStatus("朗读已完成。"); URL.revokeObjectURL(url); _currentAudio = null; };
+    audio.onerror = () => { setVoiceStatus("朗读失败，请稍后再试。"); URL.revokeObjectURL(url); _currentAudio = null; };
+    await audio.play();
+  } catch (exc) {
+    setVoiceStatus(`朗读失败：${exc.message}`);
   }
-
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(answer);
-  utterance.lang = "zh-CN";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.onstart = () => setVoiceStatus("正在朗读回答。");
-  utterance.onend = () => setVoiceStatus("朗读已完成。");
-  utterance.onerror = () => setVoiceStatus("朗读失败，请稍后再试。");
-  window.speechSynthesis.speak(utterance);
 }
 
 function stopSpeech() {
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.cancel();
-    setVoiceStatus("已停止朗读。");
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  setVoiceStatus("已停止朗读。");
+}
+
+async function generateDittoVideo(text) {
+  const stage = $("videoStage");
+  if (!stage || state.room) return;
+  try {
+    setText("modeState", "视频生成中…");
+    const response = await fetch("/api/ditto/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${response.status}`);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    stage.innerHTML = "";
+    const video = document.createElement("video");
+    video.src = url;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:inherit;";
+    const restore = () => { URL.revokeObjectURL(url); renderVideoPlaceholder(); setText("modeState", "图文问答主流程"); };
+    video.onended = restore;
+    video.onerror = restore;
+    stage.appendChild(video);
+    setText("modeState", "视频播放中");
+  } catch (exc) {
+    setText("modeState", "图文问答主流程");
+    console.warn("Ditto:", exc.message);
   }
 }
 
