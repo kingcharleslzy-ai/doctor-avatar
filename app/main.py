@@ -35,17 +35,6 @@ console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
 
 
-MOBILE_MARKERS = (
-    "iphone",
-    "android",
-    "mobile",
-    "ipad",
-    "ipod",
-    "windows phone",
-    "blackberry",
-    "opera mini",
-)
-
 
 def resolve_user_template(request: Request) -> str:
     view = request.query_params.get("view")
@@ -53,11 +42,7 @@ def resolve_user_template(request: Request) -> str:
         return "user_mobile.html"
     if view == "desktop":
         return "user_desktop.html"
-
-    user_agent = request.headers.get("user-agent", "").lower()
-    if any(marker in user_agent for marker in MOBILE_MARKERS):
-        return "user_mobile.html"
-    return "user_desktop.html"
+    return "index.html"
 
 
 def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(console_auth)) -> str:

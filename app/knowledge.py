@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from contextlib import closing
@@ -17,6 +18,8 @@ WORD_RE = re.compile(r"[\w\u4e00-\u9fff]+")
 _index: list[dict] | None = None
 _index_ready = False
 _index_signature: str | None = None
+# 快路径缓存：仅用于检查是否需要重建，避免每次请求都读文件+DB
+_fast_sig: str | None = None
 
 
 @dataclass
@@ -98,19 +101,39 @@ def _cache_file() -> Path:
 
 
 def _build_index_signature(chunk_texts: list[str], sqlite_fp: str) -> str:
-    return json.dumps({"texts": chunk_texts, "sqlite_fp": sqlite_fp}, ensure_ascii=False)
+    """用 SHA256 摘要生成签名，避免把全量文本存入内存。"""
+    text_hash = hashlib.sha256("\n".join(chunk_texts).encode()).hexdigest()
+    return json.dumps({"text_hash": text_hash, "sqlite_fp": sqlite_fp})
+
+
+def _compute_fast_sig() -> str:
+    """仅用 SQLite 指纹 + 文件 mtime 做快速变更检测，无需加载文件内容。"""
+    sqlite_fp = _sqlite_fingerprint()
+    file_mtimes = "|".join(
+        f"{p.name}:{p.stat().st_mtime_ns}"
+        for p in sorted(KNOWLEDGE_DIR.glob("*.md"))
+        if p.exists()
+    )
+    return f"{sqlite_fp}||{file_mtimes}"
 
 
 def invalidate_index() -> None:
     """手动失效进程内索引缓存（新增 DB 条目后调用）。"""
-    global _index, _index_ready, _index_signature
+    global _index, _index_ready, _index_signature, _fast_sig
     _index = None
     _index_ready = False
     _index_signature = None
+    _fast_sig = None
 
 
 def _get_index(client) -> list[dict] | None:
-    global _index, _index_ready, _index_signature
+    global _index, _index_ready, _index_signature, _fast_sig
+
+    # 快路径：仅用 SQLite 指纹 + 文件 mtime 检查，避免每次请求读文件内容
+    if _index_ready:
+        current_fast = _compute_fast_sig()
+        if current_fast == _fast_sig:
+            return _index
 
     file_chunks = _load_file_chunks()
     db_chunks = _load_db_chunks()
@@ -125,18 +148,20 @@ def _get_index(client) -> list[dict] | None:
     signature = _build_index_signature(chunk_texts, sqlite_fp)
 
     if _index_ready and _index_signature == signature:
+        _fast_sig = _compute_fast_sig()
         return _index
 
     cache_file = _cache_file()
 
-    # 磁盘缓存命中：内容 + SQLite 指纹均未变则直接用
+    # 磁盘缓存命中：签名一致则直接用，无需再调 OpenAI
     if cache_file.exists():
         try:
             cache = json.loads(cache_file.read_text(encoding="utf-8"))
-            if cache.get("texts") == chunk_texts and cache.get("sqlite_fp") == sqlite_fp:
+            if cache.get("signature") == signature:
                 _index = cache["entries"]
                 _index_ready = True
                 _index_signature = signature
+                _fast_sig = _compute_fast_sig()
                 return _index
         except Exception:
             pass
@@ -148,14 +173,12 @@ def _get_index(client) -> list[dict] | None:
         for c, emb in zip(all_chunks, embeddings)
     ]
     cache_file.write_text(
-        json.dumps(
-            {"texts": chunk_texts, "sqlite_fp": sqlite_fp, "entries": _index},
-            ensure_ascii=False,
-        ),
+        json.dumps({"signature": signature, "entries": _index}, ensure_ascii=False),
         encoding="utf-8",
     )
     _index_ready = True
     _index_signature = signature
+    _fast_sig = _compute_fast_sig()
     return _index
 
 

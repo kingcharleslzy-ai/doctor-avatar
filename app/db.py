@@ -324,7 +324,6 @@ def upsert_memory_entry(
     return _row_to_dict(row), created
 
 
-
 def _row_to_dict(row: sqlite3.Row) -> dict:
     tags = []
     try:
