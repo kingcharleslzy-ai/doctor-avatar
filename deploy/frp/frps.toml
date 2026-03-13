@@ -3,7 +3,7 @@ bindPort = 7000
 transport.tls.force = true
 
 allowPorts = [
-  { single = 6000 }
+  { single = 6022 }
 ]
 
 auth.method = "token"

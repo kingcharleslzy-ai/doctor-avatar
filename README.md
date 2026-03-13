@@ -36,13 +36,13 @@ uvicorn app.main:app --reload
 
 ## 4090D 远程接入（frp）
 
-当前已为“阿里云主站 + 家里 4090D 渲染机”准备了 `frp` 的 SSH 通道方案：
+当前已为“阿里云主站 + 家里 4090D 渲染机”准备了 `frp` 服务通道方案：
 
 - 阿里云服务器运行 `frps`
 - 家里 4090D 机器运行 `frpc`
 - 默认端口：
   - `7000/tcp`：`frps` 控制通道
-  - `6000/tcp`：映射后的家里机器 `ssh`
+  - `6022/tcp`：当前保留给远程接入的映射端口
 
 仓库内文件：
 
@@ -56,15 +56,13 @@ uvicorn app.main:app --reload
   - `FRP_AUTH_TOKEN`
 - 阿里云安全组还需要放行：
   - `7000/tcp`
-  - `6000/tcp`
+  - `6022/tcp`
 
-如果 `setup-frps.yml` 已成功运行，后续只要家里机器的 `frpc` 也连上，就可以通过：
+说明：
 
-```bash
-ssh -p 6000 charles@47.250.168.45
-```
-
-从外网进入家里的 4090D 机器。
+- 旧的 `6000/tcp` SSH 映射已废弃，不再作为长期入口
+- 目前远程 SSH 的主入口统一为下面的 `6022/tcp` 反向隧道
+- `frp` 这层后续主要为 4090D 渲染服务暴露 HTTP / 流式接口预留
 
 ## 4090D 外网 SSH（反向隧道）
 
@@ -427,6 +425,29 @@ cd D:\charles\Documents\doctor-avatar
 4. 再补用户端字幕、会话摘要和隐私提示细节
 
 ## CHANGELOG
+
+### 2026-03-14（六）—— codex 服务器轻量优化与温和防护
+
+**为什么改**：服务器本身并没有爆内存，但仍有 4 个值得先收掉的小问题：
+- `2核2G` 机器没有 `swap`，短时峰值更容易直接 OOM
+- Docker build cache 累积到约 `800MB`
+- 旧的 `6000/tcp` 反向 SSH 残留还在监听，和现行 `6022/tcp` 混在一起
+- Nginx 面对 `/.env / wp-admin / cgi-bin` 之类公网探测时缺少最基础的温和拦截
+
+**改了什么**（`deploy/nginx/default.conf`、`deploy/frp/frps.toml`、`.github/workflows/setup-frps.yml`）：
+- `deploy/nginx/default.conf`：新增温和防扫规则，直接丢弃常见探测路径；补了轻量级 API 频率/连接限制，但不影响正常页面、SWAS RunCommand、GitHub Actions 或站点主链路
+- `deploy/frp/frps.toml`：把 `frps` 允许端口从旧的 `6000` 收敛到 `6022`
+- `.github/workflows/setup-frps.yml`：同步把防火墙放行端口从 `6000` 改为 `6022`
+
+**服务器实机处理**：
+- 已通过阿里云 `SWAS RunCommand` 直接加上 `1GB` swap，并写入 `/etc/fstab`
+- 已清空 Docker build cache，释放约 `800MB`
+- 已清理旧的 `6000/tcp` 监听，只保留 `6022/tcp`
+
+**影响**：
+- 服务器在部署、重启、短时峰值时更稳
+- 远程通道统一，后续不再混用 `6000 / 6022`
+- 对常见扫站噪音更耐受，但不会影响当前项目、阿里云官方直连命令通道或 GitHub 自动部署
 
 ### 2026-03-14（六）—— codex 线上监控与密钥修复
 

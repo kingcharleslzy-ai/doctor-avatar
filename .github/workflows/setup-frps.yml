@@ -54,7 +54,7 @@ jobs:
         run: |
           if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
             ufw allow 7000/tcp
-            ufw allow 6000/tcp
+            ufw allow 6022/tcp
           fi
 
       - name: Enable and restart frps
