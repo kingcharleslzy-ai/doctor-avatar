@@ -308,13 +308,23 @@ async def text_to_speech(payload: TTSRequest) -> Response:
         raise HTTPException(status_code=500, detail=f"TTS 失败: {exc}") from exc
 
 
+def _ditto_clip_text(text: str, max_chars: int = 60) -> str:
+    """取第一个完整句子（不超过 max_chars 字），用于 Ditto 生成短片段而非全文。"""
+    for ch in "。！？.!?":
+        idx = text.find(ch)
+        if 0 < idx < max_chars:
+            return text[: idx + 1]
+    return text[:max_chars]
+
+
 @app.post("/api/ditto/generate")
 async def ditto_generate(payload: DittoGenerateRequest) -> Response:
     if not settings.ditto_enabled:
         raise HTTPException(status_code=409, detail="Ditto 视频生成未启用。")
     try:
         import edge_tts
-        communicate = edge_tts.Communicate(payload.text, settings.tts_voice)
+        clip_text = _ditto_clip_text(payload.text)
+        communicate = edge_tts.Communicate(clip_text, settings.tts_voice)
         audio_buf = io.BytesIO()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
