@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### 2026-03-14 — 语音识别重构 + 回复精简（windows-claude，commit 86c8edd）
+
+**改动文件：**
+- `app/config.py`：新增 `STT_API_KEY` 配置项，语音识别用独立 OpenAI key
+- `app/main.py`：新增 `/api/stt` 端点，接收音频文件发给 OpenAI Whisper 转写
+- `app/static/user.js`：废弃 Web Speech API，改用 MediaRecorder 录音 + 服务端 Whisper 转写（兼容 iOS Safari / Android / 桌面全平台）
+- `app/prompts.py`：去掉每次回复的自我介绍和末尾免责声明，改为简洁直接回答
+
+**为什么：**
+- Web Speech API 在 iOS Safari 完全不支持，Android 不稳定，桌面端只能识别一句就停
+- 改用 MediaRecorder + Whisper 方案全平台兼容，识别质量更好
+- AI 回复去掉废话（自我介绍 + 免责声明），用户体验更好，也减少 Ditto 视频生成的文本量
+
+**部署：** 服务器 .env 新增 `STT_API_KEY=<OpenAI key>`（聊天继续走 DeepSeek）
+
+---
+
 ### 2026-03-14 — Ditto 视频+TTS 语音系统接入（windows-claude）
 
 **改动文件：**
