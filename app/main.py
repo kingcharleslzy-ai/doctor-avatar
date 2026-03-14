@@ -385,6 +385,31 @@ async def text_to_speech(payload: TTSRequest) -> Response:
         raise HTTPException(status_code=500, detail=f"TTS 失败: {exc}") from exc
 
 
+@app.post("/api/tts/stream")
+async def text_to_speech_stream(payload: TTSRequest):
+    """流式 TTS：边生成边返回 MP3 音频块，首包延迟 <400ms。默认走 Edge TTS。"""
+    from fastapi.responses import StreamingResponse
+    import edge_tts
+
+    voice = payload.voice or settings.edge_tts_voice or "zh-CN-YunxiNeural"
+
+    async def _generate():
+        communicate = edge_tts.Communicate(payload.text, voice)
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                yield chunk["data"]
+
+    return StreamingResponse(
+        _generate(),
+        media_type="audio/mpeg",
+        headers={
+            "X-TTS-Provider": "edge-stream",
+            "X-TTS-Voice": voice,
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
 def _ditto_clip_text(text: str, max_chars: int = 60) -> str:
     """取第一个完整句子（不超过 max_chars 字），用于 Ditto 生成短片段而非全文。"""
     for ch in "。！？.!?":

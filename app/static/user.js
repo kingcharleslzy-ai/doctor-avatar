@@ -890,6 +890,75 @@ async function toggleVoiceInput() {
 
 let _currentAudio = null;
 
+/* ---- Sentence-level streaming TTS queue ---- */
+let _ttsQueue = [];
+let _ttsPlaying = false;
+
+function _splitSentences(text) {
+  /* Split Chinese/English text into sentences at natural boundaries */
+  return text.split(/(?<=[。！？；\n.!?;])\s*/).filter(s => s.trim().length > 0);
+}
+
+async function _fetchTtsBlob(text) {
+  const resp = await fetch("/api/tts/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!resp.ok) throw new Error(`TTS HTTP ${resp.status}`);
+  return await resp.blob();
+}
+
+async function _playNextInQueue() {
+  if (_ttsPlaying || _ttsQueue.length === 0) return;
+  _ttsPlaying = true;
+  const { blob, isLast } = _ttsQueue.shift();
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  const audioContext = createAvatarAudioContext();
+  if (audioContext) {
+    const sourceNode = audioContext.createMediaElementSource(audio);
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.72;
+    sourceNode.connect(analyser);
+    analyser.connect(audioContext.destination);
+    startAvatarMonitoring(audioContext, analyser, sourceNode, "speaking");
+  } else {
+    setAvatarMode("speaking");
+  }
+  _currentAudio = audio;
+  audio.onplay = () => {
+    setVoiceStatus("正在朗读回答。");
+    setAvatarMode("speaking");
+    setText("connectionState", "正在回答");
+  };
+  audio.onended = () => {
+    URL.revokeObjectURL(url);
+    _currentAudio = null;
+    _ttsPlaying = false;
+    if (_ttsQueue.length > 0) {
+      _playNextInQueue();
+    } else {
+      stopAvatarMonitoring();
+      setAvatarMode("idle", "当前回答已播报完成，你可以继续追问。");
+      setVoiceStatus("朗读已完成。");
+      setText("connectionState", "语音待命");
+    }
+  };
+  audio.onerror = () => {
+    stopAvatarMonitoring();
+    URL.revokeObjectURL(url);
+    _currentAudio = null;
+    _ttsPlaying = false;
+    _ttsQueue = [];
+    setAvatarMode("idle", "语音播放失败，你可以继续文字追问。");
+    setVoiceStatus("朗读失败，请稍后再试。");
+    setText("connectionState", "语音待命");
+  };
+  await audio.play().catch(() => {});
+}
+
 async function speakAnswer(textOverride) {
   const answer = (textOverride || $("answer")?.textContent || "").trim();
   if (!answer || answer === "尚未生成回答。") {
@@ -897,53 +966,34 @@ async function speakAnswer(textOverride) {
     return;
   }
   try {
-    setVoiceStatus("语音合成中…");
+    setVoiceStatus("语音准备中…");
     setAvatarMode("thinking", "回答已生成，正在准备语音播报。");
     if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
-    const response = await fetch("/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: answer }),
-    });
-    if (!response.ok) throw new Error(`TTS HTTP ${response.status}`);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    const audioContext = createAvatarAudioContext();
-    if (audioContext) {
-      const sourceNode = audioContext.createMediaElementSource(audio);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.72;
-      sourceNode.connect(analyser);
-      analyser.connect(audioContext.destination);
-      startAvatarMonitoring(audioContext, analyser, sourceNode, "speaking");
-    } else {
-      setAvatarMode("speaking");
+    _ttsQueue = [];
+    _ttsPlaying = false;
+
+    const sentences = _splitSentences(answer);
+    if (sentences.length === 0) return;
+
+    /* Fetch first sentence immediately, start playing ASAP */
+    const firstBlob = await _fetchTtsBlob(sentences[0]);
+    _ttsQueue.push({ blob: firstBlob, isLast: sentences.length === 1 });
+    _playNextInQueue();
+
+    /* Fetch remaining sentences in parallel while first plays */
+    if (sentences.length > 1) {
+      const remaining = sentences.slice(1);
+      const promises = remaining.map((s, i) =>
+        _fetchTtsBlob(s).then(blob => ({ blob, index: i, isLast: i === remaining.length - 1 }))
+      );
+      /* Process in order as they resolve */
+      const results = await Promise.all(promises);
+      results.sort((a, b) => a.index - b.index);
+      for (const r of results) {
+        _ttsQueue.push({ blob: r.blob, isLast: r.isLast });
+        if (!_ttsPlaying) _playNextInQueue();
+      }
     }
-    _currentAudio = audio;
-    audio.onplay = () => {
-      setVoiceStatus("正在朗读回答。");
-      setAvatarMode("speaking");
-      setText("connectionState", "正在回答");
-    };
-    audio.onended = () => {
-      stopAvatarMonitoring();
-      setAvatarMode("idle", "当前回答已播报完成，你可以继续追问。");
-      setVoiceStatus("朗读已完成。");
-      setText("connectionState", "语音待命");
-      URL.revokeObjectURL(url);
-      _currentAudio = null;
-    };
-    audio.onerror = () => {
-      stopAvatarMonitoring();
-      setAvatarMode("idle", "语音播放失败，你可以继续文字追问。");
-      setVoiceStatus("朗读失败，请稍后再试。");
-      setText("connectionState", "语音待命");
-      URL.revokeObjectURL(url);
-      _currentAudio = null;
-    };
-    await audio.play();
   } catch (exc) {
     stopAvatarMonitoring();
     setAvatarMode("idle", "当前朗读启动失败，但你仍可继续文字对话。");
