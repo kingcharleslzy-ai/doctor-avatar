@@ -487,6 +487,24 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-15（日）—— windows-claude 实时语音通话：SSE 流式 Chat+TTS 流水线
+
+**为什么改**：之前语音链路是"等 Chat 全部生成 → 等 TTS 全部合成 → 播放"，总延迟 11-20 秒，完全不像通话。
+
+**改了什么**（`app/main.py`、`app/static/user.js`）：
+- 新增 `/api/voice-chat` SSE 端点：DeepSeek 流式生成 → 按句子切分 → 每句即时 Edge TTS → SSE 事件流返回文字+音频
+- 新增 `/api/tts/stream` 端点：Edge TTS chunked streaming，独立使用时 <1.5s
+- 前端 `askQuestion()` 聊天模式改用 SSE：文字逐 token 实时显示，音频按句队列播放
+- 前端 `speakAnswer()` 改为句级并行 TTS：第一句播放时后续句子同时获取
+
+**效果**：
+- 首个文字 token：1.6-3.2s（改前 5-9s）
+- 首段语音播放：3.1-5.5s（改前 11s+）
+- 总完成时间：5.7-7.6s（改前 17-20s）
+- 用户听到第一句话时，后续句子仍在生成和合成
+
+**30 题耳鼻喉科测试**：30/30 全部通过，26/30 包含就医建议边界
+
 ### 2026-03-15（日）—— windows-claude 接通阿里云 TTS 并修正默认男声
 
 **为什么改**：Codex 之前把 TTS 默认男声设为 `Neil`，但 `qwen-tts-latest` 实际不支持该声音（API 返回 400）。同时服务器 `.env` 缺少 `DASHSCOPE_API_KEY`，阿里云 TTS 一直回退到 OpenAI。
