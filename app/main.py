@@ -16,7 +16,7 @@ from fastapi.templating import Jinja2Templates
 
 from .config import settings
 from .db import create_memory_entry, delete_memory_entries, init_memory_db, list_memory_entries, memory_kind_counts
-from .knowledge import invalidate_index, load_doctor_profile
+from .knowledge import invalidate_index, load_doctor_profile, search_knowledge
 from .memory_snapshot import MARKER_KIND, get_memory_status
 from .models import (
     ChatRequest,
@@ -327,6 +327,96 @@ def mobile(request: Request) -> HTMLResponse:
 @app.get("/console", response_class=HTMLResponse)
 def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLResponse:
     return templates.TemplateResponse("console.html", {"request": request})
+
+
+@app.post("/api/voice-chat")
+async def voice_chat(payload: ChatRequest):
+    """流式语音聊天：DeepSeek streaming → 句级 Edge TTS → SSE 返回文本+音频。
+    前端只需一个请求，就能实现"边说边听"的实时通话体验。"""
+    import base64
+    import re
+    import edge_tts
+    from fastapi.responses import StreamingResponse
+
+    if chat_service.client is None:
+        raise HTTPException(status_code=503, detail="Chat 未配置。")
+
+    hits = search_knowledge(payload.message)
+    snippets = [hit.snippet for hit in hits]
+
+    async def _tts_bytes(text: str) -> bytes:
+        voice = settings.edge_tts_voice or "zh-CN-YunxiNeural"
+        communicate = edge_tts.Communicate(text, voice)
+        buf = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                buf.write(chunk["data"])
+        return buf.getvalue()
+
+    async def _generate():
+        # Stream chat from DeepSeek
+        from .prompts import build_system_prompt, build_user_prompt
+        from .ops import record_openai_usage, record_openai_error
+
+        try:
+            stream = chat_service.client.chat.completions.create(
+                model=settings.openai_model,
+                messages=[
+                    {"role": "system", "content": build_system_prompt(chat_service.profile)},
+                    *payload.conversation,
+                    {"role": "user", "content": build_user_prompt(payload.message, snippets)},
+                ],
+                stream=True,
+            )
+        except Exception:
+            record_openai_error()
+            raise
+
+        full_text = ""
+        sentence_buf = ""
+        sent_count = 0
+        sentence_ends = re.compile(r'[。！？；\n.!?;]')
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta.content:
+                token = delta.content
+                full_text += token
+                sentence_buf += token
+
+                # Send text token immediately for live display
+                yield f"data: {json.dumps({'type': 'text', 'token': token}, ensure_ascii=False)}\n\n"
+
+                # Check if we completed a sentence
+                if sentence_ends.search(token):
+                    sentence = sentence_buf.strip()
+                    sentence_buf = ""
+                    if len(sentence) > 2:
+                        sent_count += 1
+                        try:
+                            audio = await _tts_bytes(sentence)
+                            audio_b64 = base64.b64encode(audio).decode()
+                            yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
+                        except Exception:
+                            pass  # Skip TTS errors, text still shows
+
+        # Handle remaining text
+        if sentence_buf.strip() and len(sentence_buf.strip()) > 2:
+            sent_count += 1
+            try:
+                audio = await _tts_bytes(sentence_buf.strip())
+                audio_b64 = base64.b64encode(audio).decode()
+                yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
+            except Exception:
+                pass
+
+        yield f"data: {json.dumps({'type': 'done', 'full_text': full_text}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        _generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.post("/api/chat", response_model=ChatResponse)

@@ -714,15 +714,53 @@ async function askQuestion() {
     setText("connectionState", "理解问题中");
     setConversationBusy(true);
     try {
-      const data = await postJson("/api/chat", { message, conversation: state.conversation });
-      setText("answer", data.answer);
-      updateChatMessage(loadingRow, data.answer);
+      /* Stream voice-chat: get text tokens + audio chunks via SSE */
+      const resp = await fetch("/api/voice-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, conversation: state.conversation }),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let sseBuffer = "";
+      _ttsQueue = [];
+      _ttsPlaying = false;
+      if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+            if (evt.type === "text") {
+              fullText += evt.token;
+              updateChatMessage(loadingRow, fullText);
+            } else if (evt.type === "audio") {
+              const binary = Uint8Array.from(atob(evt.audio), c => c.charCodeAt(0));
+              const blob = new Blob([binary], { type: evt.format || "audio/mpeg" });
+              _ttsQueue.push({ blob, isLast: false });
+              if (!_ttsPlaying) _playNextInQueue();
+            } else if (evt.type === "done") {
+              fullText = evt.full_text || fullText;
+            }
+          } catch (_) { /* skip malformed SSE lines */ }
+        }
+      }
+
+      setText("answer", fullText);
+      updateChatMessage(loadingRow, fullText);
       state.conversation.push({ role: "user", content: message });
-      state.conversation.push({ role: "assistant", content: data.answer });
+      state.conversation.push({ role: "assistant", content: fullText });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
-      void speakAnswer(data.answer);
-      if (state.experimentalVideoEnabled && state.appConfig?.ditto_stream?.enabled) startDittoStream(data.answer);
-      else if (state.experimentalVideoEnabled && state.appConfig?.ditto_enabled) void generateDittoVideo(data.answer);
+      if (state.experimentalVideoEnabled && state.appConfig?.ditto_stream?.enabled) startDittoStream(fullText);
+      else if (state.experimentalVideoEnabled && state.appConfig?.ditto_enabled) void generateDittoVideo(fullText);
     } catch (error) {
       setText("answer", error.message);
       updateChatMessage(loadingRow, `出错了：${error.message}`);
