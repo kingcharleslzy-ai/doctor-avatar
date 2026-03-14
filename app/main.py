@@ -299,6 +299,29 @@ def chat(payload: ChatRequest) -> ChatResponse:
     return ChatResponse(**result)
 
 
+@app.post("/api/stt")
+async def speech_to_text(request: Request) -> dict[str, str]:
+    stt_key = settings.stt_api_key or settings.openai_api_key
+    if not stt_key:
+        raise HTTPException(status_code=503, detail="语音识别 API key 未配置。")
+    form = await request.form()
+    audio_file = form.get("audio")
+    if audio_file is None:
+        raise HTTPException(status_code=400, detail="缺少音频文件。")
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=stt_key)
+        audio_bytes = await audio_file.read()
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=("audio.webm", audio_bytes),
+            language="zh",
+        )
+        return {"text": transcript.text}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"语音识别失败: {exc}") from exc
+
+
 @app.post("/api/tts")
 async def text_to_speech(payload: TTSRequest) -> Response:
     try:

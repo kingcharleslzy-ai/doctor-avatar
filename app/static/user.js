@@ -4,8 +4,8 @@ const state = {
   conversation: [],
   doctorProfile: null,
   appConfig: null,
-  recognition: null,
-  recognitionAvailable: false,
+  mediaRecorder: null,
+  isRecording: false,
   microphonePrimed: false,
   presenceSessionId: "",
   dittoWs: null,
@@ -363,18 +363,13 @@ async function startConsultation() {
   }
 
   if (!hasLiveAvatarMode() && hasDittoMode()) {
-    setVoiceStatus("已进入语音视频模式。正在准备麦克风权限；你也可以直接输入文字并发送。");
+    setVoiceStatus("已进入语音视频模式。点击「语音」按钮开始录音，或直接输入文字发送。");
     const message = $("message");
     if (message) {
       message.focus();
       message.placeholder = "先说出或输入问题，发送后将自动生成语音和视频…";
     }
     await prepareMicrophoneAccess();
-    if (state.recognitionAvailable) {
-      await startVoiceInput();
-    } else if (state.microphonePrimed) {
-      setVoiceStatus("麦克风权限已准备好。当前浏览器不支持原生语音识别，请直接输入文字后发送。");
-    }
     return;
   }
 
@@ -495,53 +490,76 @@ async function prepareMicrophoneAccess() {
   }
 }
 
-function initRecognition() {
-  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Recognition) {
-    setVoiceStatus("当前浏览器不支持原生语音输入，请改用手动输入。");
+async function toggleVoiceInput() {
+  if (state.isRecording) {
+    stopVoiceRecording();
     return;
   }
+  const micOk = await prepareMicrophoneAccess();
+  if (!micOk) return;
 
-  const recognition = new Recognition();
-  recognition.lang = "zh-CN";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+    const recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream);
+    const chunks = [];
 
-  recognition.onstart = () => {
-    setVoiceStatus("正在听你说话，请开始讲话。");
-    setText("voiceInputBtn", "正在录音...");
-  };
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
 
-  recognition.onresult = (event) => {
-    const transcript = event.results?.[0]?.[0]?.transcript || "";
-    if (transcript && $("message")) {
-      $("message").value = transcript.trim();
-      setVoiceStatus("已识别语音内容，你可以直接提交，或再检查一下文字。");
-    }
-  };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      state.isRecording = false;
+      const voiceBtn = $("voiceInputBtn");
+      if (voiceBtn) voiceBtn.textContent = "🎤 语音";
+      if (chunks.length === 0) {
+        setVoiceStatus("未录到音频。");
+        return;
+      }
+      setVoiceStatus("识别中…");
+      const blob = new Blob(chunks, { type: recorder.mimeType });
+      const form = new FormData();
+      form.append("audio", blob, "audio.webm");
+      try {
+        const resp = await fetch("/api/stt", { method: "POST", body: form });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        const result = await resp.json();
+        const text = (result.text || "").trim();
+        if (text && $("message")) {
+          $("message").value = text;
+          setVoiceStatus("已识别，可直接发送或修改。");
+        } else {
+          setVoiceStatus("未识别到语音内容，请重试。");
+        }
+      } catch (exc) {
+        setVoiceStatus(`识别失败：${exc.message}`);
+      }
+    };
 
-  recognition.onerror = (event) => {
-    setVoiceStatus(`语音输入失败：${event.error || "未知错误"}。`);
-  };
-
-  recognition.onend = () => {
-    setText("voiceInputBtn", "语音输入");
-  };
-
-  state.recognition = recognition;
-  state.recognitionAvailable = true;
+    recorder.start();
+    state.mediaRecorder = recorder;
+    state.isRecording = true;
+    const voiceBtn = $("voiceInputBtn");
+    if (voiceBtn) voiceBtn.textContent = "⏹ 停止录音";
+    setVoiceStatus("正在录音，说完后点「停止录音」…");
+  } catch (exc) {
+    setVoiceStatus(`麦克风启动失败：${exc.message}`);
+  }
 }
 
-async function startVoiceInput() {
-  if (!state.recognitionAvailable || !state.recognition) {
-    setVoiceStatus("当前浏览器不支持原生语音输入，请改用手动输入。");
-    return;
-  }
-  await prepareMicrophoneAccess();
-  try {
-    state.recognition.start();
-  } catch (_) {
-    setVoiceStatus("语音输入正在进行中，或浏览器还没准备好。");
+function stopVoiceRecording() {
+  if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+    state.mediaRecorder.stop();
   }
 }
 
@@ -803,7 +821,7 @@ function wireUi() {
   $("keepAliveBtn")?.addEventListener("click", keepAlive);
   $("disconnectBtn")?.addEventListener("click", disconnectRoom);
   $("askBtn")?.addEventListener("click", askQuestion);
-  $("voiceInputBtn")?.addEventListener("click", startVoiceInput);
+  $("voiceInputBtn")?.addEventListener("click", toggleVoiceInput);
   $("speakAnswerBtn")?.addEventListener("click", speakAnswer);
   $("stopSpeechBtn")?.addEventListener("click", stopSpeech);
   document.querySelectorAll("#quickPrompts .prompt-pill").forEach((btn) => {
@@ -839,7 +857,6 @@ function wireUi() {
 }
 
 wireUi();
-initRecognition();
 startPresenceHeartbeat();
 loadAppConfig().catch((error) => {
   setText("answer", error.message);

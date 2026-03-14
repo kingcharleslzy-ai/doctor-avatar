@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
     openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
+    stt_api_key: str | None = Field(default=None, alias="STT_API_KEY")
     heygen_api_key: str | None = Field(default=None, alias="HEYGEN_API_KEY")
     heygen_api_base: str = Field(default="https://api.heygen.com", alias="HEYGEN_API_BASE")
     liveavatar_api_base: str = Field(default="https://api.liveavatar.com", alias="LIVEAVATAR_API_BASE")
