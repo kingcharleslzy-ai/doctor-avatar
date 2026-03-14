@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "validate:console": "node scripts/validate_console_ui.mjs"
+    "validate:console": "node scripts/validate_console_ui.mjs",
+    "validate:user": "node scripts/validate_user_ui.mjs"
   },
   "repository": {
     "type": "git",

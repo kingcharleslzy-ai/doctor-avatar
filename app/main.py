@@ -10,7 +10,7 @@ import asyncio
 
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -52,7 +52,18 @@ def resolve_user_template(request: Request) -> str:
         return "user_mobile.html"
     if view == "desktop":
         return "user_desktop.html"
-    return "index.html"
+    user_agent = (request.headers.get("user-agent") or "").lower()
+    mobile_markers = (
+        "iphone",
+        "ipad",
+        "android",
+        "mobile",
+        "harmonyos",
+        "micromessenger",
+    )
+    if any(marker in user_agent for marker in mobile_markers):
+        return "user_mobile.html"
+    return "user_desktop.html"
 
 
 def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(console_auth)) -> str:
@@ -130,6 +141,28 @@ async def request_metrics(request: Request, call_next):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots() -> str:
+    return "User-agent: *\nAllow: /\n"
+
+
+@app.get("/favicon.ico")
+def favicon() -> Response:
+    svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#g)"/>
+  <path d="M20 18h7v12h10V18h7v28h-7V36H27v10h-7z" fill="#ffffff"/>
+</svg>
+""".strip()
+    return Response(content=svg, media_type="image/svg+xml")
 
 
 @app.get("/api/app-config")
