@@ -198,7 +198,7 @@ python .\scripts\swas_run_command.py "docker compose -f /root/doctor-avatar/dock
   - 用途：当前已跑通的主识别路径
 - `阿里云 TTS`
   - 默认模型：`qwen-tts-latest`
-  - 默认男声：`Neil`
+  - 默认男声：`Ethan`（晨煦，标准普通话，阳光温暖）
   - 定位：成熟、稳重、专业，适合作为医生助手默认音色
 - `OpenAI TTS`
   - 默认模型：`gpt-4o-mini-tts`
@@ -480,12 +480,24 @@ cd D:\charles\Documents\doctor-avatar
 ## 下一步建议
 
 1. 把你爸的内部口吻、常见回答和禁答规则补进知识库
-2. 先把 `DASHSCOPE_API_KEY` 配上，验证 `Neil` 是否足够成熟、稳定
+2. ~~先把 `DASHSCOPE_API_KEY` 配上~~ ✅ 已完成，默认男声改为 `Ethan`（晨煦）
 3. 连续测试 30 到 50 个高频耳鼻咽喉科问题，重点观察 STT 医学词识别
 4. 再把主线推进到 `阿里云实时语音 + Web 2D`
 5. 最后再考虑父亲本人声音克隆，不要反过来阻塞主线
 
 ## CHANGELOG
+
+### 2026-03-15（日）—— windows-claude 接通阿里云 TTS 并修正默认男声
+
+**为什么改**：Codex 之前把 TTS 默认男声设为 `Neil`，但 `qwen-tts-latest` 实际不支持该声音（API 返回 400）。同时服务器 `.env` 缺少 `DASHSCOPE_API_KEY`，阿里云 TTS 一直回退到 OpenAI。
+
+**改了什么**（`app/config.py`、`.env.example`、`README.md`、服务器 `.env`）：
+- 查阿里云百炼文档确认 `qwen-tts-latest` 支持的男声：`Ethan`（晨煦）、`Moon`（月白）、`Kai`（凯）、`Nofish`（不吃鱼）
+- 默认男声从 `Neil` 改为 `Ethan`（标准普通话，阳光温暖，最接近医生场景）
+- 服务器配置 `DASHSCOPE_API_KEY`（百炼平台 key）并重建容器使其生效
+- 公网实测 `https://liyong828.com/api/tts` 返回 200，Provider: aliyun，194KB WAV 音频
+
+**效果**：阿里云 TTS Ethan 男声已上线，不再回退到 OpenAI
 
 ### 2026-03-14（六）—— codex 给 Web 2D 语音主线补上本地静音自动收尾
 
@@ -628,7 +640,7 @@ cd D:\charles\Documents\doctor-avatar
   - `OpenAI TTS` 支线
   - `Edge TTS` 兜底
 - 当前默认声音选择为：
-  - 阿里云：`Neil`
+  - 阿里云：`Ethan`
   - OpenAI：`cedar`
   - Edge：`zh-CN-YunxiNeural`
 - `/api/tts` 现在支持传 `provider` 和 `voice`

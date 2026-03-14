@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     tts_fallback_provider: Literal["aliyun", "openai", "edge"] = Field(default="openai", alias="TTS_FALLBACK_PROVIDER")
     dashscope_api_key: str | None = Field(default=None, alias="DASHSCOPE_API_KEY")
     aliyun_tts_model: str = Field(default="qwen-tts-latest", alias="ALIYUN_TTS_MODEL")
-    aliyun_tts_voice: str = Field(default="Neil", alias="ALIYUN_TTS_VOICE")
+    aliyun_tts_voice: str = Field(default="Ethan", alias="ALIYUN_TTS_VOICE")
     openai_tts_model: str = Field(default="gpt-4o-mini-tts", alias="OPENAI_TTS_MODEL")
     openai_tts_voice: str = Field(default="cedar", alias="OPENAI_TTS_VOICE")
     openai_tts_instructions: str = Field(
