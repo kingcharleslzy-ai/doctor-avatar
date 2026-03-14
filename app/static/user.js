@@ -17,6 +17,12 @@ const state = {
   avatarMode: "idle",
   experimentalVideoEnabled: false,
   askInFlight: false,
+  voiceVadRafId: 0,
+  voiceRecordStartedAt: 0,
+  voiceSpeechDetectedAt: 0,
+  voiceLastSpeechAt: 0,
+  voiceHasSpeech: false,
+  recordingStopReason: "manual",
 };
 
 function hasLiveAvatarMode() {
@@ -334,6 +340,91 @@ function stopAvatarMonitoring() {
   state.avatarAnalyser = null;
   state.avatarAudioContext = null;
   setAvatarLevel(0);
+}
+
+function stopVoiceActivityDetection() {
+  if (state.voiceVadRafId) {
+    cancelAnimationFrame(state.voiceVadRafId);
+    state.voiceVadRafId = 0;
+  }
+  state.voiceRecordStartedAt = 0;
+  state.voiceSpeechDetectedAt = 0;
+  state.voiceLastSpeechAt = 0;
+  state.voiceHasSpeech = false;
+}
+
+function stopVoiceRecording(reason = "manual") {
+  state.recordingStopReason = reason;
+  stopVoiceActivityDetection();
+  if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
+    state.mediaRecorder.stop();
+  }
+}
+
+function startVoiceActivityDetection(analyser) {
+  stopVoiceActivityDetection();
+  state.voiceRecordStartedAt = performance.now();
+  const buffer = new Uint8Array(analyser.fftSize);
+  const threshold = 0.02;
+  const warmupMs = 450;
+  const minSpeechMs = 280;
+  const silenceMs = 1100;
+  const idleTimeoutMs = 6500;
+  const maxRecordMs = 15000;
+
+  const tick = () => {
+    if (!state.isRecording || !state.mediaRecorder || state.mediaRecorder.state === "inactive") {
+      stopVoiceActivityDetection();
+      return;
+    }
+
+    analyser.getByteTimeDomainData(buffer);
+    let power = 0;
+    for (let i = 0; i < buffer.length; i += 1) {
+      const normalized = (buffer[i] - 128) / 128;
+      power += normalized * normalized;
+    }
+    const rms = Math.sqrt(power / Math.max(1, buffer.length));
+    const now = performance.now();
+    const elapsed = now - state.voiceRecordStartedAt;
+
+    if (rms >= threshold) {
+      if (!state.voiceHasSpeech && elapsed >= warmupMs) {
+        state.voiceHasSpeech = true;
+        state.voiceSpeechDetectedAt = now;
+        setVoiceStatus("正在听你说话，说完后会自动提交…");
+      }
+      if (state.voiceHasSpeech) {
+        state.voiceLastSpeechAt = now;
+      }
+    }
+
+    if (!state.voiceHasSpeech && elapsed >= idleTimeoutMs) {
+      setVoiceStatus("暂时没检测到清晰语音，本次先结束，你可以再试一次。");
+      stopVoiceRecording("idle-timeout");
+      return;
+    }
+
+    if (state.voiceHasSpeech) {
+      const speechElapsed = now - state.voiceSpeechDetectedAt;
+      const silenceElapsed = now - (state.voiceLastSpeechAt || state.voiceSpeechDetectedAt);
+      if (speechElapsed >= minSpeechMs && silenceElapsed >= silenceMs) {
+        setVoiceStatus("已检测到你说完，正在自动提交…");
+        stopVoiceRecording("auto-silence");
+        return;
+      }
+    }
+
+    if (elapsed >= maxRecordMs) {
+      setVoiceStatus("本轮说话时间较长，先为你提交当前内容…");
+      stopVoiceRecording("max-duration");
+      return;
+    }
+
+    state.voiceVadRafId = requestAnimationFrame(tick);
+  };
+
+  state.voiceVadRafId = requestAnimationFrame(tick);
 }
 
 function startAvatarMonitoring(audioContext, analyser, sourceNode, mode) {
@@ -693,7 +784,7 @@ async function prepareMicrophoneAccess() {
 
 async function toggleVoiceInput() {
   if (state.isRecording) {
-    stopVoiceRecording();
+    stopVoiceRecording("manual");
     return;
   }
   const micOk = await prepareMicrophoneAccess();
@@ -702,9 +793,10 @@ async function toggleVoiceInput() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const audioContext = createAvatarAudioContext();
+    let analyser = null;
     if (audioContext) {
       const sourceNode = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
+      analyser = audioContext.createAnalyser();
       analyser.fftSize = 128;
       analyser.smoothingTimeConstant = 0.65;
       sourceNode.connect(analyser);
@@ -728,18 +820,30 @@ async function toggleVoiceInput() {
 
     recorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
+      stopVoiceActivityDetection();
       stopAvatarMonitoring();
       setAvatarMode("thinking", "录音结束，正在转写你的问题。");
       setText("connectionState", "转写中");
       state.isRecording = false;
+      const stopReason = state.recordingStopReason || "manual";
+      state.recordingStopReason = "manual";
+      state.mediaRecorder = null;
       const voiceBtn = $("voiceInputBtn");
       if (voiceBtn) voiceBtn.textContent = "🎤 语音";
       updatePrimaryActionUi();
       if (chunks.length === 0) {
-        setVoiceStatus("未录到音频。");
+        setVoiceStatus(stopReason === "idle-timeout" ? "没有听清你的说话，可以再试一次。" : "未录到音频。");
+        setAvatarMode("idle", "这次没有采到有效语音，可以直接重试。");
+        setText("connectionState", "语音待命");
         return;
       }
-      setVoiceStatus("识别中…");
+      setVoiceStatus(
+        stopReason === "auto-silence"
+          ? "你说完了，正在识别…"
+          : stopReason === "max-duration"
+            ? "已按阶段提交，正在识别…"
+            : "识别中…"
+      );
       const blob = new Blob(chunks, { type: recorder.mimeType });
       const form = new FormData();
       form.append("audio", blob, "audio.webm");
@@ -771,20 +875,16 @@ async function toggleVoiceInput() {
     recorder.start();
     state.mediaRecorder = recorder;
     state.isRecording = true;
+    state.recordingStopReason = "manual";
     const voiceBtn = $("voiceInputBtn");
     if (voiceBtn) voiceBtn.textContent = "⏹ 停止录音";
     updatePrimaryActionUi();
     setText("connectionState", "正在聆听");
-    setVoiceStatus("正在录音，说完后点「停止录音」…");
+    setVoiceStatus("正在录音，说完后会自动提交，也可以手动结束。");
+    startVoiceActivityDetection(analyser || state.avatarAnalyser);
   } catch (exc) {
     setVoiceStatus(`麦克风启动失败：${exc.message}`);
     setText("connectionState", "语音待命");
-  }
-}
-
-function stopVoiceRecording() {
-  if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
-    state.mediaRecorder.stop();
   }
 }
 
