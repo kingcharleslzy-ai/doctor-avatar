@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     openai_base_url: str | None = Field(default=None, alias="OPENAI_BASE_URL")
     openai_model: str = Field(default="gpt-4.1-mini", alias="OPENAI_MODEL")
     stt_api_key: str | None = Field(default=None, alias="STT_API_KEY")
+    stt_language: str = Field(default="zh", alias="STT_LANGUAGE")
+    openai_stt_model: str = Field(default="gpt-4o-mini-transcribe", alias="OPENAI_STT_MODEL")
+    openai_stt_prompt: str = Field(
+        default="这是中文耳鼻咽喉科问诊语音，尽量正确识别鼻炎、过敏、鼻窦炎、鼻塞、喷嚏、免疫治疗、激素喷鼻等医学词汇。",
+        alias="OPENAI_STT_PROMPT",
+    )
     openai_tts_api_key: str | None = Field(default=None, alias="OPENAI_TTS_API_KEY")
     heygen_api_key: str | None = Field(default=None, alias="HEYGEN_API_KEY")
     heygen_api_base: str = Field(default="https://api.heygen.com", alias="HEYGEN_API_BASE")

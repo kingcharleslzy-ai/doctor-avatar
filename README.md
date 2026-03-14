@@ -159,6 +159,10 @@ python .\scripts\swas_run_command.py "docker compose -f /root/doctor-avatar/dock
 ### 1. `.env`
 
 - `OPENAI_API_KEY`
+- `STT_API_KEY`
+- `STT_LANGUAGE`
+- `OPENAI_STT_MODEL`
+- `OPENAI_STT_PROMPT`
 - `OPENAI_TTS_API_KEY`
 - `DASHSCOPE_API_KEY`
 - `TTS_PROVIDER`
@@ -177,26 +181,49 @@ python .\scripts\swas_run_command.py "docker compose -f /root/doctor-avatar/dock
 
 当前推荐语音路线：
 
-- 主线：`阿里云 TTS`
+- 当前可上线主流程：
+  - `OpenAI STT`
+  - `DeepSeek Chat`
+  - `阿里云 TTS -> OpenAI TTS -> Edge TTS`
+  - `浏览器本地 Web 2D`
+- 下一阶段主目标：
+  - `阿里云实时语音`
+  - 原因：更贴近中文低延迟通话感、成熟男声、以及后续父亲本人声音克隆
+
+当前默认模型与音色：
+
+- `OpenAI STT`
+  - 默认模型：`gpt-4o-mini-transcribe`
+  - 默认语言：`zh`
+  - 用途：当前已跑通的主识别路径
+- `阿里云 TTS`
   - 默认模型：`qwen-tts-latest`
   - 默认男声：`Neil`
   - 定位：成熟、稳重、专业，适合作为医生助手默认音色
-- 支线：`OpenAI TTS`
+- `OpenAI TTS`
   - 默认模型：`gpt-4o-mini-tts`
   - 默认男声：`cedar`
-- 兜底：`Edge TTS`
+- `Edge TTS`
   - 默认男声：`zh-CN-YunxiNeural`
 
 说明：
 
 - 当前聊天仍可继续走 DeepSeek（`OPENAI_BASE_URL=https://api.deepseek.com`）
+- `OpenAI STT` 优先读取：
+  - `STT_API_KEY`
+  - 若未设置，再回退到 `OPENAI_API_KEY`
 - `OpenAI TTS` 不再复用 DeepSeek 的 `OPENAI_API_KEY` 语义，而是优先读取：
   - `OPENAI_TTS_API_KEY`
   - 若未设置，再回退到 `STT_API_KEY`
 - 因此现在可以实现：
+  - `OpenAI STT` 作为当前稳定识别入口
   - `阿里云男声` 作为默认主线
   - `OpenAI 男声` 作为独立支线
   - 且不影响聊天继续使用 DeepSeek
+
+更完整的主线判断见：
+
+- [docs/VOICE_MAINLINE_PLAN.md](D:\charles\Documents\doctor-avatar\docs\VOICE_MAINLINE_PLAN.md)
 
 - `CONSOLE_USERNAME`
 - `CONSOLE_PASSWORD`
@@ -452,11 +479,40 @@ cd D:\charles\Documents\doctor-avatar
 ## 下一步建议
 
 1. 把你爸的内部口吻、常见回答和禁答规则补进知识库
-2. 用真实 `HEYGEN_AVATAR_ID` 和 `HEYGEN_VOICE_ID` 联调视频效果
-3. 连续测试 30 到 50 个高频耳鼻咽喉科问题
-4. 再补用户端字幕、会话摘要和隐私提示细节
+2. 先把 `DASHSCOPE_API_KEY` 配上，验证 `Neil` 是否足够成熟、稳定
+3. 连续测试 30 到 50 个高频耳鼻咽喉科问题，重点观察 STT 医学词识别
+4. 再把主线推进到 `阿里云实时语音 + Web 2D`
+5. 最后再考虑父亲本人声音克隆，不要反过来阻塞主线
 
 ## CHANGELOG
+
+### 2026-03-14（六）—— codex 收紧语音主线路线并升级 STT 缺省模型
+
+**为什么改**：当前主产品线已经明确从 `Ditto` 转向 `Web 2D + 低延迟语音`，但代码和文档里还有两个问题：
+
+- `/api/stt` 仍然写死旧的 `whisper-1`，后续切模型或调中文医学识别提示都得改代码
+- 仓库里虽然已经有 `阿里云 TTS` 和 `OpenAI TTS` 分层，但“当前稳定主线”和“下一阶段最优路线”还没有被明确写死，容易继续摇摆
+
+**改了什么**（`app/config.py`、`app/stt.py`、`app/main.py`、`.env.example`、`docs/VOICE_MAINLINE_PLAN.md`）：
+
+- 新增 `app/stt.py`，把语音识别收成独立服务，后续接供应商切换或实时链路时不需要再把逻辑散落在 `main.py`
+- `OPENAI_STT_MODEL` 改成配置项，当前默认值设为 `gpt-4o-mini-transcribe`
+- 新增：
+  - `STT_LANGUAGE`
+  - `OPENAI_STT_PROMPT`
+  方便针对中文耳鼻咽喉科语音做更稳的识别提示
+- `/api/stt` 现在除了返回转写文本，也会返回当前 `provider` 和 `model`
+- `/api/app-config` 新增 `stt` 状态，便于控制台或验收脚本判断当前识别配置
+- 新增 [docs/VOICE_MAINLINE_PLAN.md](D:\charles\Documents\doctor-avatar\docs\VOICE_MAINLINE_PLAN.md)，明确：
+  - 当前可上线主流程：`OpenAI STT -> DeepSeek -> 阿里云/OpenAI/Edge TTS -> Web 2D`
+  - 下一阶段主目标：`阿里云实时语音`
+  - `Ditto` 继续保留实验支线，不再定义默认用户路线
+
+**效果**：
+
+- 现有语音主线先变得更可控，不必每次为了 STT 微调再改后端代码
+- 文档口径已经明确：`OpenAI` 继续做当前稳定识别备线，`阿里云` 是下一阶段中文实时通话主线
+- 后面如果要推进“更像电话”的交互，可以在现有服务边界上继续扩，而不是再重拆一次
 
 ### 2026-03-14（六）—— codex 清理云服务器残留下载与失活隧道
 

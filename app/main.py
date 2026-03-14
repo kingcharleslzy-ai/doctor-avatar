@@ -33,6 +33,7 @@ from .models import (
 )
 from .ops import monitor_snapshot, record_presence, record_request
 from .speech import SpeechService
+from .stt import TranscriptionService
 from .services import ChatService, HeyGenService
 
 
@@ -42,6 +43,7 @@ app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
 speech_service = SpeechService()
+transcription_service = TranscriptionService()
 doctor_profile = load_doctor_profile()
 console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
@@ -195,6 +197,7 @@ def app_config() -> dict[str, object]:
             "enabled": settings.ditto_stream_enabled,
             "ws_url_configured": bool(settings.ditto_ws_url),
         },
+        "stt": transcription_service.provider_status(),
         "tts": speech_service.provider_status(),
         "liveavatar": {
             "mode": settings.heygen_mode,
@@ -337,23 +340,21 @@ def chat(payload: ChatRequest) -> ChatResponse:
 
 @app.post("/api/stt")
 async def speech_to_text(request: Request) -> dict[str, str]:
-    stt_key = settings.stt_api_key or settings.openai_api_key
-    if not stt_key:
+    if not (settings.stt_api_key or settings.openai_api_key):
         raise HTTPException(status_code=503, detail="语音识别 API key 未配置。")
     form = await request.form()
     audio_file = form.get("audio")
     if audio_file is None:
         raise HTTPException(status_code=400, detail="缺少音频文件。")
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=stt_key, base_url="https://api.openai.com/v1")
         audio_bytes = await audio_file.read()
-        transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=("audio.webm", audio_bytes),
-            language="zh",
-        )
-        return {"text": transcript.text}
+        filename = getattr(audio_file, "filename", None) or "audio.webm"
+        result = await transcription_service.transcribe(audio_bytes, filename=filename)
+        return {
+            "text": result.text,
+            "provider": result.provider,
+            "model": result.model,
+        }
     except Exception as exc:
         message = str(exc)
         if "authentication_error" in message or "Authentication Fails" in message or "invalid" in message.lower():
