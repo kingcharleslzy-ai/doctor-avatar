@@ -159,12 +159,44 @@ python .\scripts\swas_run_command.py "docker compose -f /root/doctor-avatar/dock
 ### 1. `.env`
 
 - `OPENAI_API_KEY`
+- `OPENAI_TTS_API_KEY`
+- `DASHSCOPE_API_KEY`
+- `TTS_PROVIDER`
+- `TTS_FALLBACK_PROVIDER`
+- `ALIYUN_TTS_MODEL`
+- `ALIYUN_TTS_VOICE`
+- `OPENAI_TTS_MODEL`
+- `OPENAI_TTS_VOICE`
+- `EDGE_TTS_VOICE`
 - `HEYGEN_API_KEY`
 - `HEYGEN_AVATAR_ID`
 - `HEYGEN_VOICE_ID`
 - `HEYGEN_CONTEXT_ID`
 
 这些 HeyGen 参数现在默认走后端配置，前端和调试页都不再要求手填。
+
+当前推荐语音路线：
+
+- 主线：`阿里云 TTS`
+  - 默认模型：`qwen-tts-latest`
+  - 默认男声：`Neil`
+  - 定位：成熟、稳重、专业，适合作为医生助手默认音色
+- 支线：`OpenAI TTS`
+  - 默认模型：`gpt-4o-mini-tts`
+  - 默认男声：`cedar`
+- 兜底：`Edge TTS`
+  - 默认男声：`zh-CN-YunxiNeural`
+
+说明：
+
+- 当前聊天仍可继续走 DeepSeek（`OPENAI_BASE_URL=https://api.deepseek.com`）
+- `OpenAI TTS` 不再复用 DeepSeek 的 `OPENAI_API_KEY` 语义，而是优先读取：
+  - `OPENAI_TTS_API_KEY`
+  - 若未设置，再回退到 `STT_API_KEY`
+- 因此现在可以实现：
+  - `阿里云男声` 作为默认主线
+  - `OpenAI 男声` 作为独立支线
+  - 且不影响聊天继续使用 DeepSeek
 
 - `CONSOLE_USERNAME`
 - `CONSOLE_PASSWORD`
@@ -425,6 +457,41 @@ cd D:\charles\Documents\doctor-avatar
 4. 再补用户端字幕、会话摘要和隐私提示细节
 
 ## CHANGELOG
+
+### 2026-03-14（六）—— codex 接入双语音路线：阿里云主线 + OpenAI 支线
+
+**为什么改**：用户明确要求两件事同时成立：
+
+- 现在先换成更成熟一点的男声，而且要更像医生
+- 后面保留 `OpenAI` 路线作为支线，不让实时语音能力被单一路径绑定
+
+同时，当前项目里 `OPENAI_API_KEY` 已经被用来指向 `DeepSeek` 聊天兼容接口，所以如果直接把它拿来做 OpenAI TTS，会导致语音链路与聊天链路混淆。
+
+**改了什么**（`app/config.py`、`app/models.py`、`app/main.py`、`app/speech.py`、`.env.example`）：
+
+- 新增统一语音服务 `app/speech.py`，把三条 TTS 路径收成一套可切换能力：
+  - `aliyun`
+  - `openai`
+  - `edge`
+- 默认优先级改成：
+  - `阿里云 TTS` 主线
+  - `OpenAI TTS` 支线
+  - `Edge TTS` 兜底
+- 当前默认声音选择为：
+  - 阿里云：`Neil`
+  - OpenAI：`cedar`
+  - Edge：`zh-CN-YunxiNeural`
+- `/api/tts` 现在支持传 `provider` 和 `voice`
+- `Ditto` 的离线视频生成和流式音频源也开始复用同一套语音服务，不再只写死 `edge-tts`
+- 新增 `OPENAI_TTS_API_KEY`，避免把聊天用的 DeepSeek key 和 OpenAI 官方语音 key 混在一起
+
+**效果**：
+
+- 现在可以明确区分：
+  - `聊天主脑` 走 DeepSeek
+  - `语音主线` 走阿里云
+  - `语音支线` 走 OpenAI
+- 即使阿里云语音暂时没配 key，默认链路也会自动回退，不会把现有站点语音功能直接弄坏
 
 ### 2026-03-15（日）—— codex 切换到 Web 2D 浏览器本地主路线
 

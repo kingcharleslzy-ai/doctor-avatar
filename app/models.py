@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -64,6 +64,7 @@ class LiveAvatarStartRequest(BaseModel):
 class TTSRequest(BaseModel):
     text: str = Field(min_length=1, max_length=2000)
     voice: str | None = None
+    provider: Literal["aliyun", "openai", "edge"] | None = None
 
 
 class DittoGenerateRequest(BaseModel):

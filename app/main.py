@@ -32,6 +32,7 @@ from .models import (
     TTSRequest,
 )
 from .ops import monitor_snapshot, record_presence, record_request
+from .speech import SpeechService
 from .services import ChatService, HeyGenService
 
 
@@ -40,6 +41,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 chat_service = ChatService()
 heygen_service = HeyGenService()
+speech_service = SpeechService()
 doctor_profile = load_doctor_profile()
 console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
@@ -193,6 +195,7 @@ def app_config() -> dict[str, object]:
             "enabled": settings.ditto_stream_enabled,
             "ws_url_configured": bool(settings.ditto_ws_url),
         },
+        "tts": speech_service.provider_status(),
         "liveavatar": {
             "mode": settings.heygen_mode,
             "language": settings.heygen_language,
@@ -364,14 +367,19 @@ async def speech_to_text(request: Request) -> dict[str, str]:
 @app.post("/api/tts")
 async def text_to_speech(payload: TTSRequest) -> Response:
     try:
-        import edge_tts
-        communicate = edge_tts.Communicate(payload.text, payload.voice or settings.tts_voice)
-        buf = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                buf.write(chunk["data"])
-        buf.seek(0)
-        return Response(content=buf.read(), media_type="audio/mpeg")
+        result = await speech_service.synthesize(
+            payload.text,
+            provider=payload.provider,
+            voice=payload.voice,
+        )
+        return Response(
+            content=result.audio,
+            media_type=result.media_type,
+            headers={
+                "X-TTS-Provider": result.provider,
+                "X-TTS-Voice": result.voice,
+            },
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"TTS 失败: {exc}") from exc
 
@@ -390,18 +398,19 @@ async def ditto_generate(payload: DittoGenerateRequest) -> Response:
     if not settings.ditto_enabled:
         raise HTTPException(status_code=409, detail="Ditto 视频生成未启用。")
     try:
-        import edge_tts
         clip_text = _ditto_clip_text(payload.text)
-        communicate = edge_tts.Communicate(clip_text, settings.tts_voice)
-        audio_buf = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_buf.write(chunk["data"])
-        audio_buf.seek(0)
+        speech = await speech_service.synthesize(clip_text)
+        audio_buf = io.BytesIO(speech.audio)
         async with __import__("httpx").AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 f"{settings.ditto_service_url}/generate",
-                files={"audio": ("audio.mp3", audio_buf, "audio/mpeg")},
+                files={
+                    "audio": (
+                        f"audio{'.wav' if speech.media_type.endswith('wav') else '.mp3'}",
+                        audio_buf,
+                        speech.media_type,
+                    )
+                },
             )
         if resp.status_code != 200:
             raise HTTPException(status_code=500, detail=f"Ditto 服务错误: {resp.text[:300]}")
@@ -492,13 +501,8 @@ async def ditto_ws_stream(ws: WebSocket) -> None:
             return
 
         # 2. edge-tts → MP3 → ffmpeg → 16kHz mono PCM WAV
-        import edge_tts
-        communicate = edge_tts.Communicate(text, settings.tts_voice)
-        mp3_buf = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                mp3_buf.write(chunk["data"])
-        mp3_buf.seek(0)
+        speech = await speech_service.synthesize(text)
+        audio_bytes = speech.audio
 
         proc = await asyncio.create_subprocess_exec(
             "ffmpeg", "-y", "-i", "pipe:0",
@@ -507,7 +511,7 @@ async def ditto_ws_stream(ws: WebSocket) -> None:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
         )
-        wav_data, _ = await proc.communicate(input=mp3_buf.read())
+        wav_data, _ = await proc.communicate(input=audio_bytes)
         if not wav_data or len(wav_data) <= 44:
             await ws.send_json({"error": "TTS 转换失败。"})
             await ws.close(code=1011)
