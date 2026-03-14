@@ -319,6 +319,12 @@ async def speech_to_text(request: Request) -> dict[str, str]:
         )
         return {"text": transcript.text}
     except Exception as exc:
+        message = str(exc)
+        if "authentication_error" in message or "Authentication Fails" in message or "invalid" in message.lower():
+            raise HTTPException(
+                status_code=503,
+                detail="语音识别服务认证失败，请检查服务器上的 STT_API_KEY 是否为有效的 OpenAI API key。",
+            ) from exc
         raise HTTPException(status_code=500, detail=f"语音识别失败: {exc}") from exc
 
 

@@ -442,6 +442,20 @@ cd D:\charles\Documents\doctor-avatar
 - 不补它，语音按钮路径一定是 `500`
 - 补上并重新部署后，才能继续验证新的 `MediaRecorder + Whisper STT` 语音识别链路
 
+### 2026-03-15（日）—— codex 收紧 `/api/stt` 认证失败提示
+
+**为什么改**：`python-multipart` 补上后，我继续实测公网 `/api/stt`，发现新的失败已经不是代码异常，而是服务器上的 `STT_API_KEY` 被 OpenAI 直接拒绝，返回 `401 authentication_error`。如果继续原样透传，前端只会看到一个模糊的失败提示，既误导排障，也会把底层错误原文暴露给用户。
+
+**改了什么**（`app/main.py`）：
+- 给 `/api/stt` 增加了鉴权失败分支判断
+- 当底层返回 `authentication_error / invalid key` 时，统一改成：
+  - `503`
+  - `语音识别服务认证失败，请检查服务器上的 STT_API_KEY 是否为有效的 OpenAI API key。`
+
+**影响**：
+- 语音按钮再出错时，页面会拿到更明确的中文原因
+- 当前真正需要修的已经不再是后端代码，而是换一把有效的 OpenAI STT key
+
 ### 2026-03-14（六）—— codex 修正视频按钮交互误导
 
 **为什么改**：线上真实可用的是 `提问 -> DeepSeek 回答 -> TTS 朗读 -> Ditto 生成视频`，但首页按钮仍沿用旧的 LiveAvatar 文案和逻辑。用户点击“视频通话/视频分身”时不会申请麦克风，也不会进入当前这条 Ditto 语音视频路径，实际体验会误以为功能失效。
