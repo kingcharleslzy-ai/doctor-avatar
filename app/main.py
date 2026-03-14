@@ -310,7 +310,7 @@ async def speech_to_text(request: Request) -> dict[str, str]:
         raise HTTPException(status_code=400, detail="缺少音频文件。")
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=stt_key)
+        client = OpenAI(api_key=stt_key, base_url="https://api.openai.com/v1")
         audio_bytes = await audio_file.read()
         transcript = client.audio.transcriptions.create(
             model="whisper-1",

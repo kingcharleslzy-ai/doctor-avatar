@@ -456,6 +456,24 @@ cd D:\charles\Documents\doctor-avatar
 - 语音按钮再出错时，页面会拿到更明确的中文原因
 - 当前真正需要修的已经不再是后端代码，而是换一把有效的 OpenAI STT key
 
+### 2026-03-15（日）—— codex 修掉 `/api/stt` 被 DeepSeek base URL 污染
+
+**为什么改**：我后续继续排查时发现，新的 OpenAI STT key 本身其实是有效的；问题是应用进程里同时设置了：
+
+- `OPENAI_BASE_URL=https://api.deepseek.com`
+- `STT_API_KEY=<OpenAI key>`
+
+而 `/api/stt` 里创建 `OpenAI()` 客户端时没有显式传 `base_url`，会继承进程环境里的 `OPENAI_BASE_URL`。结果就变成了“拿 OpenAI 的 key 去打 DeepSeek 兼容端点”，用户侧表现仍然像是 key 无效。
+
+**改了什么**（`app/main.py`）：
+- 给 `/api/stt` 里的 `OpenAI()` 客户端显式固定：
+  - `base_url=\"https://api.openai.com/v1\"`
+
+**影响**：
+- 聊天继续走 `DeepSeek`
+- STT 单独固定走 OpenAI 官方转写接口
+- 避免 `OPENAI_BASE_URL` 对语音识别链路产生污染
+
 ### 2026-03-14（六）—— codex 修正视频按钮交互误导
 
 **为什么改**：线上真实可用的是 `提问 -> DeepSeek 回答 -> TTS 朗读 -> Ditto 生成视频`，但首页按钮仍沿用旧的 LiveAvatar 文案和逻辑。用户点击“视频通话/视频分身”时不会申请麦克风，也不会进入当前这条 Ditto 语音视频路径，实际体验会误以为功能失效。
