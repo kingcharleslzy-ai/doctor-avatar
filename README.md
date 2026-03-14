@@ -458,6 +458,39 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-14（六）—— codex 补齐依赖并固定 4090D 运行环境安装脚本
+
+**为什么改**：当前项目反复在两类地方绕弯子：
+
+- 本地 `doctor-avatar` 需要的 Python/npm/Playwright 工具虽然已经基本装齐，但没有一个明确的“检查完就算齐了”的收口动作
+- 家里 `4090D` 的 Ditto 环境更危险：少包时会导致服务起不来，多装又可能把现有 `torch` 栈顶坏
+
+用户明确要求“没装依赖或者软件先装一下，别凑合”，所以这次把运行依赖补齐流程固定成可复用脚本，而不是继续靠记忆。
+
+**改了什么**（`deploy/ditto/install_runtime_deps.sh`）：
+
+- 新增 `deploy/ditto/install_runtime_deps.sh`
+- 脚本默认安装 `Ditto` 服务真正需要的运行包：
+  - `fastapi`
+  - `uvicorn`
+  - `websockets`
+  - `soundfile`
+  - `ffmpeg-python`
+- 默认也会装 `gradio` 作为本地演示/调试辅助
+- `xformers` 改成显式开关：
+  - 默认 `INSTALL_XFORMERS=0`
+  - 避免一条命令把现有 `torch / torchvision / torchaudio` 兼容栈直接顶坏
+- 脚本末尾会做一次模块导入校验，避免出现“包名装了但运行时还是 import 失败”
+
+**这轮实机结果**：
+
+- 本地 `doctor-avatar` 这一侧已经确认依赖齐全：
+  - `.venv` 里的 Python 包正常
+  - `npm` 依赖正常
+  - `playwright` / 本地 Chromium 正常
+- 4090D 这边已经把缺的 `gradio` 和 `ffmpeg-python` 补上了
+- 这次也踩出了一个真实坑：`xformers` 会尝试替换当前 `torch` 主栈，所以脚本里已经改成默认不自动装
+
 ### 2026-03-14（六）—— codex 接入双语音路线：阿里云主线 + OpenAI 支线
 
 **为什么改**：用户明确要求两件事同时成立：
