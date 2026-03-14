@@ -426,6 +426,22 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-15（日）—— codex 修掉 `/api/stt` 的 500 根因
+
+**为什么改**：用户实测点击语音按钮后直接提示“识别失败 HTTP 500”。我通过阿里云 `SWAS RunCommand` 直接查线上 `app` 容器日志，定位到 `/api/stt` 在 `await request.form()` 时抛出了：
+
+- `AssertionError: The python-multipart library must be installed to use form parsing.`
+
+也就是说，Claude 已经把录音上传改成 `MediaRecorder + Whisper STT`，但运行镜像里缺少了解析 multipart/form-data 的必备依赖。
+
+**改了什么**（`requirements.txt`）：
+- 新增 `python-multipart>=0.0.9,<1`
+
+**影响**：
+- 这是 `/api/stt` 走文件上传表单解析的必要依赖
+- 不补它，语音按钮路径一定是 `500`
+- 补上并重新部署后，才能继续验证新的 `MediaRecorder + Whisper STT` 语音识别链路
+
 ### 2026-03-14（六）—— codex 修正视频按钮交互误导
 
 **为什么改**：线上真实可用的是 `提问 -> DeepSeek 回答 -> TTS 朗读 -> Ditto 生成视频`，但首页按钮仍沿用旧的 LiveAvatar 文案和逻辑。用户点击“视频通话/视频分身”时不会申请麦克风，也不会进入当前这条 Ditto 语音视频路径，实际体验会误以为功能失效。
