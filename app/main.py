@@ -47,6 +47,7 @@ transcription_service = TranscriptionService()
 doctor_profile = load_doctor_profile()
 console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
+_CACHE_BUST = str(int(time.time()))
 
 
 
@@ -311,17 +312,17 @@ def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_co
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(resolve_user_template(request), {"request": request})
+    return templates.TemplateResponse(resolve_user_template(request), {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/desktop", response_class=HTMLResponse)
 def desktop(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("user_desktop.html", {"request": request})
+    return templates.TemplateResponse("user_desktop.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/mobile", response_class=HTMLResponse)
 def mobile(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("user_mobile.html", {"request": request})
+    return templates.TemplateResponse("user_mobile.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/console", response_class=HTMLResponse)
