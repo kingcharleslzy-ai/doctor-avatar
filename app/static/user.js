@@ -633,6 +633,13 @@ async function startConsultation() {
     return;
   }
 
+  /* Unlock audio playback on mobile (must happen in user gesture handler) */
+  try {
+    const silence = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAHAAL0AAAAIgAAXoAAAAQAAAGkAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQpAAADSAAAAAAAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+    await silence.play();
+    silence.pause();
+  } catch (_) { /* ignore — just an unlock attempt */ }
+
   if (!hasLiveAvatarMode() && hasDittoMode()) {
     setVoiceStatus(state.isRecording ? "再次点击即可结束说话并自动转写。" : "实时语音主路线已启用，正在准备麦克风。");
     const message = $("message");
@@ -1348,7 +1355,7 @@ function wireUi() {
     const startBtn = $("startConsultBtn");
     const endBtn = $("endConsultBtn");
     if (startBtn) startBtn.style.display = "none";
-    if (endBtn) endBtn.style.display = "";
+    if (endBtn) endBtn.style.display = "flex";
   });
   $("endConsultBtn")?.addEventListener("click", () => {
     /* End consultation: stop everything, reset UI */
