@@ -717,46 +717,61 @@ async function askQuestion() {
     const voiceBtn = $("voiceInputBtn");
     if (voiceBtn) voiceBtn.disabled = false;
     try {
-      /* Stream voice-chat: get text tokens + audio chunks via SSE */
-      _voiceChatAbort = new AbortController();
-      const resp = await fetch("/api/voice-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, conversation: state.conversation }),
-        signal: _voiceChatAbort.signal,
-      });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
+      /* Try SSE voice-chat (streaming text + audio) */
+      let usedSSE = false;
       let fullText = "";
-      let sseBuffer = "";
-      _ttsQueue = [];
-      _ttsPlaying = false;
-      if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+      try {
+        _voiceChatAbort = new AbortController();
+        const resp = await fetch("/api/voice-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message, conversation: state.conversation }),
+          signal: _voiceChatAbort.signal,
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let sseBuffer = "";
+        _ttsQueue = [];
+        _ttsPlaying = false;
+        if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        sseBuffer += decoder.decode(value, { stream: true });
-        const lines = sseBuffer.split("\n");
-        sseBuffer = lines.pop() || "";
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          try {
-            const evt = JSON.parse(line.slice(6));
-            if (evt.type === "text") {
-              fullText += evt.token;
-              updateChatMessage(loadingRow, fullText);
-            } else if (evt.type === "audio") {
-              const binary = Uint8Array.from(atob(evt.audio), c => c.charCodeAt(0));
-              const blob = new Blob([binary], { type: evt.format || "audio/mpeg" });
-              _ttsQueue.push({ blob, isLast: false });
-              if (!_ttsPlaying) _playNextInQueue();
-            } else if (evt.type === "done") {
-              fullText = evt.full_text || fullText;
-            }
-          } catch (_) { /* skip malformed SSE lines */ }
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          sseBuffer += decoder.decode(value, { stream: true });
+          const lines = sseBuffer.split("\n");
+          sseBuffer = lines.pop() || "";
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            try {
+              const evt = JSON.parse(line.slice(6));
+              if (evt.type === "text") {
+                fullText += evt.token;
+                updateChatMessage(loadingRow, fullText);
+              } else if (evt.type === "audio") {
+                const binary = Uint8Array.from(atob(evt.audio), c => c.charCodeAt(0));
+                const blob = new Blob([binary], { type: evt.format || "audio/mpeg" });
+                _ttsQueue.push({ blob, isLast: false });
+                if (!_ttsPlaying) _playNextInQueue();
+              } else if (evt.type === "done") {
+                fullText = evt.full_text || fullText;
+              }
+            } catch (_) { /* skip malformed SSE lines */ }
+          }
         }
+        usedSSE = true;
+      } catch (sseErr) {
+        if (sseErr.name === "AbortError") throw sseErr;
+        /* SSE failed (e.g. mobile ReadableStream issues) — fallback to non-streaming */
+        console.warn("SSE voice-chat failed, falling back:", sseErr);
+      }
+
+      /* Fallback: if SSE didn't produce text, use regular chat + TTS */
+      if (!fullText) {
+        const data = await postJson("/api/chat", { message, conversation: state.conversation });
+        fullText = data.answer;
+        updateChatMessage(loadingRow, fullText);
       }
 
       setText("answer", fullText);
@@ -764,6 +779,12 @@ async function askQuestion() {
       state.conversation.push({ role: "user", content: message });
       state.conversation.push({ role: "assistant", content: fullText });
       if (state.conversation.length > 20) state.conversation = state.conversation.slice(-20);
+
+      /* If SSE didn't play audio (or fallback path), speak now */
+      if (!usedSSE || (_ttsQueue.length === 0 && !_ttsPlaying && !_currentAudio)) {
+        void speakAnswer(fullText);
+      }
+
       if (state.experimentalVideoEnabled && state.appConfig?.ditto_stream?.enabled) startDittoStream(fullText);
       else if (state.experimentalVideoEnabled && state.appConfig?.ditto_enabled) void generateDittoVideo(fullText);
     } catch (error) {
@@ -1024,7 +1045,28 @@ async function _playNextInQueue() {
     setVoiceStatus("朗读失败，请稍后再试。");
     setText("connectionState", "语音待命");
   };
-  await audio.play().catch(() => {});
+  try {
+    await audio.play();
+  } catch (playErr) {
+    /* Autoplay blocked (common on mobile) — skip to next or finish */
+    console.warn("Audio play blocked:", playErr);
+    URL.revokeObjectURL(url);
+    _currentAudio = null;
+    _ttsPlaying = false;
+    if (_ttsQueue.length > 0) {
+      _playNextInQueue();
+    } else {
+      stopAvatarMonitoring();
+      setAvatarMode("idle", "回答完毕。");
+      setVoiceStatus("朗读完成。");
+      setText("connectionState", "语音待命");
+      setTimeout(() => {
+        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed) {
+          toggleVoiceInput();
+        }
+      }, 600);
+    }
+  }
 }
 
 async function speakAnswer(textOverride) {
