@@ -374,10 +374,10 @@ function startVoiceActivityDetection(analyser) {
   stopVoiceActivityDetection();
   state.voiceRecordStartedAt = performance.now();
   const buffer = new Uint8Array(analyser.fftSize);
-  const threshold = 0.015;   /* Lower threshold — catch quieter/shorter speech */
-  const warmupMs = 200;      /* 200ms warmup (was 450) — don't miss quick replies like "是" */
-  const minSpeechMs = 150;   /* 150ms min speech (was 280) — single-word replies are valid */
-  const silenceMs = 800;     /* 800ms silence to auto-submit (was 1100) — faster turn-taking */
+  const threshold = 0.02;
+  const warmupMs = 300;
+  const minSpeechMs = 200;
+  const silenceMs = 1200;
   const idleTimeoutMs = 15000;  /* 15s before "no speech" timeout — give user time to think */
   const maxRecordMs = 30000;
 
@@ -422,6 +422,13 @@ function startVoiceActivityDetection(analyser) {
         stopVoiceRecording("auto-silence");
         return;
       }
+    }
+
+    /* In voice call mode: auto-submit after 3s regardless of VAD.
+       Short replies like "是"/"对" will be caught by Whisper, not client VAD. */
+    if (state.voiceCallActive && elapsed >= 3000) {
+      stopVoiceRecording("auto-silence");
+      return;
     }
 
     if (elapsed >= maxRecordMs) {
@@ -1432,7 +1439,7 @@ function vcSyncState(mode) {
   if (!state.voiceCallActive) return;
   switch (mode) {
     case "listening":
-      vcSetStatus("正在聆听...");
+      vcSetStatus("正在聆听（点击屏幕可提交）");
       vcSetAvatarClass("vc-listening");
       vcSetWaveform("listening");
       break;
@@ -1525,6 +1532,12 @@ function wireUi() {
   $("vcEndBtn")?.addEventListener("click", () => {
     /* Trigger the same end consultation logic */
     $("endConsultBtn")?.click();
+  });
+  /* Tap overlay content area to manually submit recording (like tap-to-send) */
+  document.querySelector(".vc-content")?.addEventListener("click", () => {
+    if (state.isRecording) {
+      stopVoiceRecording("manual");
+    }
   });
   $("vcMuteBtn")?.addEventListener("click", vcToggleMute);
   $("vcTranscriptBtn")?.addEventListener("click", vcToggleTranscript);
