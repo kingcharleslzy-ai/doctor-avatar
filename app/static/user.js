@@ -633,11 +633,12 @@ async function startConsultation() {
     return;
   }
 
-  /* Unlock audio playback on mobile (must happen in user gesture handler) */
+  /* Unlock audio playback on mobile (must happen in user gesture handler).
+     Use _sharedAudio so Safari treats it as user-gesture-activated. */
   try {
-    const silence = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAHAAL0AAAAIgAAXoAAAAQAAAGkAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQpAAADSAAAAAAAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-    await silence.play();
-    silence.pause();
+    _sharedAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAHAAL0AAAAIgAAXoAAAAQAAAGkAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQpAAADSAAAAAAAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+    await _sharedAudio.play();
+    _sharedAudio.pause();
   } catch (_) { /* ignore — just an unlock attempt */ }
 
   if (!hasLiveAvatarMode() && hasDittoMode()) {
@@ -973,13 +974,20 @@ async function toggleVoiceInput() {
 let _currentAudio = null;
 let _voiceChatAbort = null; /* AbortController for interrupting voice-chat SSE */
 
+/* Persistent audio element for Safari compatibility — reuse instead of new Audio() */
+const _sharedAudio = document.createElement("audio");
+_sharedAudio.preload = "auto";
+let _sharedAudioConnected = false; /* whether MediaElementSource was created */
+
 /* ---- Sentence-level streaming TTS queue ---- */
 let _ttsQueue = [];
 let _ttsPlaying = false;
 
 function _stopAllTts() {
   /* Interrupt: stop current audio, clear queue, abort SSE */
-  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  _sharedAudio.pause();
+  _sharedAudio.removeAttribute("src");
+  _currentAudio = null;
   _ttsQueue = [];
   _ttsPlaying = false;
   if (_voiceChatAbort) { _voiceChatAbort.abort(); _voiceChatAbort = null; }
@@ -1006,17 +1014,22 @@ async function _playNextInQueue() {
   _ttsPlaying = true;
   const { blob, isLast } = _ttsQueue.shift();
   const url = URL.createObjectURL(blob);
-  const audio = new Audio(url);
+  const audio = _sharedAudio;
+  audio.src = url;
+  /* Connect to AudioContext once (Safari: MediaElementSource can only be created once per element) */
   const audioContext = createAvatarAudioContext();
-  if (audioContext) {
-    const sourceNode = audioContext.createMediaElementSource(audio);
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.72;
-    sourceNode.connect(analyser);
-    analyser.connect(audioContext.destination);
-    startAvatarMonitoring(audioContext, analyser, sourceNode, "speaking");
-  } else {
+  if (audioContext && !_sharedAudioConnected) {
+    try {
+      const sourceNode = audioContext.createMediaElementSource(audio);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.72;
+      sourceNode.connect(analyser);
+      analyser.connect(audioContext.destination);
+      startAvatarMonitoring(audioContext, analyser, sourceNode, "speaking");
+      _sharedAudioConnected = true;
+    } catch (_) { /* ignore if already connected */ }
+  } else if (!audioContext) {
     setAvatarMode("speaking");
   }
   _currentAudio = audio;
