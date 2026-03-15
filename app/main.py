@@ -354,9 +354,23 @@ async def voice_chat(payload: ChatRequest):
         return buf.getvalue()
 
     async def _generate():
-        # Stream chat from DeepSeek
         from .prompts import build_system_prompt, build_user_prompt
         from .ops import record_openai_usage, record_openai_error
+
+        # Handle memory-code special case (same as ChatService.answer)
+        if chat_service._looks_like_memory_code_request(payload.message):
+            code_answer = chat_service._answer_memory_code()
+            if code_answer:
+                text = code_answer["answer"]
+                yield f"data: {json.dumps({'type': 'text', 'token': text}, ensure_ascii=False)}\n\n"
+                try:
+                    audio = await _tts_bytes(text)
+                    audio_b64 = base64.b64encode(audio).decode()
+                    yield f"data: {json.dumps({'type': 'audio', 'index': 1, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
+                except Exception:
+                    pass
+                yield f"data: {json.dumps({'type': 'done', 'full_text': text}, ensure_ascii=False)}\n\n"
+                return
 
         try:
             stream = chat_service.client.chat.completions.create(
@@ -376,7 +390,7 @@ async def voice_chat(payload: ChatRequest):
         sentence_buf = ""
         sent_count = 0
         sentence_ends = re.compile(r'[。！？\n.!?]')
-        MIN_TTS_LEN = 8  # Merge short sentences to reduce TTS calls
+        MIN_TTS_LEN = 8
 
         for chunk in stream:
             delta = chunk.choices[0].delta

@@ -23,6 +23,7 @@ const state = {
   voiceLastSpeechAt: 0,
   voiceHasSpeech: false,
   recordingStopReason: "manual",
+  voiceSessionActive: false, /* true only when user initiated voice input, enables auto-listen after answer */
 };
 
 function hasLiveAvatarMode() {
@@ -859,6 +860,7 @@ async function toggleVoiceInput() {
   /* Interrupt any ongoing TTS playback or SSE stream */
   _stopAllTts();
   setConversationBusy(false);
+  state.voiceSessionActive = true; /* User explicitly started voice mode */
 
   const micOk = await prepareMicrophoneAccess();
   if (!micOk) return;
@@ -1027,9 +1029,9 @@ async function _playNextInQueue() {
       setAvatarMode("idle", "回答完毕，正在自动开启麦克风…");
       setVoiceStatus("回答完毕，准备继续对话。");
       setText("connectionState", "语音待命");
-      /* Auto-start recording for next round after a short pause */
+      /* Auto-start recording only if user initiated voice mode */
       setTimeout(() => {
-        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed) {
+        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed && state.voiceSessionActive) {
           toggleVoiceInput();
         }
       }, 600);
@@ -1113,9 +1115,8 @@ async function speakAnswer(textOverride) {
 }
 
 function stopSpeech() {
-  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  _stopAllTts(); /* Stop current audio, clear queue, abort SSE */
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  stopAvatarMonitoring();
   setAvatarMode("idle", "已停止朗读，你可以继续追问。");
   setVoiceStatus("已停止朗读。");
   setText("connectionState", "语音待命");
