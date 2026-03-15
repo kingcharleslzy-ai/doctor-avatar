@@ -1342,7 +1342,29 @@ async function loadAppConfig() {
 }
 
 function wireUi() {
-  $("startConsultBtn")?.addEventListener("click", startConsultation);
+  $("startConsultBtn")?.addEventListener("click", () => {
+    startConsultation();
+    /* Show end button, hide start button */
+    const startBtn = $("startConsultBtn");
+    const endBtn = $("endConsultBtn");
+    if (startBtn) startBtn.style.display = "none";
+    if (endBtn) endBtn.style.display = "";
+  });
+  $("endConsultBtn")?.addEventListener("click", () => {
+    /* End consultation: stop everything, reset UI */
+    _stopAllTts();
+    if (state.isRecording) stopVoiceRecording("manual");
+    state.voiceSessionActive = false;
+    setConversationBusy(false);
+    setAvatarMode("idle", "问诊已结束。");
+    setVoiceStatus("问诊已结束，感谢使用。");
+    setText("connectionState", "已结束");
+    /* Swap buttons back */
+    const startBtn = $("startConsultBtn");
+    const endBtn = $("endConsultBtn");
+    if (startBtn) startBtn.style.display = "";
+    if (endBtn) endBtn.style.display = "none";
+  });
   $("keepAliveBtn")?.addEventListener("click", keepAlive);
   $("disconnectBtn")?.addEventListener("click", disconnectRoom);
   $("askBtn")?.addEventListener("click", () => {
