@@ -24,6 +24,10 @@ const state = {
   voiceHasSpeech: false,
   recordingStopReason: "manual",
   voiceSessionActive: false, /* true only when user initiated voice input, enables auto-listen after answer */
+  voiceCallActive: false,
+  voiceCallTimerId: 0,
+  voiceCallSeconds: 0,
+  voiceCallMuted: false,
 };
 
 function hasLiveAvatarMode() {
@@ -119,6 +123,7 @@ function updateChatMessage(row, text) {
   if (bubble) bubble.textContent = text;
   const history = $("chatHistory");
   if (history) history.scrollTop = history.scrollHeight;
+  vcRefreshTranscript();
 }
 
 function currentProfile() {
@@ -327,6 +332,9 @@ function setAvatarMode(mode = "idle", hint = "") {
   if (state.avatarElements?.modeText) state.avatarElements.modeText.textContent = label;
   if (state.avatarElements?.modeHint) state.avatarElements.modeHint.textContent = message;
   if (state.avatarElements?.modePill) state.avatarElements.modePill.textContent = label;
+  /* Sync voice call overlay */
+  vcSyncState(mode);
+  vcRefreshTranscript();
 }
 
 function stopAvatarMonitoring() {
@@ -1356,6 +1364,135 @@ async function loadAppConfig() {
   renderVideoPlaceholder();
 }
 
+/* ── Voice Call Overlay ── */
+
+function vcShow() {
+  const overlay = $("voiceCallOverlay");
+  if (!overlay) return;
+  state.voiceCallActive = true;
+  state.voiceCallSeconds = 0;
+  overlay.style.display = "flex";
+  vcSetStatus("正在连接...");
+  vcSetAvatarClass("vc-idle");
+  vcSetWaveform("");
+  vcTimerUpdate();
+  state.voiceCallTimerId = setInterval(() => {
+    state.voiceCallSeconds++;
+    vcTimerUpdate();
+  }, 1000);
+}
+
+function vcHide() {
+  const overlay = $("voiceCallOverlay");
+  if (!overlay) return;
+  state.voiceCallActive = false;
+  overlay.style.display = "none";
+  if (state.voiceCallTimerId) {
+    clearInterval(state.voiceCallTimerId);
+    state.voiceCallTimerId = 0;
+  }
+  state.voiceCallSeconds = 0;
+  state.voiceCallMuted = false;
+  const muteBtn = $("vcMuteBtn");
+  if (muteBtn) muteBtn.classList.remove("vc-muted");
+  /* Hide transcript panel */
+  const tp = $("vcTranscriptPanel");
+  if (tp) tp.style.display = "none";
+}
+
+function vcTimerUpdate() {
+  const el = $("vcTimer");
+  if (!el) return;
+  const m = Math.floor(state.voiceCallSeconds / 60);
+  const s = state.voiceCallSeconds % 60;
+  el.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function vcSetStatus(text) {
+  const el = $("vcStatus");
+  if (el) el.textContent = text;
+}
+
+function vcSetAvatarClass(cls) {
+  const avatar = $("vcAvatar");
+  if (!avatar) return;
+  avatar.classList.remove("vc-listening", "vc-thinking", "vc-speaking", "vc-idle");
+  if (cls) avatar.classList.add(cls);
+}
+
+function vcSetWaveform(mode) {
+  const wf = $("vcWaveform");
+  if (!wf) return;
+  wf.classList.remove("vc-wave-active", "vc-wave-speak");
+  if (mode === "listening") wf.classList.add("vc-wave-active");
+  else if (mode === "speaking") wf.classList.add("vc-wave-speak");
+}
+
+function vcSyncState(mode) {
+  if (!state.voiceCallActive) return;
+  switch (mode) {
+    case "listening":
+      vcSetStatus("正在聆听...");
+      vcSetAvatarClass("vc-listening");
+      vcSetWaveform("listening");
+      break;
+    case "thinking":
+      vcSetStatus("医生思考中...");
+      vcSetAvatarClass("vc-thinking");
+      vcSetWaveform("");
+      break;
+    case "speaking":
+      vcSetStatus("医生正在回答");
+      vcSetAvatarClass("vc-speaking");
+      vcSetWaveform("speaking");
+      break;
+    case "idle":
+    default:
+      vcSetStatus("等待您说话...");
+      vcSetAvatarClass("vc-idle");
+      vcSetWaveform("");
+      break;
+  }
+}
+
+function vcToggleMute() {
+  state.voiceCallMuted = !state.voiceCallMuted;
+  const muteBtn = $("vcMuteBtn");
+  if (muteBtn) muteBtn.classList.toggle("vc-muted", state.voiceCallMuted);
+  /* If currently recording, stop; if unmuting, could restart */
+  if (state.voiceCallMuted && state.isRecording) {
+    stopVoiceRecording("manual");
+  }
+}
+
+function vcToggleTranscript() {
+  const panel = $("vcTranscriptPanel");
+  if (!panel) return;
+  if (panel.style.display === "none") {
+    /* Populate transcript from chatHistory */
+    const content = $("vcTranscriptContent");
+    const history = $("chatHistory");
+    if (content && history) {
+      content.innerHTML = history.innerHTML;
+      content.scrollTop = content.scrollHeight;
+    }
+    panel.style.display = "flex";
+  } else {
+    panel.style.display = "none";
+  }
+}
+
+function vcRefreshTranscript() {
+  const panel = $("vcTranscriptPanel");
+  if (!panel || panel.style.display === "none") return;
+  const content = $("vcTranscriptContent");
+  const history = $("chatHistory");
+  if (content && history) {
+    content.innerHTML = history.innerHTML;
+    content.scrollTop = content.scrollHeight;
+  }
+}
+
 function wireUi() {
   $("startConsultBtn")?.addEventListener("click", () => {
     startConsultation();
@@ -1364,6 +1501,8 @@ function wireUi() {
     const endBtn = $("endConsultBtn");
     if (startBtn) startBtn.style.display = "none";
     if (endBtn) endBtn.style.display = "flex";
+    /* Show voice call overlay */
+    vcShow();
   });
   $("endConsultBtn")?.addEventListener("click", () => {
     /* End consultation: stop everything, reset UI */
@@ -1379,6 +1518,19 @@ function wireUi() {
     const endBtn = $("endConsultBtn");
     if (startBtn) startBtn.style.display = "";
     if (endBtn) endBtn.style.display = "none";
+    /* Hide voice call overlay */
+    vcHide();
+  });
+  /* Voice call overlay buttons */
+  $("vcEndBtn")?.addEventListener("click", () => {
+    /* Trigger the same end consultation logic */
+    $("endConsultBtn")?.click();
+  });
+  $("vcMuteBtn")?.addEventListener("click", vcToggleMute);
+  $("vcTranscriptBtn")?.addEventListener("click", vcToggleTranscript);
+  $("vcTranscriptClose")?.addEventListener("click", () => {
+    const panel = $("vcTranscriptPanel");
+    if (panel) panel.style.display = "none";
   });
   $("keepAliveBtn")?.addEventListener("click", keepAlive);
   $("disconnectBtn")?.addEventListener("click", disconnectRoom);
