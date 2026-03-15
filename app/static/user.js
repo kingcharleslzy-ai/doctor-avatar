@@ -374,10 +374,10 @@ function startVoiceActivityDetection(analyser) {
   stopVoiceActivityDetection();
   state.voiceRecordStartedAt = performance.now();
   const buffer = new Uint8Array(analyser.fftSize);
-  const threshold = 0.02;
-  const warmupMs = 450;
-  const minSpeechMs = 280;
-  const silenceMs = 1100;
+  const threshold = 0.015;   /* Lower threshold — catch quieter/shorter speech */
+  const warmupMs = 200;      /* 200ms warmup (was 450) — don't miss quick replies like "是" */
+  const minSpeechMs = 150;   /* 150ms min speech (was 280) — single-word replies are valid */
+  const silenceMs = 800;     /* 800ms silence to auto-submit (was 1100) — faster turn-taking */
   const idleTimeoutMs = 15000;  /* 15s before "no speech" timeout — give user time to think */
   const maxRecordMs = 30000;
 
