@@ -38,7 +38,14 @@ from .stt import TranscriptionService
 from .services import ChatService, HeyGenService
 
 
-app = FastAPI(title="Doctor Avatar MVP", version="0.1.0")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(application):
+    init_memory_db()
+    yield
+
+app = FastAPI(title="Doctor Avatar MVP", version="0.1.0", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 chat_service = ChatService()
@@ -123,11 +130,6 @@ def load_build_meta() -> dict[str, str]:
         **defaults,
         **{key: value for key, value in payload.items() if isinstance(value, str) and value},
     }
-
-
-@app.on_event("startup")
-def startup() -> None:
-    init_memory_db()
 
 
 @app.middleware("http")

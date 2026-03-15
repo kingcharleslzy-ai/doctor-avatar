@@ -1602,3 +1602,9 @@ loadProfile().catch((error) => {
   setText("doctorBio", error.message);
   renderVideoPlaceholder();
 });
+
+/* Cleanup on page unload */
+window.addEventListener("beforeunload", () => {
+  if (_ttsAudioCtx) { try { _ttsAudioCtx.close(); } catch (_) {} }
+  if (state.persistentMicStream) { state.persistentMicStream.getTracks().forEach(t => t.stop()); }
+});
