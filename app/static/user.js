@@ -934,8 +934,11 @@ async function toggleVoiceInput() {
             : "识别中…"
       );
       const blob = new Blob(chunks, { type: recorder.mimeType });
+      /* Pick filename extension matching actual format (OpenAI validates this) */
+      const mime = (recorder.mimeType || "").toLowerCase();
+      const ext = mime.includes("mp4") ? "mp4" : mime.includes("ogg") ? "ogg" : mime.includes("wav") ? "wav" : "webm";
       const form = new FormData();
-      form.append("audio", blob, "audio.webm");
+      form.append("audio", blob, "audio." + ext);
       try {
         const resp = await fetch("/api/stt", { method: "POST", body: form });
         if (!resp.ok) {
