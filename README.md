@@ -487,6 +487,20 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-15（日）—— windows-claude MiniMax 风格重设计 + 移动端修复 + 开始/结束问诊
+
+**为什么改**：界面之前被 codex 多轮迭代改回了旧风格，用户桌面上有 MiniMax 设计的两个参考页面需要恢复。移动端 TTS 一直朗读失败。开始问诊按钮太小且无法结束问诊。
+
+**改了什么**（`user_desktop.html`、`user_mobile.html`、`user.js`）：
+- 桌面端和移动端模板完整重写为 MiniMax 蓝紫玻璃拟态风格
+- 动态背景光球、渐变按钮、glassmorphism 卡片、自定义滚动条
+- 桌面：双列布局（头像区左、聊天区右），医生头像圆形+发光动画
+- 移动：手机容器布局，紧凑头部+全高聊天区
+- `startConsultBtn` 改为全宽突出按钮（17px 粗体、渐变背景、麦克风图标）
+- 新增 `endConsultBtn`（结束问诊，红色渐变，点击后停止录音/TTS/重置状态）
+- 移除 inline script，按钮切换逻辑统一在 user.js 管理
+- 移动端确认所有 24 个功能 DOM ID 完整，user.js 正确加载
+
 ### 2026-03-15（日）—— windows-claude 修复多轮语音对话 + 打断 + 口语化
 
 **Bug 修复**：
