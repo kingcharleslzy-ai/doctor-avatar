@@ -39,14 +39,25 @@ class TranscriptionService:
         if self._openai_client is None:
             raise RuntimeError("语音识别 API key 未配置。")
 
-        transcript = self._openai_client.audio.transcriptions.create(
-            model=settings.openai_stt_model,
-            file=(filename, audio_bytes),
-            language=settings.stt_language,
-            prompt=settings.openai_stt_prompt or None,
-        )
-        return TranscriptionResult(
-            text=transcript.text,
-            provider="openai",
-            model=settings.openai_stt_model,
-        )
+        last_error = None
+        for attempt in range(2):  # retry once on transient failure
+            try:
+                transcript = self._openai_client.audio.transcriptions.create(
+                    model=settings.openai_stt_model,
+                    file=(filename, audio_bytes),
+                    language=settings.stt_language,
+                    prompt=settings.openai_stt_prompt or None,
+                )
+                return TranscriptionResult(
+                    text=transcript.text,
+                    provider="openai",
+                    model=settings.openai_stt_model,
+                )
+            except Exception as exc:
+                last_error = exc
+                if attempt == 0 and "authentication" not in str(exc).lower():
+                    import asyncio
+                    await asyncio.sleep(0.5)
+                    continue
+                raise
+        raise last_error  # type: ignore[misc]
