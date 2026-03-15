@@ -28,6 +28,7 @@ const state = {
   voiceCallTimerId: 0,
   voiceCallSeconds: 0,
   voiceCallMuted: false,
+  persistentMicStream: null, /* Kept open for entire voice call — no re-init lag */
 };
 
 function hasLiveAvatarMode() {
@@ -422,13 +423,6 @@ function startVoiceActivityDetection(analyser) {
         stopVoiceRecording("auto-silence");
         return;
       }
-    }
-
-    /* In voice call mode: auto-submit after 3s regardless of VAD.
-       Short replies like "是"/"对" will be caught by Whisper, not client VAD. */
-    if (state.voiceCallActive && elapsed >= 3000) {
-      stopVoiceRecording("auto-silence");
-      return;
     }
 
     if (elapsed >= maxRecordMs) {
@@ -884,7 +878,16 @@ async function toggleVoiceInput() {
   if (!micOk) return;
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    /* In voice call mode, reuse persistent mic stream — no re-init lag */
+    let stream;
+    if (state.voiceCallActive && state.persistentMicStream) {
+      stream = state.persistentMicStream;
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (state.voiceCallActive) {
+        state.persistentMicStream = stream;
+      }
+    }
     const audioContext = createAvatarAudioContext();
     let analyser = null;
     if (audioContext) {
@@ -912,7 +915,10 @@ async function toggleVoiceInput() {
     };
 
     recorder.onstop = async () => {
-      stream.getTracks().forEach((t) => t.stop());
+      /* In voice call mode, keep mic stream open for instant next-round recording */
+      if (!state.voiceCallActive) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
       stopVoiceActivityDetection();
       stopAvatarMonitoring();
       setAvatarMode("thinking", "录音结束，正在转写你的问题。");
@@ -1394,6 +1400,11 @@ function vcHide() {
   if (!overlay) return;
   state.voiceCallActive = false;
   overlay.style.display = "none";
+  /* Release persistent mic stream */
+  if (state.persistentMicStream) {
+    state.persistentMicStream.getTracks().forEach(t => t.stop());
+    state.persistentMicStream = null;
+  }
   if (state.voiceCallTimerId) {
     clearInterval(state.voiceCallTimerId);
     state.voiceCallTimerId = 0;
@@ -1439,7 +1450,7 @@ function vcSyncState(mode) {
   if (!state.voiceCallActive) return;
   switch (mode) {
     case "listening":
-      vcSetStatus("正在聆听（点击屏幕可提交）");
+      vcSetStatus("正在聆听...");
       vcSetAvatarClass("vc-listening");
       vcSetWaveform("listening");
       break;
@@ -1532,12 +1543,6 @@ function wireUi() {
   $("vcEndBtn")?.addEventListener("click", () => {
     /* Trigger the same end consultation logic */
     $("endConsultBtn")?.click();
-  });
-  /* Tap overlay content area to manually submit recording (like tap-to-send) */
-  document.querySelector(".vc-content")?.addEventListener("click", () => {
-    if (state.isRecording) {
-      stopVoiceRecording("manual");
-    }
   });
   $("vcMuteBtn")?.addEventListener("click", vcToggleMute);
   $("vcTranscriptBtn")?.addEventListener("click", vcToggleTranscript);
