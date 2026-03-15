@@ -1,10 +1,39 @@
 from __future__ import annotations
 
+import subprocess
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 
 from openai import OpenAI
 
 from .config import settings
+
+
+def _convert_to_wav(audio_bytes: bytes, original_filename: str) -> tuple[bytes, str]:
+    """Convert any audio format to 16kHz mono WAV via ffmpeg for maximum Whisper compatibility."""
+    suffix = Path(original_filename).suffix or ".webm"
+    try:
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as inp:
+            inp.write(audio_bytes)
+            inp_path = inp.name
+        out_path = inp_path + ".wav"
+        result = subprocess.run(
+            ["ffmpeg", "-y", "-i", inp_path, "-ar", "16000", "-ac", "1", "-f", "wav", out_path],
+            capture_output=True, timeout=10,
+        )
+        if result.returncode == 0 and Path(out_path).exists():
+            wav_bytes = Path(out_path).read_bytes()
+            return wav_bytes, "audio.wav"
+    except Exception:
+        pass  # ffmpeg not available or conversion failed — use original
+    finally:
+        for p in [inp_path, inp_path + ".wav"]:
+            try:
+                Path(p).unlink(missing_ok=True)
+            except Exception:
+                pass
+    return audio_bytes, original_filename
 
 
 @dataclass
@@ -38,6 +67,9 @@ class TranscriptionService:
     async def transcribe(self, audio_bytes: bytes, filename: str = "audio.webm") -> TranscriptionResult:
         if self._openai_client is None:
             raise RuntimeError("语音识别 API key 未配置。")
+
+        # Convert to WAV for maximum compatibility (iOS mp4/m4a, etc.)
+        audio_bytes, filename = _convert_to_wav(audio_bytes, filename)
 
         last_error = None
         for attempt in range(2):  # retry once on transient failure

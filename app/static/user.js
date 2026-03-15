@@ -633,13 +633,8 @@ async function startConsultation() {
     return;
   }
 
-  /* Unlock audio playback on mobile (must happen in user gesture handler).
-     Use _sharedAudio so Safari treats it as user-gesture-activated. */
-  try {
-    _sharedAudio.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYoRwmHAAAAAAD/+1DEAAAHAAL0AAAAIgAAXoAAAAQAAAGkAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UMQpAAADSAAAAAAAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
-    await _sharedAudio.play();
-    _sharedAudio.pause();
-  } catch (_) { /* ignore — just an unlock attempt */ }
+  /* Unlock Web Audio API on mobile (must happen in user gesture handler) */
+  _unlockTtsAudio();
 
   if (!hasLiveAvatarMode() && hasDittoMode()) {
     setVoiceStatus(state.isRecording ? "再次点击即可结束说话并自动转写。" : "实时语音主路线已启用，正在准备麦克风。");
@@ -936,7 +931,7 @@ async function toggleVoiceInput() {
       const blob = new Blob(chunks, { type: recorder.mimeType });
       /* Pick filename extension matching actual format (OpenAI validates this) */
       const mime = (recorder.mimeType || "").toLowerCase();
-      const ext = mime.includes("mp4") ? "mp4" : mime.includes("ogg") ? "ogg" : mime.includes("wav") ? "wav" : "webm";
+      const ext = mime.includes("mp4") ? "m4a" : mime.includes("ogg") ? "ogg" : mime.includes("wav") ? "wav" : "webm";
       const form = new FormData();
       form.append("audio", blob, "audio." + ext);
       try {
@@ -983,10 +978,30 @@ async function toggleVoiceInput() {
 let _currentAudio = null;
 let _voiceChatAbort = null; /* AbortController for interrupting voice-chat SSE */
 
-/* Persistent audio element for Safari compatibility — reuse instead of new Audio() */
-const _sharedAudio = document.createElement("audio");
-_sharedAudio.preload = "auto";
-let _sharedAudioConnected = false; /* whether MediaElementSource was created */
+/* Web Audio API context for TTS playback — survives async callbacks on iOS Safari */
+let _ttsAudioCtx = null;
+let _ttsCurrentSource = null; /* AudioBufferSourceNode currently playing */
+
+function _getTtsAudioCtx() {
+  if (!_ttsAudioCtx) {
+    _ttsAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return _ttsAudioCtx;
+}
+
+function _unlockTtsAudio() {
+  /* Call from user gesture to unlock AudioContext on iOS */
+  const ctx = _getTtsAudioCtx();
+  if (ctx.state === "suspended" || ctx.state === "interrupted") {
+    ctx.resume();
+  }
+  /* Play a tiny silent buffer to fully prime the context */
+  const buf = ctx.createBuffer(1, 1, 22050);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(ctx.destination);
+  src.start(0);
+}
 
 /* ---- Sentence-level streaming TTS queue ---- */
 let _ttsQueue = [];
@@ -994,8 +1009,7 @@ let _ttsPlaying = false;
 
 function _stopAllTts() {
   /* Interrupt: stop current audio, clear queue, abort SSE */
-  _sharedAudio.pause();
-  _sharedAudio.removeAttribute("src");
+  if (_ttsCurrentSource) { try { _ttsCurrentSource.stop(); } catch (_) {} _ttsCurrentSource = null; }
   _currentAudio = null;
   _ttsQueue = [];
   _ttsPlaying = false;
@@ -1021,35 +1035,10 @@ async function _fetchTtsBlob(text) {
 async function _playNextInQueue() {
   if (_ttsPlaying || _ttsQueue.length === 0) return;
   _ttsPlaying = true;
-  const { blob, isLast } = _ttsQueue.shift();
-  const url = URL.createObjectURL(blob);
-  const audio = _sharedAudio;
-  audio.src = url;
-  /* Connect to AudioContext once (Safari: MediaElementSource can only be created once per element) */
-  const audioContext = createAvatarAudioContext();
-  if (audioContext && !_sharedAudioConnected) {
-    try {
-      const sourceNode = audioContext.createMediaElementSource(audio);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.72;
-      sourceNode.connect(analyser);
-      analyser.connect(audioContext.destination);
-      startAvatarMonitoring(audioContext, analyser, sourceNode, "speaking");
-      _sharedAudioConnected = true;
-    } catch (_) { /* ignore if already connected */ }
-  } else if (!audioContext) {
-    setAvatarMode("speaking");
-  }
-  _currentAudio = audio;
-  audio.onplay = () => {
-    setVoiceStatus("正在朗读回答。");
-    setAvatarMode("speaking");
-    setText("connectionState", "正在回答");
-  };
-  audio.onended = () => {
-    URL.revokeObjectURL(url);
-    _currentAudio = null;
+  const { blob } = _ttsQueue.shift();
+
+  const _onFinish = () => {
+    _ttsCurrentSource = null;
     _ttsPlaying = false;
     if (_ttsQueue.length > 0) {
       _playNextInQueue();
@@ -1058,7 +1047,6 @@ async function _playNextInQueue() {
       setAvatarMode("idle", "回答完毕，正在自动开启麦克风…");
       setVoiceStatus("回答完毕，准备继续对话。");
       setText("connectionState", "语音待命");
-      /* Auto-start recording only if user initiated voice mode */
       setTimeout(() => {
         if (!state.isRecording && !_ttsPlaying && state.microphonePrimed && state.voiceSessionActive) {
           toggleVoiceInput();
@@ -1066,36 +1054,34 @@ async function _playNextInQueue() {
       }, 600);
     }
   };
-  audio.onerror = () => {
-    stopAvatarMonitoring();
-    URL.revokeObjectURL(url);
-    _currentAudio = null;
-    _ttsPlaying = false;
-    _ttsQueue = [];
-    setAvatarMode("idle", "语音播放失败，你可以继续文字追问。");
-    setVoiceStatus("朗读失败，请稍后再试。");
-    setText("connectionState", "语音待命");
-  };
+
   try {
-    await audio.play();
-  } catch (playErr) {
-    /* Autoplay blocked (common on mobile) — skip to next or finish */
-    console.warn("Audio play blocked:", playErr);
-    URL.revokeObjectURL(url);
-    _currentAudio = null;
+    /* Use Web Audio API for iOS Safari compatibility — survives async callbacks */
+    const ctx = _getTtsAudioCtx();
+    if (ctx.state === "suspended" || ctx.state === "interrupted") {
+      await ctx.resume();
+    }
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    const source = ctx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(ctx.destination);
+    source.onended = _onFinish;
+    _ttsCurrentSource = source;
+    setVoiceStatus("正在朗读回答。");
+    setAvatarMode("speaking");
+    setText("connectionState", "正在回答");
+    source.start(0);
+  } catch (err) {
+    console.warn("Web Audio playback failed:", err);
+    _ttsCurrentSource = null;
     _ttsPlaying = false;
     if (_ttsQueue.length > 0) {
       _playNextInQueue();
     } else {
-      stopAvatarMonitoring();
-      setAvatarMode("idle", "回答完毕。");
-      setVoiceStatus("朗读完成。");
+      setAvatarMode("idle", "朗读失败。");
+      setVoiceStatus("朗读失败，请重试。");
       setText("connectionState", "语音待命");
-      setTimeout(() => {
-        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed) {
-          toggleVoiceInput();
-        }
-      }, 600);
     }
   }
 }
