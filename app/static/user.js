@@ -1116,6 +1116,7 @@ async function speakAnswer(textOverride) {
 
 function stopSpeech() {
   _stopAllTts(); /* Stop current audio, clear queue, abort SSE */
+  state.voiceSessionActive = false; /* Exit continuous voice mode */
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   setAvatarMode("idle", "已停止朗读，你可以继续追问。");
   setVoiceStatus("已停止朗读。");
@@ -1344,7 +1345,10 @@ function wireUi() {
   $("startConsultBtn")?.addEventListener("click", startConsultation);
   $("keepAliveBtn")?.addEventListener("click", keepAlive);
   $("disconnectBtn")?.addEventListener("click", disconnectRoom);
-  $("askBtn")?.addEventListener("click", askQuestion);
+  $("askBtn")?.addEventListener("click", () => {
+    state.voiceSessionActive = false; /* Text submit exits voice mode */
+    askQuestion();
+  });
   $("voiceInputBtn")?.addEventListener("click", toggleVoiceInput);
   $("speakAnswerBtn")?.addEventListener("click", speakAnswer);
   $("stopSpeechBtn")?.addEventListener("click", stopSpeech);
@@ -1356,6 +1360,7 @@ function wireUi() {
       msgEl.value = question.trim();
       msgEl.style.height = "auto";
       msgEl.style.height = Math.min(msgEl.scrollHeight, 120) + "px";
+      state.voiceSessionActive = false; /* Quick prompt exits voice mode */
       askQuestion();
     });
   });
@@ -1364,6 +1369,7 @@ function wireUi() {
     msgEl.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
+        state.voiceSessionActive = false; /* Keyboard submit exits voice mode */
         askQuestion();
       }
     });
