@@ -13,6 +13,7 @@ from .config import settings
 def _convert_to_wav(audio_bytes: bytes, original_filename: str) -> tuple[bytes, str]:
     """Convert any audio format to 16kHz mono WAV via ffmpeg for maximum Whisper compatibility."""
     suffix = Path(original_filename).suffix or ".webm"
+    inp_path = None
     try:
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as inp:
             inp.write(audio_bytes)
@@ -28,11 +29,12 @@ def _convert_to_wav(audio_bytes: bytes, original_filename: str) -> tuple[bytes, 
     except Exception:
         pass  # ffmpeg not available or conversion failed — use original
     finally:
-        for p in [inp_path, inp_path + ".wav"]:
-            try:
-                Path(p).unlink(missing_ok=True)
-            except Exception:
-                pass
+        if inp_path:
+            for p in [inp_path, inp_path + ".wav"]:
+                try:
+                    Path(p).unlink(missing_ok=True)
+                except Exception:
+                    pass
     return audio_bytes, original_filename
 
 

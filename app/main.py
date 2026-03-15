@@ -8,6 +8,7 @@ from pathlib import Path
 
 import asyncio
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
@@ -182,7 +183,7 @@ def app_config() -> dict[str, object]:
         "ditto_enabled": settings.ditto_enabled,
         "runtime": build_meta,
         "doctor_memory": {
-            "db_path": settings.doctor_memory_db_path,
+            # db_path removed — don't expose internal filesystem paths
             "bootstrap_enabled": settings.doctor_memory_bootstrap,
             "has_entries": bool(memory_entries),
             "memory_code": memory_code,
@@ -532,7 +533,7 @@ async def ditto_generate(payload: DittoGenerateRequest) -> Response:
         clip_text = _ditto_clip_text(payload.text)
         speech = await speech_service.synthesize(clip_text)
         audio_buf = io.BytesIO(speech.audio)
-        async with __import__("httpx").AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 f"{settings.ditto_service_url}/generate",
                 files={

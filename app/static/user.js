@@ -517,7 +517,7 @@ function updateVideoModeUi() {
   }
 
   if (connDot) {
-    connDot.classList.toggle("live", liveEnabled || dittoEnabled || !liveEnabled);
+    connDot.classList.toggle("live", liveEnabled || dittoEnabled);
   }
 
   if (liveEnabled) {
