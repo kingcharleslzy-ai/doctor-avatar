@@ -487,6 +487,25 @@ cd D:\charles\Documents\doctor-avatar
 
 ## CHANGELOG
 
+### 2026-03-16（一）—— windows-claude 代码审计修复 + 语音通话体验优化
+
+**代码审计（7项修复）：**
+- 修复 `__import__("httpx")` → 正常 import（P0）
+- 修复 `stt.py` inp_path NameError（P0）
+- nginx `proxy_buffering off` 给 SSE 端点（P1，减少延迟）
+- nginx 安全头：HSTS + X-Content-Type-Options + X-Frame-Options（P1）
+- nginx gzip 压缩：JSON/JS/CSS/SSE 响应压缩 44%（P1）
+- 修复 connDot 永远绿色的逻辑 bug（P1）
+- 移除 `/api/app-config` 暴露的 db_path（P2）
+
+**语音通话体验优化：**
+- 语音通话全屏 overlay（FaceTime/微信风格）：深色背景、大头像、脉冲光环、状态文字、计时器、波形条
+- Edge TTS 声音 YunxiNeural→YunjianNeural（沉稳播音腔）+ 语速 +15%
+- Prompt 重写为电话口语风格：1-3 句 60 字以内，主动追问，用口语词
+- 麦克风持久化：通话期间 stream 保持开启，消除每轮 500ms+ 初始化延迟
+- VAD 静音幻觉修复：前端不提交无人声录音 + 后端过滤 prompt echo
+- iOS Safari TTS 用 Web Audio API + iOS STT 用 ffmpeg 转 WAV
+
 ### 2026-03-15（日）—— windows-claude MiniMax 风格重设计 + 移动端修复 + 开始/结束问诊
 
 **为什么改**：界面之前被 codex 多轮迭代改回了旧风格，用户桌面上有 MiniMax 设计的两个参考页面需要恢复。移动端 TTS 一直朗读失败。开始问诊按钮太小且无法结束问诊。
