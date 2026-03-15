@@ -375,7 +375,8 @@ async def voice_chat(payload: ChatRequest):
         full_text = ""
         sentence_buf = ""
         sent_count = 0
-        sentence_ends = re.compile(r'[。！？；\n.!?;]')
+        sentence_ends = re.compile(r'[。！？\n.!?]')
+        MIN_TTS_LEN = 8  # Merge short sentences to reduce TTS calls
 
         for chunk in stream:
             delta = chunk.choices[0].delta
@@ -387,18 +388,17 @@ async def voice_chat(payload: ChatRequest):
                 # Send text token immediately for live display
                 yield f"data: {json.dumps({'type': 'text', 'token': token}, ensure_ascii=False)}\n\n"
 
-                # Check if we completed a sentence
-                if sentence_ends.search(token):
+                # Check if we completed a sentence (and it's long enough)
+                if sentence_ends.search(token) and len(sentence_buf.strip()) >= MIN_TTS_LEN:
                     sentence = sentence_buf.strip()
                     sentence_buf = ""
-                    if len(sentence) > 2:
-                        sent_count += 1
-                        try:
-                            audio = await _tts_bytes(sentence)
-                            audio_b64 = base64.b64encode(audio).decode()
-                            yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
-                        except Exception:
-                            pass  # Skip TTS errors, text still shows
+                    sent_count += 1
+                    try:
+                        audio = await _tts_bytes(sentence)
+                        audio_b64 = base64.b64encode(audio).decode()
+                        yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
+                    except Exception:
+                        pass  # Skip TTS errors, text still shows
 
         # Handle remaining text
         if sentence_buf.strip() and len(sentence_buf.strip()) > 2:

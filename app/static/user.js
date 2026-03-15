@@ -712,13 +712,18 @@ async function askQuestion() {
     const loadingRow = appendChatMessage("ai", null);
     setAvatarMode("thinking");
     setText("connectionState", "理解问题中");
-    setConversationBusy(true);
+    state.askInFlight = true;
+    /* Keep voiceInputBtn enabled so user can interrupt */
+    const voiceBtn = $("voiceInputBtn");
+    if (voiceBtn) voiceBtn.disabled = false;
     try {
       /* Stream voice-chat: get text tokens + audio chunks via SSE */
+      _voiceChatAbort = new AbortController();
       const resp = await fetch("/api/voice-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, conversation: state.conversation }),
+        signal: _voiceChatAbort.signal,
       });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const reader = resp.body.getReader();
@@ -762,12 +767,17 @@ async function askQuestion() {
       if (state.experimentalVideoEnabled && state.appConfig?.ditto_stream?.enabled) startDittoStream(fullText);
       else if (state.experimentalVideoEnabled && state.appConfig?.ditto_enabled) void generateDittoVideo(fullText);
     } catch (error) {
-      setText("answer", error.message);
-      updateChatMessage(loadingRow, `出错了：${error.message}`);
-      setAvatarMode("idle", "这次回答失败了，可以重试或换一种问法。");
-      setText("connectionState", "语音待命");
+      if (error.name === "AbortError") {
+        /* User interrupted — not an error */
+      } else {
+        setText("answer", error.message);
+        updateChatMessage(loadingRow, `出错了：${error.message}`);
+        setAvatarMode("idle", "这次回答失败了，可以重试或换一种问法。");
+        setText("connectionState", "语音待命");
+      }
     } finally {
-      setConversationBusy(false);
+      state.askInFlight = false;
+      _voiceChatAbort = null;
       updateVideoModeUi();
     }
   } else {
@@ -825,6 +835,10 @@ async function toggleVoiceInput() {
     stopVoiceRecording("manual");
     return;
   }
+  /* Interrupt any ongoing TTS playback or SSE stream */
+  _stopAllTts();
+  setConversationBusy(false);
+
   const micOk = await prepareMicrophoneAccess();
   if (!micOk) return;
 
@@ -927,10 +941,20 @@ async function toggleVoiceInput() {
 }
 
 let _currentAudio = null;
+let _voiceChatAbort = null; /* AbortController for interrupting voice-chat SSE */
 
 /* ---- Sentence-level streaming TTS queue ---- */
 let _ttsQueue = [];
 let _ttsPlaying = false;
+
+function _stopAllTts() {
+  /* Interrupt: stop current audio, clear queue, abort SSE */
+  if (_currentAudio) { _currentAudio.pause(); _currentAudio = null; }
+  _ttsQueue = [];
+  _ttsPlaying = false;
+  if (_voiceChatAbort) { _voiceChatAbort.abort(); _voiceChatAbort = null; }
+  stopAvatarMonitoring();
+}
 
 function _splitSentences(text) {
   /* Split Chinese/English text into sentences at natural boundaries */
@@ -979,9 +1003,15 @@ async function _playNextInQueue() {
       _playNextInQueue();
     } else {
       stopAvatarMonitoring();
-      setAvatarMode("idle", "当前回答已播报完成，你可以继续追问。");
-      setVoiceStatus("朗读已完成。");
+      setAvatarMode("idle", "回答完毕，正在自动开启麦克风…");
+      setVoiceStatus("回答完毕，准备继续对话。");
       setText("connectionState", "语音待命");
+      /* Auto-start recording for next round after a short pause */
+      setTimeout(() => {
+        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed) {
+          toggleVoiceInput();
+        }
+      }, 600);
     }
   };
   audio.onerror = () => {
