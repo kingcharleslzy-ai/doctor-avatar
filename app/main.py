@@ -346,8 +346,8 @@ async def voice_chat(payload: ChatRequest):
     snippets = [hit.snippet for hit in hits]
 
     async def _tts_bytes(text: str) -> bytes:
-        voice = settings.edge_tts_voice or "zh-CN-YunxiNeural"
-        communicate = edge_tts.Communicate(text, voice)
+        voice = settings.edge_tts_voice or "zh-CN-YunjianNeural"
+        communicate = edge_tts.Communicate(text, voice, rate="+15%")
         buf = io.BytesIO()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
@@ -496,10 +496,10 @@ async def text_to_speech_stream(payload: TTSRequest):
     from fastapi.responses import StreamingResponse
     import edge_tts
 
-    voice = payload.voice or settings.edge_tts_voice or "zh-CN-YunxiNeural"
+    voice = payload.voice or settings.edge_tts_voice or "zh-CN-YunjianNeural"
 
     async def _generate():
-        communicate = edge_tts.Communicate(payload.text, voice)
+        communicate = edge_tts.Communicate(payload.text, voice, rate="+15%")
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 yield chunk["data"]
