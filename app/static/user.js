@@ -370,8 +370,8 @@ function startVoiceActivityDetection(analyser) {
   const warmupMs = 450;
   const minSpeechMs = 280;
   const silenceMs = 1100;
-  const idleTimeoutMs = 6500;
-  const maxRecordMs = 15000;
+  const idleTimeoutMs = 15000;  /* 15s before "no speech" timeout — give user time to think */
+  const maxRecordMs = 30000;
 
   const tick = () => {
     if (!state.isRecording || !state.mediaRecorder || state.mediaRecorder.state === "inactive") {
@@ -914,10 +914,16 @@ async function toggleVoiceInput() {
       const voiceBtn = $("voiceInputBtn");
       if (voiceBtn) voiceBtn.textContent = "🎤 语音";
       updatePrimaryActionUi();
-      if (chunks.length === 0) {
-        setVoiceStatus(stopReason === "idle-timeout" ? "没有听清你的说话，可以再试一次。" : "未录到音频。");
+      if (chunks.length === 0 || (stopReason === "idle-timeout" && !state.voiceHasSpeech)) {
+        setVoiceStatus("没有听到你说话，可以再试一次。");
         setAvatarMode("idle", "这次没有采到有效语音，可以直接重试。");
         setText("connectionState", "语音待命");
+        /* Auto-restart listening if in voice session */
+        setTimeout(() => {
+          if (!state.isRecording && state.voiceSessionActive && state.microphonePrimed) {
+            toggleVoiceInput();
+          }
+        }, 1000);
         return;
       }
       setVoiceStatus(

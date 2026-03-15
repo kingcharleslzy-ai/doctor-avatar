@@ -48,8 +48,13 @@ class TranscriptionService:
                     language=settings.stt_language,
                     prompt=settings.openai_stt_prompt or None,
                 )
+                text = transcript.text.strip()
+                # Filter hallucinated prompt echo (Whisper returns prompt when audio is silent)
+                prompt = (settings.openai_stt_prompt or "").strip()
+                if prompt and text and (text == prompt or text in prompt or prompt in text):
+                    text = ""
                 return TranscriptionResult(
-                    text=transcript.text,
+                    text=text,
                     provider="openai",
                     model=settings.openai_stt_model,
                 )
