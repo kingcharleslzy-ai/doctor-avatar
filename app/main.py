@@ -348,7 +348,7 @@ async def voice_chat(payload: ChatRequest):
 
     async def _tts_bytes(text: str) -> bytes:
         voice = settings.edge_tts_voice or "zh-CN-YunjianNeural"
-        communicate = edge_tts.Communicate(text, voice, rate="+15%")
+        communicate = edge_tts.Communicate(text, voice, rate="+10%", pitch="-5Hz")
         buf = io.BytesIO()
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
@@ -500,7 +500,7 @@ async def text_to_speech_stream(payload: TTSRequest):
     voice = payload.voice or settings.edge_tts_voice or "zh-CN-YunjianNeural"
 
     async def _generate():
-        communicate = edge_tts.Communicate(payload.text, voice, rate="+15%")
+        communicate = edge_tts.Communicate(payload.text, voice, rate="+10%", pitch="-5Hz")
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 yield chunk["data"]
