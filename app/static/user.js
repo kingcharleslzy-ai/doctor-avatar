@@ -403,6 +403,10 @@ function startVoiceActivityDetection(analyser) {
         state.voiceHasSpeech = true;
         state.voiceSpeechDetectedAt = now;
         setVoiceStatus("正在听你说话，说完后会自动提交…");
+        /* Interrupt AI if it's speaking — user wants to talk */
+        if (_ttsPlaying || _ttsCurrentSource) {
+          _stopAllTts();
+        }
       }
       if (state.voiceHasSpeech) {
         state.voiceLastSpeechAt = now;
@@ -645,22 +649,9 @@ async function startConsultation() {
   /* Unlock Web Audio API on mobile (must happen in user gesture handler) */
   _unlockTtsAudio();
 
-  if (!hasLiveAvatarMode() && hasDittoMode()) {
-    setVoiceStatus(state.isRecording ? "再次点击即可结束说话并自动转写。" : "实时语音主路线已启用，正在准备麦克风。");
-    const message = $("message");
-    if (message) {
-      message.focus();
-      message.placeholder = "先说出或输入问题，系统会先语音回答；实验视频仅在手动开启时启用。";
-    }
-    renderAvatarStage("idle", "实时语音主路线已启用。你说话时会进入聆听态，回答时会自动口播。");
-    await toggleVoiceInput();
-    return;
-  }
-
   if (!hasLiveAvatarMode()) {
-    setVoiceStatus(state.isRecording ? "再次点击即可结束说话并自动转写。" : "实时语音模式已启用，正在准备麦克风。");
-    renderAvatarStage("idle", "当前优先走 Web 2D 实时语音助手，不再默认等待视频生成。");
-    await toggleVoiceInput();
+    /* Play opening greeting, then auto-start listening */
+    _playGreetingThenListen();
     return;
   }
 
@@ -967,6 +958,10 @@ async function toggleVoiceInput() {
           $("message").value = text;
           setVoiceStatus("已识别，正在发送问题…");
           setAvatarMode("thinking", "转写已完成，正在提交给医生助手。");
+          /* In voice call mode, start listening again immediately (even while AI responds) */
+          if (state.voiceCallActive && state.persistentMicStream) {
+            setTimeout(() => { if (!state.isRecording) toggleVoiceInput(); }, 300);
+          }
           await askQuestion();
         } else {
           setVoiceStatus("未识别到语音内容，请重试。");
@@ -1065,14 +1060,13 @@ async function _playNextInQueue() {
       _playNextInQueue();
     } else {
       stopAvatarMonitoring();
-      setAvatarMode("idle", "回答完毕，正在自动开启麦克风…");
-      setVoiceStatus("回答完毕，准备继续对话。");
+      setAvatarMode("idle", "等待您说话...");
+      setVoiceStatus("回答完毕。");
       setText("connectionState", "语音待命");
-      setTimeout(() => {
-        if (!state.isRecording && !_ttsPlaying && state.microphonePrimed && state.voiceSessionActive) {
-          toggleVoiceInput();
-        }
-      }, 600);
+      /* Fallback: if recording didn't auto-restart after STT submission */
+      if (!state.isRecording && state.voiceCallActive && state.persistentMicStream) {
+        toggleVoiceInput();
+      }
     }
   };
 
@@ -1378,6 +1372,46 @@ async function loadAppConfig() {
 }
 
 /* ── Voice Call Overlay ── */
+
+async function _playGreetingThenListen() {
+  const greeting = "你好，我是李勇医生的AI助手。有什么不舒服的，跟我说说。";
+  vcSetStatus("医生正在回答");
+  vcSetAvatarClass("vc-speaking");
+  vcSetWaveform("speaking");
+  try {
+    const resp = await fetch("/api/tts/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: greeting }),
+    });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const ctx = _getTtsAudioCtx();
+      if (ctx.state === "suspended" || ctx.state === "interrupted") await ctx.resume();
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      source.onended = () => {
+        vcSetStatus("等待您说话...");
+        vcSetAvatarClass("vc-idle");
+        vcSetWaveform("");
+        if (!state.isRecording) toggleVoiceInput();
+      };
+      source.start(0);
+      /* Also add greeting to chat history */
+      if (typeof appendChatMessage === "function") {
+        appendChatMessage("ai", greeting);
+      }
+    } else {
+      /* TTS failed, just start listening */
+      if (!state.isRecording) toggleVoiceInput();
+    }
+  } catch (_) {
+    if (!state.isRecording) toggleVoiceInput();
+  }
+}
 
 function vcShow() {
   const overlay = $("voiceCallOverlay");
