@@ -403,10 +403,6 @@ function startVoiceActivityDetection(analyser) {
         state.voiceHasSpeech = true;
         state.voiceSpeechDetectedAt = now;
         setVoiceStatus("正在听你说话，说完后会自动提交…");
-        /* Interrupt AI if it's speaking — user wants to talk */
-        if (_ttsPlaying || _ttsCurrentSource) {
-          _stopAllTts();
-        }
       }
       if (state.voiceHasSpeech) {
         state.voiceLastSpeechAt = now;
@@ -467,6 +463,8 @@ function createAvatarAudioContext() {
 function renderAvatarStage(mode = "idle", hint = "") {
   const stage = $("videoStage");
   if (!stage || state.room) return;
+  /* Don't replace the SVG avatar with HUD markup in non-LiveAvatar mode */
+  if (!hasLiveAvatarMode()) return;
   stage.innerHTML = avatarStageMarkup(mode, hint);
   cacheAvatarElements();
   setAvatarMode(mode, hint);
@@ -475,9 +473,8 @@ function renderAvatarStage(mode = "idle", hint = "") {
 
 function renderVideoPlaceholder() {
   const stage = $("videoStage");
-  if (!stage || state.room) {
-    return;
-  }
+  if (!stage || state.room) return;
+  if (!hasLiveAvatarMode()) return;
   renderAvatarStage("idle");
 }
 
@@ -958,10 +955,6 @@ async function toggleVoiceInput() {
           $("message").value = text;
           setVoiceStatus("已识别，正在发送问题…");
           setAvatarMode("thinking", "转写已完成，正在提交给医生助手。");
-          /* In voice call mode, start listening again immediately (even while AI responds) */
-          if (state.voiceCallActive && state.persistentMicStream) {
-            setTimeout(() => { if (!state.isRecording) toggleVoiceInput(); }, 300);
-          }
           await askQuestion();
         } else {
           setVoiceStatus("未识别到语音内容，请重试。");
