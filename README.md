@@ -2,13 +2,21 @@
 
 这是一个新的独立项目，用来搭建你爸的医生虚拟人第一版。
 
-当前版本包含 3 层：
+## 当前状态（2026-03-16）
 
-1. `OpenAI` 问答层
-2. `本地知识库` 检索层
-3. `HeyGen / LiveAvatar + LiveKit` 会话接口层
+技术栈：FastAPI + DeepSeek Chat + OpenAI STT + Edge TTS（YunjianNeural 沉稳男声） + 阿里云 ECS
 
-目标不是一步做到真人级视频通话，而是先把“像你爸说话、守住医疗边界、能逐步接入视频分身”的骨架跑起来。
+语音通话主线已跑通：
+- SSE 流式对话：DeepSeek 流式生成 → 按句切分 → Edge TTS 即时合成 → 文字+音频同步推送
+- 首个文字 1.6-3.2s，首段音频 3.1-5.5s
+- iOS Safari / 夸克 / 桌面全平台兼容（Web Audio API + ffmpeg 转码）
+- MiniMax 蓝紫玻璃拟态 UI，移动端+桌面端
+- 诊断阶段要求 300-500 字详细分析，等待时显示”医生正在给出诊断意见”
+- 代码审计通过：安全头、gzip、SSE buffering、资源清理
+
+最新改动（windows-claude）：强化诊断质量（更详细）、去除 AI 免责声明、加等待提示
+
+详细变更见 [CHANGELOG.md](CHANGELOG.md)
 
 ## 目录
 

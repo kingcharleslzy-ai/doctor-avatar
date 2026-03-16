@@ -714,6 +714,12 @@ async function askQuestion() {
     setAvatarMode("thinking");
     setText("connectionState", "理解问题中");
     state.askInFlight = true;
+    /* Show "正在给出诊断意见" if first token takes > 3s */
+    const _diagHintTimer = setTimeout(() => {
+      updateChatMessage(loadingRow, "医生正在给出诊断意见，请稍等……");
+    }, 3000);
+    let _diagHintCleared = false;
+    const _clearDiagHint = () => { if (!_diagHintCleared) { clearTimeout(_diagHintTimer); _diagHintCleared = true; } };
     /* Keep voiceInputBtn enabled so user can interrupt */
     const voiceBtn = $("voiceInputBtn");
     if (voiceBtn) voiceBtn.disabled = false;
@@ -748,6 +754,7 @@ async function askQuestion() {
             try {
               const evt = JSON.parse(line.slice(6));
               if (evt.type === "text") {
+                _clearDiagHint();
                 fullText += evt.token;
                 updateChatMessage(loadingRow, fullText);
               } else if (evt.type === "audio") {
@@ -770,6 +777,7 @@ async function askQuestion() {
 
       /* Fallback: if SSE didn't produce text, use regular chat + TTS */
       if (!fullText) {
+        _clearDiagHint();
         const data = await postJson("/api/chat", { message, conversation: state.conversation });
         fullText = data.answer;
         updateChatMessage(loadingRow, fullText);
@@ -789,6 +797,7 @@ async function askQuestion() {
       if (state.experimentalVideoEnabled && state.appConfig?.ditto_stream?.enabled) startDittoStream(fullText);
       else if (state.experimentalVideoEnabled && state.appConfig?.ditto_enabled) void generateDittoVideo(fullText);
     } catch (error) {
+      _clearDiagHint();
       if (error.name === "AbortError") {
         /* User interrupted — not an error */
       } else {
@@ -1482,7 +1491,9 @@ function vcSyncState(mode) {
       vcSetWaveform("listening");
       break;
     case "thinking":
-      vcSetStatus("医生思考中...");
+      /* Show different hint based on conversation depth */
+      const rounds = state.conversation.length / 2;
+      vcSetStatus(rounds >= 3 ? "医生正在给出诊断意见，请稍等..." : "医生思考中...");
       vcSetAvatarClass("vc-thinking");
       vcSetWaveform("");
       break;

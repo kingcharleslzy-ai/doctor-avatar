@@ -74,8 +74,7 @@ class ChatService:
             return None
         answer = (
             f"当前资料库暗号：{code}\n"
-            f"当前有效资料条数：{row_count}。\n"
-            "提醒：以上内容仅供健康科普与就医参考，不替代面诊。"
+            f"当前有效资料条数：{row_count}。"
         )
         return {
             "answer": answer,
