@@ -955,6 +955,10 @@ async function toggleVoiceInput() {
           $("message").value = text;
           setVoiceStatus("已识别，正在发送问题…");
           setAvatarMode("thinking", "转写已完成，正在提交给医生助手。");
+          /* In voice call mode, start listening again immediately while AI responds */
+          if (state.voiceCallActive && state.persistentMicStream && !state.isRecording) {
+            setTimeout(() => { if (!state.isRecording) toggleVoiceInput(); }, 300);
+          }
           await askQuestion();
         } else {
           setVoiceStatus("未识别到语音内容，请重试。");
