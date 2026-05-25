@@ -60,23 +60,7 @@ _CACHE_BUST = str(int(time.time()))
 
 
 def resolve_user_template(request: Request) -> str:
-    view = request.query_params.get("view")
-    if view == "mobile":
-        return "user_mobile.html"
-    if view == "desktop":
-        return "user_desktop.html"
-    user_agent = (request.headers.get("user-agent") or "").lower()
-    mobile_markers = (
-        "iphone",
-        "ipad",
-        "android",
-        "mobile",
-        "harmonyos",
-        "micromessenger",
-    )
-    if any(marker in user_agent for marker in mobile_markers):
-        return "user_mobile.html"
-    return "user_desktop.html"
+    return "digital_human.html"
 
 
 def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(console_auth)) -> str:
@@ -320,17 +304,22 @@ def home(request: Request) -> HTMLResponse:
 
 @app.get("/desktop", response_class=HTMLResponse)
 def desktop(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("user_desktop.html", {"request": request, "v": _CACHE_BUST})
+    return templates.TemplateResponse("digital_human.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/mobile", response_class=HTMLResponse)
 def mobile(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("user_mobile.html", {"request": request, "v": _CACHE_BUST})
+    return templates.TemplateResponse("digital_human.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/hospital-ai", response_class=HTMLResponse)
 def hospital_ai(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("hospital_ai.html", {"request": request, "v": _CACHE_BUST})
+
+
+@app.get("/rhinitis-ai", response_class=HTMLResponse)
+def rhinitis_ai(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("rhinitis_ai.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/console", response_class=HTMLResponse)

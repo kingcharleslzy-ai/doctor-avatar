@@ -3,691 +3,1658 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>医院 AI 信息化技术服务</title>
+  <title>临床 AI 信息化工作室</title>
   <link rel="icon" href="/favicon.ico" />
   <style>
     :root {
-      --ink: #172033;
-      --muted: #5d6b82;
-      --subtle: #eef3f8;
-      --line: #d9e2ec;
-      --surface: #ffffff;
-      --teal: #0f766e;
-      --blue: #245c9f;
-      --green: #227653;
-      --amber: #b46812;
-      --red: #a53d3d;
-      --bg: #f6f8fb;
-      --shadow: 0 12px 34px rgba(23, 32, 51, 0.08);
+      --porcelain: #f7f8f4;
+      --paper: #fffdf8;
+      --ink: #161915;
+      --ink-soft: #343a35;
+      --ash: #6d746e;
+      --mist: #dfe6df;
+      --line: #cbd5cc;
+      --surgical: #0c6f62;
+      --surgical-2: #12453d;
+      --copper: #a45f34;
+      --clay: #d8c4af;
+      --signal: #11a28d;
+      --danger: #8f3430;
+      --shadow: 0 26px 70px rgba(22, 25, 21, 0.12);
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+      --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Mono", "Roboto Mono", monospace;
     }
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
       color: var(--ink);
-      background: var(--bg);
-      line-height: 1.55;
+      background:
+        linear-gradient(90deg, rgba(12, 111, 98, .05) 1px, transparent 1px) 0 0 / 42px 42px,
+        linear-gradient(180deg, var(--porcelain), #edf2ef 56%, #f7f8f4);
+      font-family: var(--sans);
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(115deg, rgba(22, 25, 21, .035) 0 1px, transparent 1px 8px),
+        radial-gradient(circle at 77% 18%, rgba(164, 95, 52, .12), transparent 28%),
+        radial-gradient(circle at 5% 92%, rgba(12, 111, 98, .10), transparent 30%);
+      opacity: .8;
     }
 
     a { color: inherit; text-decoration: none; }
+    p, h1, h2, h3 { margin: 0; }
+    img { max-width: 100%; display: block; }
 
-    .topbar {
+    .skip-link {
+      position: fixed;
+      left: 16px;
+      top: 12px;
+      z-index: 60;
+      transform: translateY(-160%);
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 14px;
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+
+    .site-shell {
+      min-height: 100vh;
+      overflow: clip;
+    }
+
+    .nav-wrap {
       position: sticky;
       top: 0;
-      z-index: 20;
-      border-bottom: 1px solid rgba(217, 226, 236, 0.9);
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(14px);
+      z-index: 40;
+      background: rgba(247, 248, 244, .86);
+      border-bottom: 1px solid rgba(203, 213, 204, .75);
+      backdrop-filter: blur(16px);
     }
 
     .nav {
-      width: min(1120px, calc(100% - 32px));
-      min-height: 64px;
+      width: min(1180px, calc(100% - 40px));
+      min-height: 72px;
       margin: 0 auto;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto;
       align-items: center;
-      justify-content: space-between;
-      gap: 20px;
+      gap: 28px;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       min-width: 0;
     }
 
     .brand-mark {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--teal), var(--blue));
-      color: #fff;
+      width: 46px;
+      height: 46px;
       display: grid;
       place-items: center;
-      font-weight: 800;
+      color: var(--paper);
+      background: var(--ink);
+      border: 1px solid rgba(255, 255, 255, .22);
+      font-family: var(--serif);
+      font-size: 19px;
+      line-height: 1;
+      position: relative;
       flex: 0 0 auto;
     }
 
-    .brand-text strong {
-      display: block;
-      font-size: 15px;
-      line-height: 1.2;
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      bottom: -5px;
+      width: 15px;
+      height: 15px;
+      background: var(--signal);
+      border: 2px solid var(--porcelain);
     }
 
-    .brand-text span {
+    .brand strong {
       display: block;
-      color: var(--muted);
-      font-size: 12px;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .brand span {
+      display: block;
       margin-top: 2px;
+      color: var(--ash);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 18px;
-      color: var(--muted);
+      gap: 24px;
+      color: var(--ink-soft);
       font-size: 14px;
-      white-space: nowrap;
     }
 
-    .nav-links a:hover { color: var(--blue); }
-
-    .nav-cta {
-      padding: 9px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      color: var(--blue);
-      background: #fff;
-      font-weight: 700;
+    .nav-links a {
+      position: relative;
+      padding: 4px 0;
     }
 
-    .section {
-      border-bottom: 1px solid var(--line);
-      background: var(--surface);
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -3px;
+      height: 1px;
+      background: var(--copper);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 260ms var(--ease);
     }
 
-    .section.alt { background: var(--bg); }
+    .nav-links a:hover::after,
+    .nav-links a:focus-visible::after {
+      transform: scaleX(1);
+    }
+
+    .nav-action {
+      color: var(--paper);
+      background: var(--surgical-2);
+      padding: 10px 15px;
+      border: 1px solid var(--surgical-2);
+    }
+
+    .nav-action::after { display: none; }
 
     .wrap {
-      width: min(1120px, calc(100% - 32px));
+      width: min(1180px, calc(100% - 40px));
       margin: 0 auto;
     }
 
     .hero {
-      min-height: 650px;
+      min-height: auto;
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-      gap: 42px;
+      grid-template-columns: minmax(0, 1.04fr) minmax(380px, .96fr);
+      gap: clamp(30px, 5vw, 72px);
       align-items: center;
-      padding: 44px 0 34px;
+      padding: clamp(34px, 5.4vh, 62px) 0 clamp(30px, 4vh, 44px);
+      position: relative;
     }
 
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--teal);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0;
-      margin-bottom: 16px;
-    }
-
-    .eyebrow::before {
+    .hero::before {
       content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--green);
+      position: absolute;
+      left: -9vw;
+      top: 72px;
+      width: 46vw;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--surgical), transparent);
     }
 
-    h1, h2, h3, p { margin: 0; }
+    .kicker {
+      display: grid;
+      grid-template-columns: 72px auto;
+      gap: 14px;
+      align-items: center;
+      color: var(--surgical-2);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+
+    .kicker::before {
+      content: "";
+      height: 1px;
+      background: var(--surgical);
+    }
 
     h1 {
-      max-width: 800px;
-      font-size: clamp(34px, 5.2vw, 54px);
-      line-height: 1.05;
+      max-width: 760px;
+      font-family: var(--serif);
+      font-size: clamp(44px, 6.5vw, 78px);
+      line-height: .98;
       letter-spacing: 0;
-      color: var(--ink);
+      font-weight: 700;
     }
 
-    .lead {
-      margin-top: 22px;
-      max-width: 680px;
-      color: var(--muted);
-      font-size: 18px;
+    .h1-line {
+      display: block;
+    }
+
+    .h1-line.accent {
+      color: var(--surgical-2);
+      font-style: italic;
+    }
+
+    .hero-copy {
+      margin-top: 28px;
+      max-width: 650px;
+      color: var(--ink-soft);
+      font-size: clamp(17px, 1.55vw, 21px);
     }
 
     .hero-actions {
+      margin-top: 34px;
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 30px;
+      gap: 14px;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
-      padding: 0 18px;
-      border-radius: 8px;
-      font-weight: 800;
-      border: 1px solid transparent;
-      cursor: pointer;
+      min-height: 48px;
+      padding: 0 20px;
+      border: 1px solid var(--ink);
+      font-weight: 700;
+      transition: transform 220ms var(--ease), background 220ms var(--ease), color 220ms var(--ease);
     }
 
-    .btn.primary { background: var(--blue); color: #fff; }
-    .btn.secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+    .btn.primary {
+      background: var(--ink);
+      color: var(--paper);
+    }
 
-    .hero-meta {
+    .btn.secondary {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      transform: translateY(-2px);
+    }
+
+    .hero-note {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 36px;
+      gap: 1px;
+      margin-top: 32px;
       max-width: 760px;
-    }
-
-    .metric {
+      background: var(--line);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      background: #fff;
     }
 
-    .metric strong {
+    .note-item {
+      min-height: 108px;
+      padding: 18px;
+      background: rgba(255, 253, 248, .82);
+    }
+
+    .note-item b {
       display: block;
-      font-size: 19px;
-      color: var(--teal);
-      margin-bottom: 4px;
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 14px;
     }
 
-    .metric span {
-      color: var(--muted);
+    .note-item strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.25;
+      margin-bottom: 7px;
+    }
+
+    .note-item span {
+      display: block;
+      color: var(--ash);
       font-size: 13px;
     }
 
-    .panel {
+    .hero-visual {
+      min-height: 560px;
+      position: relative;
+      display: grid;
+      align-items: end;
+      isolation: isolate;
+    }
+
+    .signal-lab {
+      position: absolute;
+      inset: 0 8% 92px 0;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: var(--shadow);
+      background:
+        linear-gradient(90deg, rgba(12, 111, 98, .08) 1px, transparent 1px) 0 0 / 34px 34px,
+        linear-gradient(180deg, rgba(255, 253, 248, .92), rgba(226, 234, 227, .92));
       overflow: hidden;
+      box-shadow: var(--shadow);
+      padding: 24px;
     }
 
-    .panel-head {
-      padding: 18px 20px;
-      border-bottom: 1px solid var(--line);
-      background: #f8fbfd;
+    .signal-lab::before {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border: 1px solid rgba(12, 111, 98, .18);
+      pointer-events: none;
     }
 
-    .panel-head strong {
+    .signal-lab::after {
+      content: "";
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      top: 50%;
+      height: 1px;
+      background:
+        linear-gradient(90deg, transparent, rgba(12, 111, 98, .42), transparent);
+      pointer-events: none;
+    }
+
+    .lab-caption {
+      position: absolute;
+      left: 26px;
+      top: 22px;
+      z-index: 2;
+      color: var(--ink);
+    }
+
+    .lab-caption strong {
       display: block;
-      font-size: 17px;
-      margin-bottom: 4px;
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.1;
     }
 
-    .panel-head span {
-      color: var(--muted);
+    .lab-caption span {
+      display: block;
+      margin-top: 6px;
+      color: var(--ash);
       font-size: 13px;
     }
 
-    .workflow {
-      padding: 16px 20px 20px;
+    .system-map {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 150px;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr 1fr;
+      gap: 14px;
+      z-index: 2;
+    }
+
+    .map-stack {
       display: grid;
       gap: 12px;
+      align-content: end;
     }
 
-    .step {
+    .map-card {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid rgba(12, 111, 98, .24);
+      background: rgba(255, 253, 248, .72);
+      box-shadow: 0 14px 34px rgba(22, 25, 21, .07);
+    }
+
+    .map-card.dark {
+      color: var(--paper);
+      background: var(--surgical-2);
+      border-color: var(--surgical-2);
+    }
+
+    .map-card b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .map-card.dark b {
+      color: var(--signal);
+    }
+
+    .map-card strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .map-card span {
+      display: block;
+      margin-top: 5px;
+      color: var(--ash);
+      font-size: 12px;
+    }
+
+    .map-card.dark span {
+      color: rgba(255, 253, 248, .72);
+    }
+
+    .lab-ruler {
+      position: absolute;
+      right: 24px;
+      top: 24px;
+      bottom: 24px;
+      width: 44px;
+      border-left: 1px solid rgba(12, 111, 98, .22);
+      background:
+        repeating-linear-gradient(180deg, transparent 0 13px, rgba(12, 111, 98, .22) 13px 14px);
+      opacity: .7;
+    }
+
+    .workbench {
+      position: relative;
+      z-index: 3;
+      width: min(460px, 94%);
+      margin-left: auto;
+      border: 1px solid rgba(22, 25, 21, .22);
+      background: rgba(255, 253, 248, .94);
+      box-shadow: 0 22px 54px rgba(22, 25, 21, .18);
+      backdrop-filter: blur(12px);
+    }
+
+    .workbench-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ash);
+    }
+
+    .pulse {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--surgical);
+      font-weight: 700;
+    }
+
+    .pulse::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background: var(--signal);
+      animation: pulse 1.8s infinite;
+    }
+
+    .workbench-body {
+      padding: 18px;
       display: grid;
-      grid-template-columns: 32px 1fr;
+      gap: 14px;
+    }
+
+    .rail {
+      display: grid;
+      grid-template-columns: 78px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(203, 213, 204, .78);
+    }
+
+    .rail:last-child { border-bottom: none; }
+
+    .rail code {
+      font-family: var(--mono);
+      color: var(--copper);
+      font-size: 12px;
+    }
+
+    .rail strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .rail span {
+      color: var(--ash);
+      font-size: 12px;
+    }
+
+    .rail i {
+      width: 42px;
+      height: 1px;
+      background: var(--surgical);
+      display: block;
+    }
+
+    .section {
+      padding: clamp(70px, 9vw, 118px) 0;
+      border-top: 1px solid rgba(203, 213, 204, .8);
+      position: relative;
+    }
+
+    .section.paper {
+      background: rgba(255, 253, 248, .74);
+    }
+
+    .section.dark {
+      color: var(--paper);
+      background:
+        linear-gradient(115deg, rgba(12, 111, 98, .18), transparent 40%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 8px),
+        #171a18;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .78fr) minmax(320px, .54fr);
+      gap: clamp(28px, 6vw, 90px);
+      align-items: end;
+      margin-bottom: clamp(30px, 5vw, 60px);
+    }
+
+    .section-index {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 5vw, 62px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .section-head p {
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .dark .section-head p,
+    .dark .large-copy,
+    .dark .text-muted {
+      color: rgba(255, 253, 248, .72);
+    }
+
+    .large-copy {
+      max-width: 920px;
+      color: var(--ink-soft);
+      font-size: clamp(22px, 3.2vw, 38px);
+      line-height: 1.28;
+      font-family: var(--serif);
+    }
+
+    .studio-proof {
+      margin-top: 44px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .proof-panel {
+      background: rgba(255, 253, 248, .86);
+      padding: clamp(22px, 3vw, 34px);
+      min-height: 230px;
+    }
+
+    .proof-panel h3 {
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+
+    .proof-panel p {
+      color: var(--ash);
+    }
+
+    .proof-list {
+      display: grid;
+      gap: 14px;
+      color: var(--ink-soft);
+    }
+
+    .proof-list div {
+      display: grid;
+      grid-template-columns: 28px 1fr;
       gap: 12px;
       align-items: start;
     }
 
-    .step b {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: #e8f3f1;
-      color: var(--teal);
-      display: grid;
-      place-items: center;
-      font-size: 13px;
+    .proof-list b {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
     }
 
-    .step strong {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 2px;
-    }
-
-    .step span {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .band {
-      padding: 52px 0;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 22px;
-    }
-
-    .section-head h2 {
-      font-size: clamp(24px, 3vw, 34px);
-      line-height: 1.15;
-      letter-spacing: 0;
-    }
-
-    .section-head p {
-      max-width: 540px;
-      color: var(--muted);
-      font-size: 15px;
-    }
-
-    .cards {
+    .service-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
+      border: 1px solid var(--line);
+      background: var(--line);
+      gap: 1px;
     }
 
-    .card {
-      min-height: 220px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 18px;
+    .service-card {
+      min-height: 315px;
+      background: rgba(255, 253, 248, .9);
+      padding: 24px;
       display: flex;
       flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: attr(data-code);
+      position: absolute;
+      right: 18px;
+      top: 14px;
+      color: rgba(12, 111, 98, .18);
+      font-family: var(--mono);
+      font-size: 42px;
+      font-weight: 700;
+    }
+
+    .service-card h3 {
+      max-width: 220px;
+      font-family: var(--serif);
+      font-size: 27px;
+      line-height: 1.08;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .service-card p {
+      color: var(--ash);
+      font-size: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .service-card ul {
+      margin: auto 0 0;
+      padding: 22px 0 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      border-top: 1px solid var(--mist);
+      position: relative;
+      z-index: 1;
+    }
+
+    .service-card li {
+      display: grid;
+      grid-template-columns: 12px 1fr;
+      gap: 9px;
+      align-items: start;
+    }
+
+    .service-card li::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-top: 9px;
+      background: var(--surgical);
+    }
+
+    .specialty-module {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
+      gap: 1px;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .specialty-copy,
+    .specialty-board {
+      background: rgba(255, 253, 248, .9);
+      padding: clamp(24px, 4vw, 44px);
+    }
+
+    .specialty-copy h2 {
+      max-width: 620px;
+      margin-bottom: 18px;
+    }
+
+    .specialty-copy p {
+      max-width: 650px;
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .specialty-actions {
+      margin-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .specialty-board {
+      display: grid;
       gap: 14px;
+      align-content: center;
     }
 
-    .card .tag {
-      width: max-content;
-      max-width: 100%;
-      padding: 5px 9px;
-      border-radius: 999px;
+    .specialty-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--mist);
+    }
+
+    .specialty-row:last-child {
+      border-bottom: none;
+    }
+
+    .specialty-row code {
+      color: var(--copper);
+      font-family: var(--mono);
       font-size: 12px;
-      font-weight: 800;
-      color: var(--teal);
-      background: #e8f3f1;
     }
 
-    .card h3 {
-      font-size: 18px;
-      line-height: 1.25;
+    .specialty-row strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 16px;
     }
 
-    .card p {
-      color: var(--muted);
+    .specialty-row span {
+      color: var(--ash);
       font-size: 14px;
     }
 
-    .deliverables {
-      margin-top: auto;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-      color: #34425a;
+    .method {
+      display: grid;
+      grid-template-columns: .72fr 1.28fr;
+      gap: clamp(28px, 6vw, 82px);
+      align-items: start;
+    }
+
+    .method-sticky {
+      position: sticky;
+      top: 104px;
+    }
+
+    .method-sticky p {
+      margin-top: 18px;
+      color: rgba(255, 253, 248, .68);
+      font-size: 17px;
+    }
+
+    .process {
+      display: grid;
+      gap: 1px;
+      background: rgba(255, 253, 248, .18);
+      border: 1px solid rgba(255, 253, 248, .18);
+    }
+
+    .process-step {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 26px;
+      padding: 26px;
+      background: rgba(255, 253, 248, .055);
+    }
+
+    .process-step code {
+      color: var(--signal);
+      font-family: var(--mono);
       font-size: 13px;
     }
 
-    .grid-2 {
+    .process-step h3 {
+      font-family: var(--serif);
+      font-size: 30px;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .process-step p {
+      color: rgba(255, 253, 248, .70);
+      max-width: 620px;
+    }
+
+    .product {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
+      gap: clamp(30px, 5vw, 70px);
+      align-items: center;
+    }
+
+    .product-copy p {
+      margin-top: 20px;
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .product-actions {
+      margin-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .screen {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      min-height: 480px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .screen-bar {
+      height: 54px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      color: var(--ash);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .screen-dot {
+      display: flex;
+      gap: 7px;
+    }
+
+    .screen-dot i {
+      width: 9px;
+      height: 9px;
+      background: var(--line);
+      display: block;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: 178px 1fr;
+      min-height: 420px;
+    }
+
+    .screen-side {
+      border-right: 1px solid var(--line);
+      padding: 18px;
+      display: grid;
+      gap: 13px;
+      align-content: start;
+    }
+
+    .screen-side b {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--copper);
+      letter-spacing: .08em;
+    }
+
+    .side-line {
+      height: 36px;
+      border: 1px solid var(--mist);
+      background:
+        linear-gradient(90deg, rgba(12,111,98,.12), transparent 70%),
+        rgba(247,248,244,.8);
+    }
+
+    .side-line.short { width: 72%; }
+
+    .screen-main {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .screen-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+    }
+
+    .screen-title strong {
+      font-family: var(--serif);
+      font-size: 29px;
+      line-height: 1.1;
+    }
+
+    .screen-title span {
+      color: var(--surgical);
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .screen-row {
+      display: grid;
+      grid-template-columns: 84px 1fr 56px;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--mist);
+    }
+
+    .screen-row code {
+      font-family: var(--mono);
+      color: var(--copper);
+      font-size: 12px;
+    }
+
+    .screen-row div {
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .screen-row i {
+      height: 7px;
+      background: var(--surgical);
+      display: block;
+    }
+
+    .advisor {
+      display: grid;
+      grid-template-columns: minmax(320px, .82fr) minmax(0, 1.18fr);
+      gap: clamp(30px, 6vw, 82px);
+      align-items: center;
+    }
+
+    .advisor-system {
+      border: 1px solid rgba(255, 253, 248, .22);
+      min-height: 560px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 16px),
+        linear-gradient(180deg, rgba(255, 253, 248, .08), rgba(255, 253, 248, .02));
+      overflow: hidden;
+      padding: clamp(22px, 3vw, 34px);
+      display: grid;
+      align-content: end;
       gap: 18px;
     }
 
-    .list-panel {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 20px;
+    .advisor-system h3 {
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw, 50px);
+      line-height: 1.02;
+      max-width: 430px;
     }
 
-    .list-panel h3 {
-      font-size: 19px;
-      margin-bottom: 14px;
-    }
-
-    .rows {
+    .review-ledger {
       display: grid;
-      gap: 10px;
+      gap: 1px;
+      background: rgba(255, 253, 248, .18);
+      border: 1px solid rgba(255, 253, 248, .18);
     }
 
-    .row {
+    .review-ledger div {
       display: grid;
-      grid-template-columns: 118px 1fr;
-      gap: 14px;
-      padding: 11px 0;
-      border-top: 1px solid var(--line);
+      grid-template-columns: 92px 1fr;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(255, 253, 248, .055);
     }
 
-    .row:first-child { border-top: none; padding-top: 0; }
-    .row strong { color: var(--ink); font-size: 14px; }
-    .row span { color: var(--muted); font-size: 14px; }
-
-    .warning {
-      border-left: 4px solid var(--red);
-      background: #fff6f6;
+    .review-ledger b {
+      color: var(--signal);
+      font-family: var(--mono);
+      font-size: 12px;
     }
 
-    .safe {
-      border-left: 4px solid var(--green);
-      background: #f5fbf8;
-    }
-
-    .timeline {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fff;
-    }
-
-    .phase {
-      padding: 18px;
-      min-height: 150px;
-      border-left: 1px solid var(--line);
-    }
-
-    .phase:first-child { border-left: none; }
-
-    .phase span {
-      display: block;
-      color: var(--teal);
-      font-weight: 800;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-
-    .phase strong {
-      display: block;
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
-
-    .phase p {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .case-strip {
-      display: grid;
-      grid-template-columns: 1fr 0.9fr;
-      gap: 24px;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 24px;
-    }
-
-    .case-strip h2 {
-      font-size: clamp(24px, 3vw, 34px);
-      margin-bottom: 12px;
-    }
-
-    .case-strip p {
-      color: var(--muted);
-      font-size: 15px;
-      margin-bottom: 20px;
-    }
-
-    .demo {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: linear-gradient(180deg, #f8fbfd, #ffffff);
-      padding: 18px;
-    }
-
-    .demo-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 14px;
-      margin-bottom: 14px;
-    }
-
-    .avatar-mini {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background-image: url("/static/doctor-liyong-official.jpg");
-      background-size: cover;
-      background-position: center;
-      border: 3px solid #fff;
-      box-shadow: 0 4px 14px rgba(23, 32, 51, 0.12);
-      flex: 0 0 auto;
-    }
-
-    .demo-lines {
-      display: grid;
-      gap: 8px;
-      color: var(--muted);
+    .review-ledger span {
+      color: rgba(255, 253, 248, .78);
       font-size: 14px;
     }
 
+    .advisor-copy h2 {
+      max-width: 720px;
+    }
+
+    .advisor-copy p {
+      margin-top: 22px;
+      color: rgba(255, 253, 248, .72);
+      font-size: 18px;
+      max-width: 720px;
+    }
+
+    .advisor-facts {
+      margin-top: 34px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(255, 253, 248, .2);
+      border: 1px solid rgba(255, 253, 248, .18);
+    }
+
+    .advisor-facts div {
+      min-height: 128px;
+      padding: 18px;
+      background: rgba(255, 253, 248, .055);
+    }
+
+    .advisor-facts b {
+      display: block;
+      color: var(--signal);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .advisor-facts span {
+      display: block;
+      color: rgba(255, 253, 248, .84);
+      font-size: 14px;
+    }
+
+    .boundary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .boundary-col {
+      background: rgba(255, 253, 248, .9);
+      padding: clamp(24px, 4vw, 42px);
+    }
+
+    .boundary-col h3 {
+      font-family: var(--serif);
+      font-size: 34px;
+      line-height: 1.05;
+      margin-bottom: 22px;
+    }
+
+    .boundary-list {
+      display: grid;
+      gap: 1px;
+      background: var(--mist);
+    }
+
+    .boundary-list div {
+      background: rgba(255, 253, 248, .94);
+      padding: 15px 0;
+      display: grid;
+      grid-template-columns: 128px 1fr;
+      gap: 18px;
+    }
+
+    .boundary-list strong {
+      color: var(--surgical-2);
+      font-size: 14px;
+    }
+
+    .boundary-list span {
+      color: var(--ash);
+      font-size: 14px;
+    }
+
+    .boundary-col.no strong {
+      color: var(--danger);
+    }
+
+    .cta {
+      min-height: 520px;
+      display: grid;
+      align-items: center;
+      text-align: center;
+      color: var(--paper);
+      background:
+        linear-gradient(180deg, rgba(22, 25, 21, .62), rgba(22, 25, 21, .96)),
+        repeating-linear-gradient(115deg, rgba(255,255,255,.055) 0 1px, transparent 1px 14px),
+        linear-gradient(90deg, rgba(12, 111, 98, .46), rgba(164, 95, 52, .22)),
+        #171a18;
+      border-top: 1px solid rgba(255, 253, 248, .18);
+    }
+
+    .cta h2 {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .cta p {
+      margin: 22px auto 0;
+      max-width: 660px;
+      color: rgba(255, 253, 248, .78);
+      font-size: 18px;
+    }
+
+    .cta .btn {
+      margin-top: 34px;
+      border-color: rgba(255, 253, 248, .84);
+      background: rgba(255, 253, 248, .92);
+      color: var(--ink);
+    }
+
     .footer {
-      padding: 26px 0;
-      color: var(--muted);
+      background: var(--ink);
+      color: rgba(255, 253, 248, .74);
+      padding: 30px 0;
       font-size: 13px;
-      background: #101827;
     }
 
     .footer .wrap {
       display: flex;
       justify-content: space-between;
-      gap: 18px;
-      color: #cbd5e1;
+      gap: 20px;
+      align-items: center;
     }
 
-    @media (max-width: 980px) {
-      .hero {
-        grid-template-columns: 1fr;
-        min-height: auto;
-        padding-top: 34px;
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 650ms var(--ease), transform 650ms var(--ease);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: .35; transform: scale(.9); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal,
+      .btn,
+      .pulse::before {
+        animation: none;
+        transition: none;
       }
-      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .timeline { grid-template-columns: 1fr; }
-      .phase { border-left: none; border-top: 1px solid var(--line); min-height: auto; }
-      .phase:first-child { border-top: none; }
-      .case-strip { grid-template-columns: 1fr; }
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
     }
 
-    @media (max-width: 720px) {
-      .nav { min-height: 58px; }
-      .brand-text span { display: none; }
-      .nav-links a:not(.nav-cta) { display: none; }
-      .hero-meta { grid-template-columns: 1fr; }
-      .section-head { display: block; }
-      .section-head p { margin-top: 10px; }
-      .cards, .grid-2 { grid-template-columns: 1fr; }
-      .row { grid-template-columns: 1fr; gap: 4px; }
-      .footer .wrap { display: block; }
-      .hero { gap: 24px; padding-bottom: 32px; }
+    @media (max-width: 1060px) {
+      .hero,
+      .product,
+      .advisor,
+      .method,
+      .specialty-module,
+      .section-head {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        max-height: none;
+      }
+
+      .hero-visual {
+        min-height: 560px;
+      }
+
+      .service-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .method-sticky {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .nav {
+        width: min(100% - 28px, 1180px);
+        min-height: 64px;
+      }
+
+      .brand-copy,
+      .nav-links a:not(.nav-action) {
+        display: none;
+      }
+
+      .brand strong {
+        font-size: 16px;
+      }
+
+      .nav-action {
+        padding: 8px 11px;
+        font-size: 13px;
+      }
+
+      .wrap {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .hero {
+        padding-top: 34px;
+        min-height: auto;
+      }
+
+      h1 {
+        font-size: clamp(38px, 12.2vw, 56px);
+      }
+
+      .hero-copy {
+        font-size: 17px;
+      }
+
+      .hero-note,
+      .studio-proof,
+      .boundary,
+      .advisor-facts {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        min-height: 248px;
+      }
+
+      .signal-lab {
+        position: relative;
+        inset: auto;
+        height: 238px;
+        padding: 18px;
+      }
+
+      .workbench {
+        display: none;
+      }
+
+      .system-map {
+        display: none;
+      }
+
+      .lab-caption {
+        left: 20px;
+        right: 64px;
+        top: 20px;
+      }
+
+      .lab-caption strong {
+        font-size: 23px;
+      }
+
+      .lab-ruler {
+        right: 18px;
+        top: 18px;
+        bottom: 18px;
+      }
+
+      .rail {
+        grid-template-columns: 52px 1fr;
+      }
+
+      .rail i {
+        display: none;
+      }
+
+      .service-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .specialty-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .process-step {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .screen-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .screen-side {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .screen-row {
+        grid-template-columns: 64px 1fr;
+      }
+
+      .screen-row i {
+        display: none;
+      }
+
+      .advisor-system {
+        min-height: 430px;
+      }
+
+      .boundary-list div {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .footer .wrap {
+        display: grid;
+      }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <nav class="nav" aria-label="主导航">
-      <a class="brand" href="/hospital-ai" aria-label="医院 AI 信息化技术服务首页">
-        <span class="brand-mark">AI</span>
-        <span class="brand-text">
-          <strong>医院 AI 信息化技术服务</strong>
-          <span>非诊疗场景的 AI 工具落地与流程优化</span>
-        </span>
-      </a>
-      <div class="nav-links">
-        <a href="#services">服务包</a>
-        <a href="#compliance">合规边界</a>
-        <a href="#delivery">交付流程</a>
-        <a class="nav-cta" href="/">医疗数字人演示</a>
-      </div>
-    </nav>
-  </header>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="site-shell">
+    <header class="nav-wrap">
+      <nav class="nav" aria-label="主导航">
+        <a class="brand" href="/hospital-ai" aria-label="临床 AI 信息化工作室首页">
+          <span class="brand-mark">医</span>
+          <span class="brand-copy">
+            <strong>临床 AI 信息化工作室</strong>
+            <span>Clinical AI Systems Studio</span>
+          </span>
+        </a>
+        <div class="nav-links">
+          <a href="#services">服务能力</a>
+          <a href="/rhinitis-ai">专病 AI</a>
+          <a href="#product">数字人系统</a>
+          <a href="#advisor">专家协作</a>
+          <a href="#contact">联系咨询</a>
+          <a class="nav-action" href="/">数字人演示</a>
+        </div>
+      </nav>
+    </header>
 
-  <main>
-    <section class="section">
-      <div class="wrap hero">
-        <div>
-          <div class="eyebrow">AI 工具落地 · 医院内部效率提升</div>
-          <h1>帮医院把 AI 用到文书、知识库、质控和宣教流程里</h1>
-          <p class="lead">
-            面向私立医院和专科科室，提供 AI 办公培训、科室 SOP 与知识库建设、病历文书质控辅助流程、患者宣教模板系统等非诊疗技术服务。
+    <main id="main">
+      <section class="wrap hero" aria-label="首页首屏">
+        <div class="hero-copy-block">
+          <div class="kicker reveal">Clinical AI / Medical Digital Systems</div>
+          <h1 class="reveal">
+            <span class="h1-line">医疗机构 AI</span>
+            <span class="h1-line accent">信息化建设服务</span>
+          </h1>
+          <p class="hero-copy reveal">
+            为私立医院、专科科室与医疗管理团队提供医学内容数字化、科室知识库、智能文书、患者宣教与数字人展示系统建设服务。
           </p>
-          <div class="hero-actions">
-            <a class="btn primary" href="#services">查看服务包</a>
-            <a class="btn secondary" href="#compliance">先看合规边界</a>
-          </div>
-          <div class="hero-meta" aria-label="服务重点">
-            <div class="metric"><strong>非诊疗</strong><span>不替代医生诊断、治疗、处方或会诊</span></div>
-            <div class="metric"><strong>轻试点</strong><span>适合 7-30 天小项目快速验证</span></div>
-            <div class="metric"><strong>可验收</strong><span>合同、任务书、交付物、验收单闭环</span></div>
+          <div class="hero-actions reveal">
+            <a class="btn primary" href="#services">了解服务能力</a>
+            <a class="btn secondary" href="#product">查看数字人系统</a>
           </div>
         </div>
-        <aside class="panel" aria-label="项目实施路径">
-          <div class="panel-head">
-            <strong>一个试点项目怎么做</strong>
-            <span>先做低风险、可验收的小项目，再逐步扩展。</span>
-          </div>
-          <div class="workflow">
-            <div class="step"><b>01</b><div><strong>访谈与边界确认</strong><span>确认科室痛点、数据范围、是否涉及具体患者诊疗。</span></div></div>
-            <div class="step"><b>02</b><div><strong>任务书与报价</strong><span>把服务范围、交付物、验收标准写清楚。</span></div></div>
-            <div class="step"><b>03</b><div><strong>培训与工具配置</strong><span>落地提示词、知识库、文书模板和使用规范。</span></div></div>
-            <div class="step"><b>04</b><div><strong>试运行与修订</strong><span>收集科室反馈，形成版本记录和使用手册。</span></div></div>
-            <div class="step"><b>05</b><div><strong>验收与复盘</strong><span>提交验收单、交付清单和下一阶段建议。</span></div></div>
-          </div>
-        </aside>
-      </div>
-    </section>
 
-    <section class="section alt" id="services">
-      <div class="wrap band">
-        <div class="section-head">
-          <h2>适合先卖给医院的四个服务包</h2>
-          <p>从低风险、低接入成本的项目开始，先证明效率价值，再讨论更深的信息系统接入。</p>
-        </div>
-        <div class="cards">
-          <article class="card">
-            <span class="tag">低风险</span>
-            <h3>AI 办公与文书提效</h3>
-            <p>面向院办、医务、护理、市场部门，建立通知、制度、会议纪要、运营文案的 AI 使用流程。</p>
-            <div class="deliverables">交付：培训课件、提示词库、使用手册、试运行报告</div>
-          </article>
-          <article class="card">
-            <span class="tag">中低风险</span>
-            <h3>科室 SOP 与知识库</h3>
-            <p>把科室制度、流程、患者常见问题和宣教材料整理成可维护的内部知识库。</p>
-            <div class="deliverables">交付：SOP 文档、知识库目录、审核记录、版本记录</div>
-          </article>
-          <article class="card">
-            <span class="tag">中风险</span>
-            <h3>病历文书质控辅助</h3>
-            <p>设计完整性、格式、逻辑一致性检查规则，辅助科室做文书质量管理。</p>
-            <div class="deliverables">交付：质控规则表、流程图、测试记录、培训记录</div>
-          </article>
-          <article class="card">
-            <span class="tag">中风险</span>
-            <h3>患者宣教模板系统</h3>
-            <p>建设通用宣教模板和审核流程，由医院医生最终审核后使用。</p>
-            <div class="deliverables">交付：宣教模板库、审核流程、样例文档、使用规范</div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="compliance">
-      <div class="wrap band">
-        <div class="section-head">
-          <h2>合规边界先写清楚</h2>
-          <p>项目从第一天就按合同、交付、数据和医疗边界拆开，避免把医生个人医疗服务包装成技术费。</p>
-        </div>
-        <div class="grid-2">
-          <div class="list-panel safe">
-            <h3>可以承接</h3>
-            <div class="rows">
-              <div class="row"><strong>AI 工具培训</strong><span>医院内部员工使用方法、流程和规范。</span></div>
-              <div class="row"><strong>知识库建设</strong><span>科室 SOP、宣教模板、常见问题、运营资料整理。</span></div>
-              <div class="row"><strong>流程优化</strong><span>文书、质控、运营、培训等非诊疗流程。</span></div>
-              <div class="row"><strong>技术顾问</strong><span>医学专家只做通用内容审核和专业建议。</span></div>
+        <div class="hero-visual reveal" aria-label="医院 AI 工作台视觉">
+          <div class="signal-lab" aria-hidden="true">
+            <div class="lab-caption">
+              <strong>Hospital AI Operating System</strong>
+              <span>知识库、文书、宣教与培训模块化建设。</span>
             </div>
-          </div>
-          <div class="list-panel warning">
-            <h3>不承接</h3>
-            <div class="rows">
-              <div class="row"><strong>具体诊疗</strong><span>不对具体患者诊断、治疗、处方、手术指导。</span></div>
-              <div class="row"><strong>远程会诊</strong><span>不通过本服务提供线上会诊或患者个体化方案。</span></div>
-              <div class="row"><strong>按病例结算</strong><span>不按患者数、手术数、转诊量、医院收入比例收费。</span></div>
-              <div class="row"><strong>未授权数据</strong><span>不接收或外传未脱敏的病历、影像、身份信息。</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section alt" id="delivery">
-      <div class="wrap band">
-        <div class="section-head">
-          <h2>30 天内可完成的试点交付</h2>
-          <p>用小范围科室试点验证价值，避免一开始就做重系统集成。</p>
-        </div>
-        <div class="timeline">
-          <div class="phase"><span>第 1-3 天</span><strong>需求访谈</strong><p>确认科室、场景、发票项目、数据边界和验收口径。</p></div>
-          <div class="phase"><span>第 4-7 天</span><strong>任务书</strong><p>输出服务范围、交付物、排期、报价和不包含事项。</p></div>
-          <div class="phase"><span>第 8-15 天</span><strong>工具配置</strong><p>整理提示词、知识库目录、模板和培训材料。</p></div>
-          <div class="phase"><span>第 16-25 天</span><strong>试运行</strong><p>陪跑科室使用，记录问题并完成一次修订。</p></div>
-          <div class="phase"><span>第 26-30 天</span><strong>验收复盘</strong><p>提交验收单、版本记录和下一阶段建议。</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="wrap band">
-        <div class="case-strip">
-          <div>
-            <h2>医疗数字人是一个可延展分支</h2>
-            <p>
-              现有医疗数字人项目可以作为“AI 患者沟通、宣教、问答演示”的产品分支。正式对医院交付时，建议先定位为院内宣教和流程演示，不作为诊疗入口。
-            </p>
-            <a class="btn secondary" href="/">打开医疗数字人演示</a>
-          </div>
-          <div class="demo" aria-label="医疗数字人分支">
-            <div class="demo-top">
-              <div>
-                <strong>李勇医生 AI 医疗助手</strong>
-                <p style="margin-top: 4px; color: var(--muted); font-size: 13px;">已有语音互动和医生资料展示基础</p>
+            <div class="system-map">
+              <div class="map-stack">
+                <div class="map-card">
+                  <b>INPUT</b>
+                  <strong>科室制度与宣教材料</strong>
+                  <span>脱敏整理 / 版本标记</span>
+                </div>
+                <div class="map-card">
+                  <b>INPUT</b>
+                  <strong>文书规则与质控口径</strong>
+                  <span>格式 / 完整性 / 逻辑</span>
+                </div>
               </div>
-              <div class="avatar-mini" aria-hidden="true"></div>
+              <div class="map-stack">
+                <div class="map-card dark">
+                  <b>ENGINE</b>
+                  <strong>AI 流程工程与知识库</strong>
+                  <span>提示词、SOP、审核路径、使用规范</span>
+                </div>
+              </div>
+              <div class="map-stack">
+                <div class="map-card">
+                  <b>OUTPUT</b>
+                  <strong>宣教模板与培训内容</strong>
+                  <span>多端展示 / 统一维护</span>
+                </div>
+                <div class="map-card">
+                  <b>OUTPUT</b>
+                  <strong>数字人交互入口</strong>
+                  <span>网页 / 展厅 / 培训</span>
+                </div>
+              </div>
             </div>
-            <div class="demo-lines">
-              <div>分支方向：患者宣教、常见问题、院内培训演示</div>
-              <div>上线边界：不做诊断、处方、手术建议或远程会诊</div>
-              <div>项目衔接：可与知识库、宣教模板、培训服务组合销售</div>
+            <div class="lab-ruler"></div>
+          </div>
+          <aside class="workbench" aria-label="医院 AI 作业台示意">
+            <div class="workbench-head">
+              <span>MED-AI OPS BOARD</span>
+              <span class="pulse">CONTENT HUB</span>
+            </div>
+            <div class="workbench-body">
+              <div class="rail">
+                <code>DOC</code>
+                <div><strong>门诊宣教模板</strong><span>统一口径后用于院内沟通</span></div>
+                <i></i>
+              </div>
+              <div class="rail">
+                <code>SOP</code>
+                <div><strong>科室流程知识库</strong><span>制度、路径、常见问题统一维护</span></div>
+                <i></i>
+              </div>
+              <div class="rail">
+                <code>QC</code>
+                <div><strong>文书质控辅助</strong><span>完整性、格式、逻辑一致性检查</span></div>
+                <i></i>
+              </div>
+              <div class="rail">
+                <code>AVT</code>
+                <div><strong>数字人展示系统</strong><span>宣教、培训、问答演示入口</span></div>
+                <i></i>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="services">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <div class="section-index reveal">Service Scope</div>
+              <h2 class="reveal">面向医疗机构的 AI 应用能力</h2>
+            </div>
+            <p class="reveal">
+              围绕医院运营、科室管理与患者沟通，提供可模块化部署的 AI 技术服务。
+            </p>
+          </div>
+
+          <div class="service-grid reveal">
+            <article class="service-card" data-code="01">
+              <h3>智能文书与办公助手</h3>
+              <p>面向院办、运营与科室管理场景，建设规范化文书生成与材料整理能力。</p>
+              <ul>
+                <li>文书模板库</li>
+                <li>提示词配置</li>
+                <li>员工使用培训</li>
+              </ul>
+            </article>
+            <article class="service-card" data-code="02">
+              <h3>科室知识库建设</h3>
+              <p>将 SOP、FAQ、宣教内容和培训资料结构化，支持检索、问答和持续更新。</p>
+              <ul>
+                <li>知识库结构设计</li>
+                <li>内容版本管理</li>
+                <li>问答入口配置</li>
+              </ul>
+            </article>
+            <article class="service-card" data-code="03">
+              <h3>医学内容数字化</h3>
+              <p>将专科宣教、术前术后说明、常见问题整理为适合网页、屏幕和公众号的内容体系。</p>
+              <ul>
+                <li>宣教脚本</li>
+                <li>多端展示</li>
+                <li>审校流程</li>
+              </ul>
+            </article>
+            <article class="service-card" data-code="04">
+              <h3>数字人与交互展示</h3>
+              <p>基于院内确认内容构建数字人演示、互动问答页面和员工培训入口。</p>
+              <ul>
+                <li>数字人页面</li>
+                <li>互动问答</li>
+                <li>培训演示</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section paper" id="specialty-ai">
+        <div class="wrap specialty-module reveal">
+          <div class="specialty-copy">
+            <div class="section-index">Specialty AI Branch</div>
+            <h2>耳鼻喉专病 AI 预问诊</h2>
+            <p>
+              围绕过敏性鼻炎等高频专病场景，建设患者端信息采集、医生端病史摘要和数字人宣教入口，服务门诊接诊前的信息整理与患者沟通。
+            </p>
+            <div class="specialty-actions">
+              <a class="btn primary" href="/rhinitis-ai">查看分支页面</a>
+              <a class="btn secondary" href="#product">关联数字人系统</a>
+            </div>
+          </div>
+          <div class="specialty-board" aria-label="耳鼻喉专病 AI 模块能力">
+            <div class="specialty-row">
+              <code>INTAKE</code>
+              <div><strong>结构化病史采集</strong><span>症状、诱因、过敏史、用药史与环境暴露信息整理。</span></div>
+            </div>
+            <div class="specialty-row">
+              <code>SUMMARY</code>
+              <div><strong>医生端摘要</strong><span>将患者描述转为清晰、可阅读的诊前信息摘要。</span></div>
+            </div>
+            <div class="specialty-row">
+              <code>EDU</code>
+              <div><strong>数字人宣教</strong><span>用于检查说明、常见问题和科室服务介绍的展示入口。</span></div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  <footer class="footer">
-    <div class="wrap">
-      <span>医院 AI 信息化技术服务</span>
-      <span>定位：非诊疗 AI 工具落地、流程优化和知识库建设</span>
-    </div>
-  </footer>
+      <section class="section paper" id="product">
+        <div class="wrap product">
+          <div class="product-copy">
+            <div class="section-index reveal">Digital Human</div>
+            <h2 class="reveal">数字人宣教与展示系统</h2>
+            <p class="reveal">
+              将专科宣教、常见问题、培训材料与服务介绍转化为数字人交互入口，适用于官网、候诊屏、公众号和院内培训场景。
+            </p>
+            <div class="product-actions reveal">
+              <a class="btn primary" href="/">打开数字人演示</a>
+              <a class="btn secondary" href="#contact">联系咨询</a>
+            </div>
+          </div>
+
+          <div class="screen reveal" aria-label="医疗数字人产品界面示意">
+            <div class="screen-bar">
+              <div class="screen-dot"><i></i><i></i><i></i></div>
+              <span>DIGITAL HUMAN / EDUCATION NODE</span>
+            </div>
+            <div class="screen-grid">
+              <div class="screen-side">
+                <b>MODULES</b>
+                <div class="side-line"></div>
+                <div class="side-line short"></div>
+                <div class="side-line"></div>
+                <div class="side-line short"></div>
+              </div>
+              <div class="screen-main">
+                <div class="screen-title">
+                  <strong>AI 医疗宣教助手</strong>
+                  <span>content library</span>
+                </div>
+                <div class="screen-row"><code>Q&A</code><div>科室常见问题问答演示</div><i style="width: 84%;"></i></div>
+                <div class="screen-row"><code>EDU</code><div>术前术后宣教内容呈现</div><i style="width: 66%;"></i></div>
+                <div class="screen-row"><code>TRAIN</code><div>院内员工培训与话术练习</div><i style="width: 74%;"></i></div>
+                <div class="screen-row"><code>REVIEW</code><div>内容版本与审校记录</div><i style="width: 58%;"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section dark" id="advisor">
+        <div class="wrap advisor">
+          <div class="advisor-system reveal" aria-label="医学顾问审核机制示意">
+            <h3>医学内容治理与技术实现协同完成。</h3>
+            <div class="review-ledger">
+              <div><b>01 / CONTENT</b><span>医学材料结构化整理。</span></div>
+              <div><b>02 / REVIEW</b><span>术语、表达与重点内容审校。</span></div>
+              <div><b>03 / SYSTEM</b><span>知识库、页面与交互工具配置。</span></div>
+            </div>
+          </div>
+          <div class="advisor-copy">
+            <div class="section-index reveal">Expert Collaboration</div>
+            <h2 class="reveal">医学专业与工程能力结合</h2>
+            <p class="reveal">
+              由医学专业顾问参与内容审校，工程团队负责知识结构、应用配置、界面设计和系统上线支持。
+            </p>
+            <div class="advisor-facts reveal">
+              <div><b>ROLE</b><span>医学专业顾问</span></div>
+              <div><b>FOCUS</b><span>专科内容审校与表达优化</span></div>
+              <div><b>OUTPUT</b><span>知识库、宣教、培训与质控资料</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta" id="contact">
+        <div class="wrap reveal">
+          <h2>为医疗机构建设可上线的 AI 内容与应用入口。</h2>
+          <p>
+            可从科室知识库、宣教数字人、智能文书或员工培训系统开始建设。
+          </p>
+          <a class="btn" href="/">先看医疗数字人演示</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <span>临床 AI 信息化工作室</span>
+        <span>医院 AI 流程工程 / 宣教数字人 / 知识库与培训系统</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const revealTargets = document.querySelectorAll(".reveal");
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      revealTargets.forEach((el) => el.classList.add("is-visible"));
+    } else {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.16 });
+      revealTargets.forEach((el, index) => {
+        el.style.transitionDelay = `${Math.min(index % 4, 3) * 70}ms`;
+        observer.observe(el);
+      });
+    }
+  </script>
 </body>
 </html>

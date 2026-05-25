@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>耳鼻喉专病 AI 预问诊系统</title>
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    :root {
+      --porcelain: #f7f8f4;
+      --paper: #fffdf8;
+      --ink: #161915;
+      --ink-soft: #343a35;
+      --ash: #6d746e;
+      --line: #cbd5cc;
+      --mist: #e8eee7;
+      --surgical: #0c6f62;
+      --surgical-2: #12453d;
+      --copper: #a45f34;
+      --signal: #11a28d;
+      --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+      --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      --mono: "SFMono-Regular", "Cascadia Mono", "Roboto Mono", monospace;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(12, 111, 98, .05) 1px, transparent 1px) 0 0 / 42px 42px,
+        linear-gradient(180deg, var(--porcelain), #edf2ef 58%, #f7f8f4);
+      font-family: var(--sans);
+      line-height: 1.65;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(115deg, rgba(22, 25, 21, .035) 0 1px, transparent 1px 8px),
+        radial-gradient(circle at 80% 18%, rgba(164, 95, 52, .10), transparent 28%),
+        radial-gradient(circle at 6% 90%, rgba(12, 111, 98, .09), transparent 30%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    p, h1, h2, h3 { margin: 0; }
+
+    .wrap {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .nav-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(247, 248, 244, .88);
+      border-bottom: 1px solid rgba(203, 213, 204, .75);
+      backdrop-filter: blur(16px);
+    }
+
+    .nav {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      color: var(--paper);
+      background: var(--ink);
+      border: 1px solid rgba(255, 255, 255, .22);
+      font-family: var(--serif);
+      font-size: 19px;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      bottom: -5px;
+      width: 15px;
+      height: 15px;
+      background: var(--signal);
+      border: 2px solid var(--porcelain);
+    }
+
+    .brand strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 2px;
+      color: var(--ash);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    .nav-action {
+      color: var(--paper);
+      background: var(--surgical-2);
+      padding: 10px 15px;
+      border: 1px solid var(--surgical-2);
+    }
+
+    .hero {
+      min-height: 630px;
+      display: grid;
+      grid-template-columns: minmax(0, .96fr) minmax(390px, 1.04fr);
+      gap: clamp(30px, 5vw, 72px);
+      align-items: center;
+      padding: clamp(34px, 5.4vh, 62px) 0 clamp(34px, 5vh, 58px);
+    }
+
+    .kicker,
+    .section-index {
+      color: var(--surgical-2);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+      font-weight: 700;
+    }
+
+    .kicker::before {
+      content: "";
+      width: 72px;
+      height: 1px;
+      background: var(--surgical);
+    }
+
+    h1 {
+      max-width: 760px;
+      font-family: var(--serif);
+      font-size: clamp(48px, 7.4vw, 92px);
+      line-height: .98;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .accent {
+      display: block;
+      color: var(--surgical-2);
+      font-style: italic;
+    }
+
+    .hero-copy {
+      max-width: 650px;
+      margin-top: 28px;
+      color: var(--ink-soft);
+      font-size: clamp(18px, 1.7vw, 22px);
+      line-height: 1.75;
+      font-weight: 600;
+    }
+
+    .hero-actions,
+    .module-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border: 1px solid var(--ink);
+      font-weight: 800;
+      transition: transform 220ms var(--ease), background 220ms var(--ease);
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn.primary { color: var(--paper); background: var(--ink); }
+    .btn.secondary { color: var(--ink); background: transparent; }
+
+    .intake-lab {
+      min-height: 470px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(90deg, rgba(12,111,98,.14) 1px, transparent 1px) 0 0 / 45px 45px,
+        linear-gradient(180deg, rgba(255,253,248,.96), rgba(255,253,248,.76));
+      box-shadow: 0 28px 76px rgba(22, 25, 21, .13);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .intake-lab::after {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border: 1px solid rgba(12, 111, 98, .18);
+      pointer-events: none;
+    }
+
+    .lab-top {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ash);
+    }
+
+    .status {
+      color: var(--surgical);
+      font-weight: 800;
+    }
+
+    .intake-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: .88fr 1.12fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .queue,
+    .summary-card {
+      background: rgba(255,253,248,.88);
+      border: 1px solid rgba(203,213,204,.9);
+      padding: 18px;
+    }
+
+    .queue h3,
+    .summary-card h3 {
+      font-family: var(--serif);
+      font-size: 24px;
+      line-height: 1.1;
+      margin-bottom: 14px;
+    }
+
+    .question {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--mist);
+    }
+
+    .question:last-child { border-bottom: none; }
+
+    .question b {
+      display: block;
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .question span,
+    .summary-card li {
+      color: var(--ash);
+      font-size: 14px;
+    }
+
+    .summary-card ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 11px;
+    }
+
+    .summary-card li {
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 10px;
+    }
+
+    .summary-card li::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      margin-top: 10px;
+      background: var(--surgical);
+    }
+
+    .section {
+      padding: clamp(70px, 9vw, 112px) 0;
+      border-top: 1px solid rgba(203, 213, 204, .8);
+    }
+
+    .section.paper {
+      background: rgba(255, 253, 248, .74);
+    }
+
+    .section.dark {
+      color: var(--paper);
+      background:
+        linear-gradient(115deg, rgba(12, 111, 98, .18), transparent 40%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 8px),
+        #171a18;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(320px, .52fr);
+      gap: clamp(28px, 6vw, 90px);
+      align-items: end;
+      margin-bottom: clamp(30px, 5vw, 56px);
+    }
+
+    .section-index {
+      color: var(--copper);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .section-head p {
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .cap-card {
+      min-height: 290px;
+      background: rgba(255,253,248,.9);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cap-card::before {
+      content: attr(data-code);
+      position: absolute;
+      right: 20px;
+      top: 16px;
+      color: rgba(12, 111, 98, .18);
+      font-family: var(--mono);
+      font-size: 42px;
+      font-weight: 800;
+    }
+
+    .cap-card h3 {
+      max-width: 260px;
+      font-family: var(--serif);
+      font-size: 30px;
+      line-height: 1.08;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cap-card p {
+      color: var(--ash);
+      position: relative;
+      z-index: 1;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(255, 253, 248, .18);
+      border: 1px solid rgba(255, 253, 248, .18);
+    }
+
+    .flow-step {
+      min-height: 210px;
+      padding: 24px;
+      background: rgba(255,253,248,.055);
+    }
+
+    .flow-step code {
+      color: var(--signal);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .flow-step h3 {
+      margin-top: 20px;
+      margin-bottom: 12px;
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .flow-step p {
+      color: rgba(255,253,248,.72);
+      font-size: 15px;
+    }
+
+    .link-panel {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+    }
+
+    .link-copy,
+    .link-list {
+      background: rgba(255,253,248,.9);
+      padding: clamp(26px, 4vw, 46px);
+    }
+
+    .link-copy p {
+      margin-top: 18px;
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .link-list {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .link-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--mist);
+    }
+
+    .link-row:last-child { border-bottom: none; }
+    .link-row code {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .link-row strong { display: block; margin-bottom: 4px; }
+    .link-row span { color: var(--ash); font-size: 14px; }
+
+    .cta {
+      color: var(--paper);
+      padding: clamp(70px, 8vw, 108px) 0;
+      background:
+        repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 1px, transparent 1px 11px),
+        linear-gradient(120deg, rgba(12, 111, 98, .92), #151814 62%);
+    }
+
+    .cta h2 {
+      max-width: 880px;
+    }
+
+    .cta p {
+      max-width: 680px;
+      margin-top: 18px;
+      color: rgba(255,253,248,.76);
+      font-size: 18px;
+    }
+
+    .cta .btn {
+      margin-top: 30px;
+      color: var(--ink);
+      background: var(--paper);
+      border-color: var(--paper);
+    }
+
+    .footer {
+      padding: 24px 0;
+      border-top: 1px solid rgba(203, 213, 204, .8);
+      color: var(--ash);
+      font-size: 13px;
+    }
+
+    .footer .wrap {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 760ms var(--ease), transform 760ms var(--ease);
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none;
+        transition: none;
+      }
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @media (max-width: 1060px) {
+      .hero,
+      .section-head,
+      .link-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .capability-grid,
+      .flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .wrap {
+        width: min(100% - 28px, 1180px);
+      }
+
+      .nav {
+        min-height: 64px;
+      }
+
+      .brand-copy,
+      .nav-links a:not(.nav-action) {
+        display: none;
+      }
+
+      .nav-action {
+        padding: 8px 11px;
+        font-size: 13px;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 34px;
+      }
+
+      h1 {
+        font-size: clamp(40px, 12vw, 58px);
+      }
+
+      .hero-copy {
+        font-size: 17px;
+      }
+
+      .intake-lab {
+        min-height: auto;
+        padding: 20px;
+      }
+
+      .intake-grid,
+      .capability-grid,
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .link-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      .footer .wrap {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav-wrap">
+    <nav class="nav wrap" aria-label="主导航">
+      <a class="brand" href="/hospital-ai" aria-label="返回临床 AI 信息化工作室">
+        <span class="brand-mark">医</span>
+        <span class="brand-copy">
+          <strong>临床 AI 信息化工作室</strong>
+          <span>Specialty AI Module</span>
+        </span>
+      </a>
+      <div class="nav-links">
+        <a href="/hospital-ai">工作室官网</a>
+        <a href="#modules">系统能力</a>
+        <a href="#workflow">工作流</a>
+        <a href="#connection">官网结合</a>
+        <a class="nav-action" href="/">数字人演示</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap" aria-label="耳鼻喉专病 AI 首屏">
+      <div>
+        <div class="kicker reveal">ENT Specialty AI / Pre-Visit Intake</div>
+        <h1 class="reveal">
+          过敏性鼻炎
+          <span class="accent">预问诊与宣教系统</span>
+        </h1>
+        <p class="hero-copy reveal">
+          面向耳鼻喉科高频专病场景，提供患者端信息采集、医生端结构化摘要和数字人宣教入口，帮助门诊前的信息准备更完整、更清晰。
+        </p>
+        <div class="hero-actions reveal">
+          <a class="btn primary" href="#modules">查看系统能力</a>
+          <a class="btn secondary" href="/hospital-ai">返回工作室官网</a>
+        </div>
+      </div>
+
+      <div class="intake-lab reveal" aria-label="预问诊系统界面示意">
+        <div class="lab-top">
+          <span>RHINITIS INTAKE BOARD</span>
+          <span class="status">STRUCTURED</span>
+        </div>
+        <div class="intake-grid">
+          <div class="queue">
+            <h3>患者端采集</h3>
+            <div class="question"><b>SYMPTOM</b><span>鼻塞、喷嚏、流涕、鼻痒、眼部症状</span></div>
+            <div class="question"><b>TRIGGER</b><span>季节、尘螨、花粉、宠物、冷热刺激</span></div>
+            <div class="question"><b>HISTORY</b><span>过敏史、家族史、既往用药与检查资料</span></div>
+          </div>
+          <div class="summary-card">
+            <h3>医生端摘要</h3>
+            <ul>
+              <li>主诉与症状持续时间</li>
+              <li>疑似诱因与相关暴露</li>
+              <li>既往检查、用药经过与疗效记录</li>
+              <li>需要医生重点追问的信息</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section paper" id="modules">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="section-index reveal">Core Modules</div>
+            <h2 class="reveal">专病场景下的三类核心能力</h2>
+          </div>
+          <p class="reveal">
+            系统定位为信息采集、医学内容整理和院内宣教展示工具，帮助门诊沟通更有准备。
+          </p>
+        </div>
+
+        <div class="capability-grid reveal">
+          <article class="cap-card" data-code="01">
+            <h3>智能预问诊</h3>
+            <p>通过问卷与自然语言追问，收集过敏性鼻炎相关症状、诱因、病史和用药信息。</p>
+          </article>
+          <article class="cap-card" data-code="02">
+            <h3>结构化病史摘要</h3>
+            <p>将患者表达整理为医生易读的接诊前摘要，减少重复询问和信息遗漏。</p>
+          </article>
+          <article class="cap-card" data-code="03">
+            <h3>宣教数字人入口</h3>
+            <p>把检查说明、常见问题、用药注意和院内服务介绍转化为可展示的交互内容。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dark" id="workflow">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="section-index reveal">Workflow</div>
+            <h2 class="reveal">从患者描述到医生可读摘要</h2>
+          </div>
+          <p class="reveal">
+            系统按采集、结构化、摘要、宣教四个环节组织，便于与医院现有门诊流程和内容管理方式衔接。
+          </p>
+        </div>
+
+        <div class="flow reveal">
+          <article class="flow-step">
+            <code>STEP 01</code>
+            <h3>采集</h3>
+            <p>患者通过网页或数字人完成症状、病史和诱因信息填写。</p>
+          </article>
+          <article class="flow-step">
+            <code>STEP 02</code>
+            <h3>结构化</h3>
+            <p>把自然语言描述归入标准字段，形成可检索的病史资料。</p>
+          </article>
+          <article class="flow-step">
+            <code>STEP 03</code>
+            <h3>摘要</h3>
+            <p>面向医生生成接诊前摘要、待确认信息和内容版本记录。</p>
+          </article>
+          <article class="flow-step">
+            <code>STEP 04</code>
+            <h3>宣教</h3>
+            <p>将院内确认内容同步到数字人、网页或候诊屏展示入口。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section paper" id="connection">
+      <div class="wrap link-panel reveal">
+        <div class="link-copy">
+          <div class="section-index">Website Branch</div>
+          <h2>作为工作室官网的专病分支</h2>
+          <p>
+            作为工作室官网的专科应用入口，主站展示整体 AI 信息化能力，子页面呈现耳鼻喉专病场景的系统构成与应用价值。
+          </p>
+          <div class="module-actions">
+            <a class="btn primary" href="/hospital-ai">回到主站</a>
+            <a class="btn secondary" href="/">查看数字人演示</a>
+          </div>
+        </div>
+        <div class="link-list">
+          <div class="link-row">
+            <code>MAIN</code>
+            <div><strong>主官网入口</strong><span>展示医疗 AI 信息化、知识库和数字人服务能力。</span></div>
+          </div>
+          <div class="link-row">
+            <code>BRANCH</code>
+            <div><strong>专病系统页</strong><span>展示过敏性鼻炎预问诊、医生摘要和宣教数字人。</span></div>
+          </div>
+          <div class="link-row">
+            <code>DEMO</code>
+            <div><strong>数字人演示</strong><span>支持接入专病知识库，形成患者宣教演示版本。</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap reveal">
+        <h2>面向耳鼻喉专病场景的 AI 信息化组件</h2>
+        <p>
+          可对接患者端表单、医生端摘要页和数字人宣教入口，并按医院现有流程接入知识库与内容审校机制。
+        </p>
+        <a class="btn" href="/hospital-ai">返回临床 AI 信息化工作室</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <span>临床 AI 信息化工作室</span>
+      <span>耳鼻喉专病 AI / 预问诊 / 数字人宣教</span>
+    </div>
+  </footer>
+
+  <script>
+    const revealTargets = document.querySelectorAll(".reveal");
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      revealTargets.forEach((el) => el.classList.add("is-visible"));
+    } else {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.16 });
+      revealTargets.forEach((el, index) => {
+        el.style.transitionDelay = `${Math.min(index % 4, 3) * 70}ms`;
+        observer.observe(el);
+      });
+    }
+  </script>
+</body>
+</html>

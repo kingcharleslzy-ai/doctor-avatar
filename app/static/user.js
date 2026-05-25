@@ -1327,10 +1327,10 @@ async function loadProfile() {
   setText("heroTitle", `${profile.name}医生`);
   setText(
     "heroDescription",
-    `当前主舞台优先保留给医生形象与后续视频会话，图文与语音交互全部收进右侧提问舱。`
+    `专注耳鼻咽喉科常见问题的健康科普与就医建议，可通过文字或语音进行咨询。`
   );
   setText("heroSummary", `${profile.public_tagline}。`);
-  setText("identityNote", "当前优先保留主舞台和低干扰会话布局，后续视频分身、字幕和实时状态会直接叠加在这里。");
+  setText("identityNote", "支持文字问答、语音输入、回答朗读和数字人会话展示。");
   setText("hospitalValue", profile.hospital || "-");
   setText("doctorState", profile.name || "-");
   setText("deptState", profile.department || "-");
