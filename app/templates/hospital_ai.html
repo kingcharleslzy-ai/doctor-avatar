@@ -324,31 +324,27 @@
     }
 
     .hero-visual {
-      min-height: 500px;
+      min-height: 430px;
       position: relative;
       display: grid;
-      grid-template-rows: minmax(0, 1fr) auto;
-      gap: 16px;
-      align-items: stretch;
+      align-items: center;
       isolation: isolate;
     }
 
-    .signal-lab {
+    .studio-case {
       position: relative;
-      min-height: 300px;
-      border: 1px solid var(--line);
+      min-height: 420px;
+      border: 1px solid rgba(22, 25, 21, .22);
       background:
-        linear-gradient(90deg, rgba(12, 111, 98, .08) 1px, transparent 1px) 0 0 / 34px 34px,
-        linear-gradient(180deg, rgba(255, 253, 248, .92), rgba(226, 234, 227, .92));
+        linear-gradient(90deg, rgba(12, 111, 98, .07) 1px, transparent 1px) 0 0 / 30px 30px,
+        linear-gradient(180deg, rgba(255, 253, 248, .96), rgba(236, 242, 236, .94));
       overflow: hidden;
       box-shadow: var(--shadow);
-      padding: 24px;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: 24px;
+      grid-template-columns: 58px minmax(0, 1fr);
     }
 
-    .signal-lab::before {
+    .studio-case::before {
       content: "";
       position: absolute;
       inset: 24px;
@@ -356,189 +352,118 @@
       pointer-events: none;
     }
 
-    .signal-lab::after {
-      content: "";
-      position: absolute;
-      left: 24px;
-      right: 24px;
-      top: 50%;
-      height: 1px;
-      background:
-        linear-gradient(90deg, transparent, rgba(12, 111, 98, .42), transparent);
-      pointer-events: none;
-    }
-
-    .lab-caption {
+    .case-rail {
       position: relative;
       z-index: 2;
-      color: var(--ink);
-      max-width: calc(100% - 70px);
-    }
-
-    .lab-caption strong {
-      display: block;
-      font-family: var(--serif);
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
-    .lab-caption span {
-      display: block;
-      margin-top: 6px;
-      color: var(--ash);
-      font-size: 13px;
-    }
-
-    .system-map {
-      position: relative;
+      background: var(--ink);
+      color: rgba(255, 253, 248, .8);
       display: grid;
-      grid-template-columns: 1fr 1.1fr 1fr;
-      gap: 14px;
-      z-index: 2;
-      align-items: stretch;
+      place-items: center;
+      border-right: 1px solid rgba(255, 253, 248, .18);
     }
 
-    .map-stack {
-      display: grid;
-      gap: 12px;
-      align-content: stretch;
-    }
-
-    .map-card {
-      min-height: 82px;
-      padding: 12px;
-      border: 1px solid rgba(12, 111, 98, .24);
-      background: rgba(255, 253, 248, .72);
-      box-shadow: 0 14px 34px rgba(22, 25, 21, .07);
-      display: grid;
-      align-content: start;
-    }
-
-    .map-card.dark {
-      color: var(--paper);
-      background: var(--surgical-2);
-      border-color: var(--surgical-2);
-    }
-
-    .map-card b {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--copper);
+    .case-rail span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
       font-family: var(--mono);
       font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
     }
 
-    .map-card.dark b {
-      color: var(--signal);
+    .case-sheet {
+      position: relative;
+      z-index: 2;
+      padding: 24px 34px 24px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 14px;
     }
 
-    .map-card strong {
-      display: block;
-      font-size: 14px;
-      line-height: 1.2;
-    }
-
-    .map-card span {
-      display: block;
-      margin-top: 5px;
-      color: var(--ash);
-      font-size: 12px;
-    }
-
-    .map-card.dark span {
-      color: rgba(255, 253, 248, .72);
-    }
-
-    .lab-ruler {
+    .case-sheet::after {
+      content: "";
       position: absolute;
-      right: 24px;
-      top: 24px;
-      bottom: 24px;
-      width: 44px;
+      right: 28px;
+      top: 28px;
+      width: 54px;
+      height: 190px;
       border-left: 1px solid rgba(12, 111, 98, .22);
       background:
         repeating-linear-gradient(180deg, transparent 0 13px, rgba(12, 111, 98, .22) 13px 14px);
       opacity: .7;
+      pointer-events: none;
     }
 
-    .workbench {
-      position: relative;
-      z-index: 3;
-      width: 100%;
-      margin-left: auto;
-      border: 1px solid rgba(22, 25, 21, .22);
-      background: var(--paper);
-      box-shadow: 0 22px 54px rgba(22, 25, 21, .18);
-    }
-
-    .workbench-head {
+    .case-kicker {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
+      gap: 10px;
+      color: var(--copper);
       font-family: var(--mono);
-      font-size: 12px;
-      color: var(--ash);
-    }
-
-    .pulse {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--surgical);
+      font-size: 11px;
       font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
     }
 
-    .pulse::before {
+    .case-kicker::before {
       content: "";
-      width: 8px;
-      height: 8px;
-      background: var(--signal);
-      animation: pulse 1.8s infinite;
+      width: 42px;
+      height: 1px;
+      background: var(--copper);
     }
 
-    .workbench-body {
-      padding: 0;
+    .case-title {
+      max-width: 360px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .case-title strong {
+      font-family: var(--serif);
+      font-size: clamp(26px, 2.4vw, 32px);
+      line-height: 1.1;
+    }
+
+    .case-title span {
+      color: var(--ash);
+      font-size: 13px;
+    }
+
+    .case-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1px;
+      align-self: end;
       background: var(--line);
+      border: 1px solid var(--line);
     }
 
-    .rail {
+    .case-item {
+      min-height: 84px;
+      padding: 12px 15px;
+      background: rgba(255, 253, 248, .9);
       display: grid;
-      grid-template-columns: 46px 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: 14px 16px;
-      border-bottom: 0;
-      background: var(--paper);
+      align-content: start;
+      gap: 8px;
     }
 
-    .rail:last-child { border-bottom: none; }
-
-    .rail code {
-      font-family: var(--mono);
+    .case-item b {
       color: var(--copper);
-      font-size: 12px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .1em;
     }
 
-    .rail strong {
-      display: block;
-      font-size: 14px;
-      line-height: 1.25;
+    .case-item strong {
+      font-size: 17px;
+      line-height: 1.2;
     }
 
-    .rail span {
+    .case-item span {
       color: var(--ash);
       font-size: 12px;
-    }
-
-    .rail i {
-      display: none;
+      line-height: 1.55;
     }
 
     .section {
@@ -1212,11 +1137,11 @@
       }
 
       .hero-visual {
-        min-height: 500px;
+        min-height: 470px;
       }
 
-      .signal-lab {
-        min-height: 300px;
+      .studio-case {
+        min-height: 450px;
       }
 
       .service-grid {
@@ -1273,46 +1198,25 @@
       }
 
       .hero-visual {
-        min-height: 248px;
+        min-height: auto;
       }
 
-      .signal-lab {
-        position: relative;
-        inset: auto;
-        height: 238px;
-        padding: 18px;
+      .studio-case {
+        min-height: auto;
+        grid-template-columns: 42px minmax(0, 1fr);
       }
 
-      .workbench {
+      .case-sheet {
+        padding: 22px;
+        gap: 18px;
+        grid-template-rows: auto auto;
+      }
+
+      .case-sheet::after {
         display: none;
       }
 
-      .system-map {
-        display: none;
-      }
-
-      .lab-caption {
-        left: auto;
-        right: auto;
-        top: auto;
-        max-width: calc(100% - 64px);
-      }
-
-      .lab-caption strong {
-        font-size: 23px;
-      }
-
-      .lab-ruler {
-        right: 18px;
-        top: 18px;
-        bottom: 18px;
-      }
-
-      .rail {
-        grid-template-columns: 52px 1fr;
-      }
-
-      .rail i {
+      .case-grid {
         display: none;
       }
 
@@ -1389,7 +1293,7 @@
     <main id="main">
       <section class="wrap hero" aria-label="首页首屏">
         <div class="hero-copy-block">
-          <div class="kicker reveal">Clinical AI / Medical Digital Systems</div>
+          <div class="kicker reveal">医疗内容与系统建设</div>
           <h1 class="reveal">
             <span class="h1-line">医疗机构 AI</span>
             <span class="h1-line accent">信息化建设服务</span>
@@ -1403,72 +1307,36 @@
           </div>
         </div>
 
-        <div class="hero-visual reveal" aria-label="医院 AI 工作台视觉">
-          <div class="signal-lab" aria-hidden="true">
-            <div class="lab-caption">
-              <strong>Hospital AI Operating System</strong>
-              <span>知识库、文书、宣教与培训模块化建设。</span>
-            </div>
-            <div class="system-map">
-              <div class="map-stack">
-                <div class="map-card">
-                  <b>INPUT</b>
-                  <strong>科室制度与宣教材料</strong>
-                  <span>脱敏整理 / 版本标记</span>
+        <div class="hero-visual reveal" aria-label="工作室服务档案">
+          <aside class="studio-case">
+            <div class="case-rail"><span>Clinical AI Studio</span></div>
+            <div class="case-sheet">
+              <div class="case-kicker">服务档案</div>
+              <div class="case-title">
+                <strong>把医院已有内容整理成可上线的 AI 应用。</strong>
+                <span>面向科室知识、患者宣教、内部培训和数字人展示，提供从内容梳理到页面落地的完整建设支持。</span>
+              </div>
+              <div class="case-grid">
+                <div class="case-item">
+                  <b>01</b>
+                  <strong>科室知识库</strong>
+                  <span>SOP、FAQ、宣教材料与培训资料结构化维护。</span>
                 </div>
-                <div class="map-card">
-                  <b>INPUT</b>
-                  <strong>文书规则与质控口径</strong>
-                  <span>格式 / 完整性 / 逻辑</span>
+                <div class="case-item">
+                  <b>02</b>
+                  <strong>智能文书助手</strong>
+                  <span>面向院办、运营和科室管理的材料整理工具。</span>
                 </div>
-              </div>
-              <div class="map-stack">
-                <div class="map-card dark">
-                  <b>ENGINE</b>
-                  <strong>AI 流程工程与知识库</strong>
-                  <span>提示词、SOP、审核路径、使用规范</span>
+                <div class="case-item">
+                  <b>03</b>
+                  <strong>患者宣教内容</strong>
+                  <span>把专业说明转成网页、屏幕、公众号可用内容。</span>
                 </div>
-              </div>
-              <div class="map-stack">
-                <div class="map-card">
-                  <b>OUTPUT</b>
-                  <strong>宣教模板与培训内容</strong>
-                  <span>多端展示 / 统一维护</span>
+                <div class="case-item">
+                  <b>04</b>
+                  <strong>数字人展示</strong>
+                  <span>用于服务介绍、常见问题和院内培训演示。</span>
                 </div>
-                <div class="map-card">
-                  <b>OUTPUT</b>
-                  <strong>数字人交互入口</strong>
-                  <span>网页 / 展厅 / 培训</span>
-                </div>
-              </div>
-            </div>
-            <div class="lab-ruler"></div>
-          </div>
-          <aside class="workbench" aria-label="医院 AI 作业台示意">
-            <div class="workbench-head">
-              <span>MED-AI OPS BOARD</span>
-              <span class="pulse">CONTENT HUB</span>
-            </div>
-            <div class="workbench-body">
-              <div class="rail">
-                <code>DOC</code>
-                <div><strong>门诊宣教模板</strong><span>统一口径后用于院内沟通</span></div>
-                <i></i>
-              </div>
-              <div class="rail">
-                <code>SOP</code>
-                <div><strong>科室流程知识库</strong><span>制度、路径、常见问题统一维护</span></div>
-                <i></i>
-              </div>
-              <div class="rail">
-                <code>QC</code>
-                <div><strong>文书质控辅助</strong><span>完整性、格式、逻辑一致性检查</span></div>
-                <i></i>
-              </div>
-              <div class="rail">
-                <code>AVT</code>
-                <div><strong>数字人展示系统</strong><span>宣教、培训、问答演示入口</span></div>
-                <i></i>
               </div>
             </div>
           </aside>
@@ -1619,7 +1487,7 @@
             <div class="advisor-facts reveal">
               <div><b>ROLE</b><span>医学专业顾问</span></div>
               <div><b>FOCUS</b><span>专科内容审校与表达优化</span></div>
-              <div><b>OUTPUT</b><span>知识库、宣教、培训与质控资料</span></div>
+              <div><b>交付</b><span>知识库、宣教、培训与质控资料</span></div>
             </div>
           </div>
         </div>
