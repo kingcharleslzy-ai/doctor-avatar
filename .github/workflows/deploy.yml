@@ -39,18 +39,25 @@ jobs:
       - name: Rebuild and restart containers
         run: |
           cd /root/doctor-avatar
-          docker compose -f docker-compose.prod.yml up -d --build
+          docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml up -d --build app
 
       - name: Sync doctor memory snapshot
         run: |
           cd /root/doctor-avatar
-          docker compose -f docker-compose.prod.yml exec -T app python scripts/sync_memory_snapshot.py --prune-missing
+          docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml exec -T app python scripts/sync_memory_snapshot.py --prune-missing
 
       - name: Restart app after memory sync
         run: |
           cd /root/doctor-avatar
-          docker compose -f docker-compose.prod.yml restart app
+          docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml restart app
 
-      - name: Restart nginx to apply config
+      - name: Install and reload host nginx
         run: |
-          docker compose -f /root/doctor-avatar/docker-compose.prod.yml restart nginx
+          cd /root/doctor-avatar
+          install -m 0644 deploy/nginx/host/000-default-deny.conf /etc/nginx/sites-available/000-default-deny
+          install -m 0644 deploy/nginx/host/doctor-avatar.conf /etc/nginx/sites-available/doctor-avatar
+          ln -sfn /etc/nginx/sites-available/000-default-deny /etc/nginx/sites-enabled/000-default-deny
+          ln -sfn /etc/nginx/sites-available/doctor-avatar /etc/nginx/sites-enabled/doctor-avatar
+          rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/biz-data-hub /etc/nginx/sites-enabled/biz-data-hub.bak
+          nginx -t
+          systemctl reload nginx

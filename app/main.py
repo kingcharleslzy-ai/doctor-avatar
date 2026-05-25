@@ -328,6 +328,11 @@ def mobile(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("user_mobile.html", {"request": request, "v": _CACHE_BUST})
 
 
+@app.get("/hospital-ai", response_class=HTMLResponse)
+def hospital_ai(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("hospital_ai.html", {"request": request, "v": _CACHE_BUST})
+
+
 @app.get("/console", response_class=HTMLResponse)
 def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLResponse:
     return templates.TemplateResponse("console.html", {"request": request})
