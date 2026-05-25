@@ -324,16 +324,18 @@
     }
 
     .hero-visual {
-      min-height: 560px;
+      min-height: 500px;
       position: relative;
       display: grid;
-      align-items: end;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: stretch;
       isolation: isolate;
     }
 
     .signal-lab {
-      position: absolute;
-      inset: 0 8% 92px 0;
+      position: relative;
+      min-height: 300px;
       border: 1px solid var(--line);
       background:
         linear-gradient(90deg, rgba(12, 111, 98, .08) 1px, transparent 1px) 0 0 / 34px 34px,
@@ -341,6 +343,9 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       padding: 24px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 24px;
     }
 
     .signal-lab::before {
@@ -364,11 +369,10 @@
     }
 
     .lab-caption {
-      position: absolute;
-      left: 26px;
-      top: 22px;
+      position: relative;
       z-index: 2;
       color: var(--ink);
+      max-width: calc(100% - 70px);
     }
 
     .lab-caption strong {
@@ -387,28 +391,28 @@
     }
 
     .system-map {
-      position: absolute;
-      left: 26px;
-      right: 26px;
-      bottom: 150px;
+      position: relative;
       display: grid;
       grid-template-columns: 1fr 1.1fr 1fr;
       gap: 14px;
       z-index: 2;
+      align-items: stretch;
     }
 
     .map-stack {
       display: grid;
       gap: 12px;
-      align-content: end;
+      align-content: stretch;
     }
 
     .map-card {
-      min-height: 78px;
+      min-height: 82px;
       padding: 12px;
       border: 1px solid rgba(12, 111, 98, .24);
       background: rgba(255, 253, 248, .72);
       box-shadow: 0 14px 34px rgba(22, 25, 21, .07);
+      display: grid;
+      align-content: start;
     }
 
     .map-card.dark {
@@ -461,12 +465,11 @@
     .workbench {
       position: relative;
       z-index: 3;
-      width: min(460px, 94%);
+      width: 100%;
       margin-left: auto;
       border: 1px solid rgba(22, 25, 21, .22);
-      background: rgba(255, 253, 248, .94);
+      background: var(--paper);
       box-shadow: 0 22px 54px rgba(22, 25, 21, .18);
-      backdrop-filter: blur(12px);
     }
 
     .workbench-head {
@@ -498,18 +501,21 @@
     }
 
     .workbench-body {
-      padding: 18px;
+      padding: 0;
       display: grid;
-      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--line);
     }
 
     .rail {
       display: grid;
-      grid-template-columns: 78px 1fr auto;
+      grid-template-columns: 46px 1fr;
       gap: 12px;
       align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(203, 213, 204, .78);
+      padding: 14px 16px;
+      border-bottom: 0;
+      background: var(--paper);
     }
 
     .rail:last-child { border-bottom: none; }
@@ -532,10 +538,7 @@
     }
 
     .rail i {
-      width: 42px;
-      height: 1px;
-      background: var(--surgical);
-      display: block;
+      display: none;
     }
 
     .section {
@@ -1209,7 +1212,11 @@
       }
 
       .hero-visual {
-        min-height: 560px;
+        min-height: 500px;
+      }
+
+      .signal-lab {
+        min-height: 300px;
       }
 
       .service-grid {
@@ -1285,9 +1292,10 @@
       }
 
       .lab-caption {
-        left: 20px;
-        right: 64px;
-        top: 20px;
+        left: auto;
+        right: auto;
+        top: auto;
+        max-width: calc(100% - 64px);
       }
 
       .lab-caption strong {
