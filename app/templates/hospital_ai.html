@@ -7,20 +7,17 @@
   <link rel="icon" href="/favicon.ico" />
   <style>
     :root {
-      --porcelain: #f7f8f4;
-      --paper: #fffdf8;
-      --ink: #161915;
-      --ink-soft: #343a35;
-      --ash: #6d746e;
-      --mist: #dfe6df;
-      --line: #cbd5cc;
-      --surgical: #0c6f62;
-      --surgical-2: #12453d;
-      --copper: #a45f34;
-      --clay: #d8c4af;
-      --signal: #11a28d;
-      --danger: #8f3430;
-      --shadow: 0 26px 70px rgba(22, 25, 21, 0.12);
+      --cream: #f4efe6;
+      --cream-2: #ebe3d7;
+      --paper: #fbf7ef;
+      --ink: #171512;
+      --ink-soft: #38332d;
+      --muted: #766d62;
+      --line: rgba(23, 21, 18, .16);
+      --line-strong: rgba(23, 21, 18, .32);
+      --green: #0f4c43;
+      --green-soft: #dfe9df;
+      --copper: #a96843;
       --ease: cubic-bezier(.22, 1, .36, 1);
       --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
       --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
@@ -32,39 +29,24 @@
     body {
       margin: 0;
       color: var(--ink);
-      background:
-        linear-gradient(90deg, rgba(12, 111, 98, .05) 1px, transparent 1px) 0 0 / 42px 42px,
-        linear-gradient(180deg, var(--porcelain), #edf2ef 56%, #f7f8f4);
+      background: var(--cream);
       font-family: var(--sans);
-      line-height: 1.65;
+      line-height: 1.6;
       text-rendering: optimizeLegibility;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        repeating-linear-gradient(115deg, rgba(22, 25, 21, .035) 0 1px, transparent 1px 8px),
-        radial-gradient(circle at 77% 18%, rgba(164, 95, 52, .12), transparent 28%),
-        radial-gradient(circle at 5% 92%, rgba(12, 111, 98, .10), transparent 30%);
-      opacity: .8;
     }
 
     a { color: inherit; text-decoration: none; }
     p, h1, h2, h3 { margin: 0; }
-    img { max-width: 100%; display: block; }
+    img { display: block; max-width: 100%; }
 
     .skip-link {
       position: fixed;
       left: 16px;
       top: 12px;
-      z-index: 60;
+      z-index: 80;
       transform: translateY(-160%);
       background: var(--ink);
-      color: #fff;
+      color: var(--paper);
       padding: 10px 14px;
     }
 
@@ -73,25 +55,28 @@
     .site-shell {
       min-height: 100vh;
       overflow: clip;
+      background:
+        linear-gradient(90deg, rgba(23, 21, 18, .032) 1px, transparent 1px) 0 0 / 78px 78px,
+        linear-gradient(180deg, var(--cream), #efe7da 54%, var(--cream));
     }
 
     .nav-wrap {
       position: sticky;
       top: 0;
-      z-index: 40;
-      background: rgba(247, 248, 244, .86);
-      border-bottom: 1px solid rgba(203, 213, 204, .75);
-      backdrop-filter: blur(16px);
+      z-index: 50;
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 239, 230, .86);
+      backdrop-filter: blur(18px);
     }
 
     .nav {
-      width: min(1180px, calc(100% - 40px));
-      min-height: 72px;
+      width: min(1220px, calc(100% - 40px));
+      min-height: 74px;
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
-      gap: 28px;
+      gap: 30px;
     }
 
     .brand {
@@ -102,43 +87,40 @@
     }
 
     .brand-mark {
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       display: grid;
       place-items: center;
-      color: var(--paper);
-      background: var(--ink);
-      border: 1px solid rgba(255, 255, 255, .22);
-      font-family: var(--serif);
-      font-size: 19px;
-      line-height: 1;
       position: relative;
       flex: 0 0 auto;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: var(--serif);
+      font-size: 18px;
     }
 
     .brand-mark::after {
       content: "";
       position: absolute;
+      width: 14px;
+      height: 14px;
       right: -5px;
       bottom: -5px;
-      width: 15px;
-      height: 15px;
-      background: var(--signal);
-      border: 2px solid var(--porcelain);
+      background: #0fa18d;
+      border: 2px solid var(--cream);
     }
 
     .brand strong {
       display: block;
       font-family: var(--serif);
       font-size: 18px;
-      line-height: 1.2;
-      font-weight: 700;
+      line-height: 1.15;
     }
 
-    .brand span {
+    .brand span span {
       display: block;
       margin-top: 2px;
-      color: var(--ash);
+      color: var(--muted);
       font-size: 12px;
       letter-spacing: .04em;
       text-transform: uppercase;
@@ -147,138 +129,138 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 25px;
       color: var(--ink-soft);
       font-size: 14px;
+      white-space: nowrap;
     }
 
     .nav-links a {
-      position: relative;
-      padding: 4px 0;
+      border-bottom: 1px solid transparent;
+      transition: border-color 180ms var(--ease), color 180ms var(--ease);
     }
 
-    .nav-links a::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: -3px;
-      height: 1px;
-      background: var(--copper);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 260ms var(--ease);
-    }
-
-    .nav-links a:hover::after,
-    .nav-links a:focus-visible::after {
-      transform: scaleX(1);
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--ink);
+      border-bottom-color: var(--ink);
     }
 
     .nav-action {
+      padding: 9px 13px;
       color: var(--paper);
-      background: var(--surgical-2);
-      padding: 10px 15px;
-      border: 1px solid var(--surgical-2);
+      background: var(--ink);
+      border: 1px solid var(--ink);
     }
 
-    .nav-action::after { display: none; }
-
     .wrap {
-      width: min(1180px, calc(100% - 40px));
+      width: min(1220px, calc(100% - 40px));
       margin: 0 auto;
     }
 
     .hero {
-      min-height: auto;
-      display: grid;
-      grid-template-columns: minmax(0, 1.04fr) minmax(380px, .96fr);
-      gap: clamp(30px, 5vw, 72px);
-      align-items: center;
-      padding: clamp(34px, 5.4vh, 62px) 0 clamp(30px, 4vh, 44px);
       position: relative;
+      min-height: calc(100svh - 112px);
+      padding: clamp(54px, 8vh, 92px) 0 clamp(38px, 6vh, 62px);
+      display: grid;
+      align-items: center;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
     }
 
-    .hero::before {
+    .hero-art {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: .84;
+      filter: saturate(.88) contrast(.96);
+    }
+
+    .hero::after {
       content: "";
       position: absolute;
-      left: -9vw;
-      top: 72px;
-      width: 46vw;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--surgical), transparent);
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(244, 239, 230, .98) 0%, rgba(244, 239, 230, .90) 43%, rgba(244, 239, 230, .48) 100%),
+        linear-gradient(180deg, rgba(244, 239, 230, .42), rgba(244, 239, 230, .88));
+      pointer-events: none;
     }
 
-    .kicker {
+    .hero-inner {
+      position: relative;
+      z-index: 2;
       display: grid;
-      grid-template-columns: 72px auto;
-      gap: 14px;
+      grid-template-columns: minmax(0, .94fr) minmax(300px, .46fr);
+      gap: clamp(34px, 7vw, 96px);
+      align-items: end;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      display: flex;
       align-items: center;
-      color: var(--surgical-2);
-      font-size: 13px;
+      gap: 14px;
+      margin-bottom: 26px;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: .12em;
       text-transform: uppercase;
-      margin-bottom: 22px;
     }
 
-    .kicker::before {
+    .eyebrow::before {
       content: "";
+      width: 68px;
       height: 1px;
-      background: var(--surgical);
+      background: var(--green);
     }
 
     h1 {
-      max-width: 760px;
+      max-width: 940px;
       font-family: var(--serif);
-      font-size: clamp(44px, 6.5vw, 78px);
-      line-height: .98;
+      font-size: clamp(50px, 6.2vw, 84px);
+      line-height: .96;
       letter-spacing: 0;
       font-weight: 700;
     }
 
-    .h1-line {
-      display: block;
-    }
-
-    .h1-line.accent {
-      color: var(--surgical-2);
-      font-style: italic;
-    }
-
     .hero-copy {
-      margin-top: 28px;
-      max-width: 650px;
+      max-width: 740px;
+      margin-top: clamp(22px, 3vh, 30px);
       color: var(--ink-soft);
-      font-size: clamp(17px, 1.55vw, 21px);
+      font-size: clamp(19px, 2vw, 25px);
+      line-height: 1.62;
     }
 
     .hero-actions {
-      margin-top: 34px;
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
+      margin-top: 34px;
     }
 
     .btn {
+      min-height: 48px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 48px;
-      padding: 0 20px;
+      padding: 0 18px;
       border: 1px solid var(--ink);
       font-weight: 700;
-      transition: transform 220ms var(--ease), background 220ms var(--ease), color 220ms var(--ease);
+      transition: transform 180ms var(--ease), background 180ms var(--ease), color 180ms var(--ease);
     }
 
     .btn.primary {
-      background: var(--ink);
       color: var(--paper);
+      background: var(--ink);
     }
 
     .btn.secondary {
-      background: transparent;
       color: var(--ink);
+      background: transparent;
     }
 
     .btn:hover,
@@ -286,834 +268,324 @@
       transform: translateY(-2px);
     }
 
-    .hero-note {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1px;
-      margin-top: 32px;
-      max-width: 760px;
-      background: var(--line);
-      border: 1px solid var(--line);
+    .hero-aside {
+      border-left: 1px solid var(--line-strong);
+      padding-left: 24px;
+      color: var(--ink-soft);
+      font-size: 15px;
     }
 
-    .note-item {
-      min-height: 108px;
-      padding: 18px;
-      background: rgba(255, 253, 248, .82);
-    }
-
-    .note-item b {
+    .hero-aside b {
       display: block;
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 12px;
-      margin-bottom: 14px;
-    }
-
-    .note-item strong {
-      display: block;
-      font-size: 18px;
-      line-height: 1.25;
-      margin-bottom: 7px;
-    }
-
-    .note-item span {
-      display: block;
-      color: var(--ash);
-      font-size: 13px;
-    }
-
-    .hero-visual {
-      min-height: 430px;
-      position: relative;
-      display: grid;
-      align-items: center;
-      isolation: isolate;
-    }
-
-    .studio-case {
-      position: relative;
-      min-height: 420px;
-      border: 1px solid rgba(22, 25, 21, .22);
-      background:
-        linear-gradient(90deg, rgba(12, 111, 98, .07) 1px, transparent 1px) 0 0 / 30px 30px,
-        linear-gradient(180deg, rgba(255, 253, 248, .96), rgba(236, 242, 236, .94));
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      display: grid;
-      grid-template-columns: 58px minmax(0, 1fr);
-    }
-
-    .studio-case::before {
-      content: "";
-      position: absolute;
-      inset: 24px;
-      border: 1px solid rgba(12, 111, 98, .18);
-      pointer-events: none;
-    }
-
-    .case-rail {
-      position: relative;
-      z-index: 2;
-      background: var(--ink);
-      color: rgba(255, 253, 248, .8);
-      display: grid;
-      place-items: center;
-      border-right: 1px solid rgba(255, 253, 248, .18);
-    }
-
-    .case-rail span {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-    }
-
-    .case-sheet {
-      position: relative;
-      z-index: 2;
-      padding: 24px 34px 24px;
-      display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr);
-      gap: 14px;
-    }
-
-    .case-sheet::after {
-      content: "";
-      position: absolute;
-      right: 28px;
-      top: 28px;
-      width: 54px;
-      height: 190px;
-      border-left: 1px solid rgba(12, 111, 98, .22);
-      background:
-        repeating-linear-gradient(180deg, transparent 0 13px, rgba(12, 111, 98, .22) 13px 14px);
-      opacity: .7;
-      pointer-events: none;
-    }
-
-    .case-kicker {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .13em;
-      text-transform: uppercase;
-    }
-
-    .case-kicker::before {
-      content: "";
-      width: 42px;
-      height: 1px;
-      background: var(--copper);
-    }
-
-    .case-title {
-      max-width: 360px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .case-title strong {
-      font-family: var(--serif);
-      font-size: clamp(26px, 2.4vw, 32px);
-      line-height: 1.1;
-    }
-
-    .case-title span {
-      color: var(--ash);
-      font-size: 13px;
-    }
-
-    .case-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1px;
-      align-self: end;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .case-item {
-      min-height: 84px;
-      padding: 12px 15px;
-      background: rgba(255, 253, 248, .9);
-      display: grid;
-      align-content: start;
-      gap: 8px;
-    }
-
-    .case-item b {
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: .1em;
-    }
-
-    .case-item strong {
-      font-size: 17px;
-      line-height: 1.2;
-    }
-
-    .case-item span {
-      color: var(--ash);
-      font-size: 12px;
-      line-height: 1.55;
-    }
-
-    .section {
-      padding: clamp(70px, 9vw, 118px) 0;
-      border-top: 1px solid rgba(203, 213, 204, .8);
-      position: relative;
-    }
-
-    .section.paper {
-      background: rgba(255, 253, 248, .74);
-    }
-
-    .section.dark {
-      color: var(--paper);
-      background:
-        linear-gradient(115deg, rgba(12, 111, 98, .18), transparent 40%),
-        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 8px),
-        #171a18;
-    }
-
-    .section-head {
-      display: grid;
-      grid-template-columns: minmax(0, .78fr) minmax(320px, .54fr);
-      gap: clamp(28px, 6vw, 90px);
-      align-items: end;
-      margin-bottom: clamp(30px, 5vw, 60px);
-    }
-
-    .section-index {
+      margin-bottom: 16px;
       color: var(--copper);
       font-family: var(--mono);
       font-size: 12px;
       letter-spacing: .12em;
       text-transform: uppercase;
+    }
+
+    .hero-aside a {
+      display: block;
+      padding: 15px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .hero-aside a:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-aside span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      padding: clamp(72px, 10vw, 128px) 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section.alt {
+      background: rgba(251, 247, 239, .56);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(280px, .42fr);
+      gap: clamp(28px, 7vw, 96px);
+      align-items: end;
+      margin-bottom: clamp(34px, 5vw, 62px);
+    }
+
+    .label {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
       margin-bottom: 16px;
     }
 
     h2 {
+      max-width: 880px;
       font-family: var(--serif);
-      font-size: clamp(32px, 5vw, 62px);
-      line-height: 1.02;
-      letter-spacing: 0;
+      font-size: clamp(34px, 5.2vw, 74px);
+      line-height: 1;
       font-weight: 700;
     }
 
-    .section-head p {
-      color: var(--ink-soft);
-      font-size: 17px;
-    }
-
-    .dark .section-head p,
-    .dark .large-copy,
-    .dark .text-muted {
-      color: rgba(255, 253, 248, .72);
-    }
-
+    .section-head p,
     .large-copy {
-      max-width: 920px;
       color: var(--ink-soft);
-      font-size: clamp(22px, 3.2vw, 38px);
-      line-height: 1.28;
-      font-family: var(--serif);
+      font-size: clamp(17px, 1.7vw, 21px);
     }
 
-    .studio-proof {
-      margin-top: 44px;
+    .service-list {
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .service-row {
       display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 1px;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .proof-panel {
-      background: rgba(255, 253, 248, .86);
-      padding: clamp(22px, 3vw, 34px);
-      min-height: 230px;
-    }
-
-    .proof-panel h3 {
-      font-family: var(--serif);
-      font-size: 28px;
-      line-height: 1.1;
-      margin-bottom: 18px;
-    }
-
-    .proof-panel p {
-      color: var(--ash);
-    }
-
-    .proof-list {
-      display: grid;
-      gap: 14px;
-      color: var(--ink-soft);
-    }
-
-    .proof-list div {
-      display: grid;
-      grid-template-columns: 28px 1fr;
-      gap: 12px;
+      grid-template-columns: 110px minmax(240px, .55fr) minmax(0, 1fr);
+      gap: clamp(18px, 5vw, 72px);
       align-items: start;
+      padding: clamp(24px, 3vw, 38px) 0;
+      border-bottom: 1px solid var(--line);
     }
 
-    .proof-list b {
+    .service-row code {
       color: var(--copper);
       font-family: var(--mono);
       font-size: 12px;
+      letter-spacing: .12em;
     }
 
-    .service-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      border: 1px solid var(--line);
-      background: var(--line);
-      gap: 1px;
-    }
-
-    .service-card {
-      min-height: 315px;
-      background: rgba(255, 253, 248, .9);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .service-card::before {
-      content: attr(data-code);
-      position: absolute;
-      right: 18px;
-      top: 14px;
-      color: rgba(12, 111, 98, .18);
-      font-family: var(--mono);
-      font-size: 42px;
+    .service-row h3 {
+      font-family: var(--serif);
+      font-size: clamp(24px, 3vw, 42px);
+      line-height: 1.08;
       font-weight: 700;
     }
 
-    .service-card h3 {
-      max-width: 220px;
-      font-family: var(--serif);
-      font-size: 27px;
-      line-height: 1.08;
-      margin-bottom: 18px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .service-card p {
-      color: var(--ash);
-      font-size: 15px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .service-card ul {
-      margin: auto 0 0;
-      padding: 22px 0 0;
-      list-style: none;
-      display: grid;
-      gap: 8px;
-      color: var(--ink-soft);
-      font-size: 13px;
-      border-top: 1px solid var(--mist);
-      position: relative;
-      z-index: 1;
-    }
-
-    .service-card li {
-      display: grid;
-      grid-template-columns: 12px 1fr;
-      gap: 9px;
-      align-items: start;
-    }
-
-    .service-card li::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      margin-top: 9px;
-      background: var(--surgical);
-    }
-
-    .specialty-module {
-      display: grid;
-      grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
-      gap: 1px;
-      border: 1px solid var(--line);
-      background: var(--line);
-    }
-
-    .specialty-copy,
-    .specialty-board {
-      background: rgba(255, 253, 248, .9);
-      padding: clamp(24px, 4vw, 44px);
-    }
-
-    .specialty-copy h2 {
-      max-width: 620px;
-      margin-bottom: 18px;
-    }
-
-    .specialty-copy p {
-      max-width: 650px;
-      color: var(--ink-soft);
-      font-size: 17px;
-    }
-
-    .specialty-actions {
-      margin-top: 28px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .specialty-board {
-      display: grid;
-      gap: 14px;
-      align-content: center;
-    }
-
-    .specialty-row {
-      display: grid;
-      grid-template-columns: 92px 1fr;
-      gap: 16px;
-      align-items: start;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--mist);
-    }
-
-    .specialty-row:last-child {
-      border-bottom: none;
-    }
-
-    .specialty-row code {
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .specialty-row strong {
-      display: block;
-      margin-bottom: 5px;
+    .service-row p {
+      max-width: 560px;
+      color: var(--muted);
       font-size: 16px;
     }
 
-    .specialty-row span {
-      color: var(--ash);
-      font-size: 14px;
-    }
-
-    .method {
+    .feature {
       display: grid;
-      grid-template-columns: .72fr 1.28fr;
-      gap: clamp(28px, 6vw, 82px);
-      align-items: start;
-    }
-
-    .method-sticky {
-      position: sticky;
-      top: 104px;
-    }
-
-    .method-sticky p {
-      margin-top: 18px;
-      color: rgba(255, 253, 248, .68);
-      font-size: 17px;
-    }
-
-    .process {
-      display: grid;
-      gap: 1px;
-      background: rgba(255, 253, 248, .18);
-      border: 1px solid rgba(255, 253, 248, .18);
-    }
-
-    .process-step {
-      display: grid;
-      grid-template-columns: 112px 1fr;
-      gap: 26px;
-      padding: 26px;
-      background: rgba(255, 253, 248, .055);
-    }
-
-    .process-step code {
-      color: var(--signal);
-      font-family: var(--mono);
-      font-size: 13px;
-    }
-
-    .process-step h3 {
-      font-family: var(--serif);
-      font-size: 30px;
-      line-height: 1.1;
-      margin-bottom: 10px;
-    }
-
-    .process-step p {
-      color: rgba(255, 253, 248, .70);
-      max-width: 620px;
-    }
-
-    .product {
-      display: grid;
-      grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
-      gap: clamp(30px, 5vw, 70px);
+      grid-template-columns: minmax(0, .78fr) minmax(320px, .58fr);
+      gap: clamp(34px, 7vw, 96px);
       align-items: center;
     }
 
-    .product-copy p {
-      margin-top: 20px;
-      color: var(--ink-soft);
-      font-size: 17px;
-    }
-
-    .product-actions {
-      margin-top: 28px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-    }
-
-    .screen {
-      border: 1px solid var(--line);
-      background: var(--paper);
-      box-shadow: var(--shadow);
-      min-height: 480px;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-
-    .screen-bar {
-      height: 54px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      color: var(--ash);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .screen-dot {
-      display: flex;
-      gap: 7px;
-    }
-
-    .screen-dot i {
-      width: 9px;
-      height: 9px;
-      background: var(--line);
-      display: block;
-    }
-
-    .screen-grid {
-      display: grid;
-      grid-template-columns: 178px 1fr;
-      min-height: 420px;
-    }
-
-    .screen-side {
-      border-right: 1px solid var(--line);
-      padding: 18px;
-      display: grid;
-      gap: 13px;
-      align-content: start;
-    }
-
-    .screen-side b {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--copper);
-      letter-spacing: .08em;
-    }
-
-    .side-line {
-      height: 36px;
-      border: 1px solid var(--mist);
+    .feature-panel {
+      min-height: 430px;
+      position: relative;
+      border: 1px solid var(--line-strong);
       background:
-        linear-gradient(90deg, rgba(12,111,98,.12), transparent 70%),
-        rgba(247,248,244,.8);
-    }
-
-    .side-line.short { width: 72%; }
-
-    .screen-main {
-      padding: 24px;
-      display: grid;
-      gap: 18px;
-      align-content: start;
-    }
-
-    .screen-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 18px;
-    }
-
-    .screen-title strong {
-      font-family: var(--serif);
-      font-size: 29px;
-      line-height: 1.1;
-    }
-
-    .screen-title span {
-      color: var(--surgical);
-      font-family: var(--mono);
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .screen-row {
-      display: grid;
-      grid-template-columns: 84px 1fr 56px;
-      gap: 14px;
-      align-items: center;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--mist);
-    }
-
-    .screen-row code {
-      font-family: var(--mono);
-      color: var(--copper);
-      font-size: 12px;
-    }
-
-    .screen-row div {
-      color: var(--ink-soft);
-      font-size: 14px;
-    }
-
-    .screen-row i {
-      height: 7px;
-      background: var(--surgical);
-      display: block;
-    }
-
-    .advisor {
-      display: grid;
-      grid-template-columns: minmax(320px, .82fr) minmax(0, 1.18fr);
-      gap: clamp(30px, 6vw, 82px);
-      align-items: center;
-    }
-
-    .advisor-system {
-      border: 1px solid rgba(255, 253, 248, .22);
-      min-height: 560px;
-      background:
-        repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 16px),
-        linear-gradient(180deg, rgba(255, 253, 248, .08), rgba(255, 253, 248, .02));
+        linear-gradient(90deg, rgba(244, 239, 230, .94), rgba(244, 239, 230, .52)),
+        url("/static/medical-field-bg.png") center / cover;
       overflow: hidden;
+    }
+
+    .feature-panel::before {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border: 1px solid rgba(15, 76, 67, .22);
+    }
+
+    .feature-panel::after {
+      content: "";
+      position: absolute;
+      right: 28px;
+      top: 28px;
+      width: 88px;
+      height: 88px;
+      border-top: 1px solid var(--green);
+      border-right: 1px solid var(--green);
+      opacity: .72;
+    }
+
+    .panel-system {
+      position: absolute;
+      inset: auto 34px 32px 34px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel-line {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 18px;
+      align-items: baseline;
+      padding: 16px 0;
+      border-top: 1px solid rgba(23, 21, 18, .2);
+      background: rgba(244, 239, 230, .18);
+      backdrop-filter: blur(3px);
+    }
+
+    .panel-line code {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .12em;
+    }
+
+    .panel-line span {
+      font-family: var(--serif);
+      color: var(--ink);
+      font-size: clamp(22px, 3.1vw, 38px);
+      line-height: 1.08;
+    }
+
+    .feature-copy {
+      display: grid;
+      gap: 24px;
+    }
+
+    .compact-links {
+      display: grid;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .compact-links a {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .compact-links span {
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-top: 1px solid var(--line-strong);
+      border-left: 1px solid var(--line);
+    }
+
+    .case-card {
+      min-height: 220px;
+      display: grid;
+      align-content: space-between;
+      gap: 24px;
       padding: clamp(22px, 3vw, 34px);
-      display: grid;
-      align-content: end;
-      gap: 18px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(251, 247, 239, .46);
     }
 
-    .advisor-system h3 {
+    .case-card code {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .12em;
+    }
+
+    .case-card h3 {
       font-family: var(--serif);
-      font-size: clamp(32px, 4vw, 50px);
+      font-size: clamp(25px, 3.4vw, 44px);
       line-height: 1.02;
-      max-width: 430px;
+      font-weight: 700;
     }
 
-    .review-ledger {
-      display: grid;
-      gap: 1px;
-      background: rgba(255, 253, 248, .18);
-      border: 1px solid rgba(255, 253, 248, .18);
+    .case-card p {
+      color: var(--muted);
+      font-size: 15px;
     }
 
-    .review-ledger div {
-      display: grid;
-      grid-template-columns: 92px 1fr;
-      gap: 16px;
-      padding: 16px;
-      background: rgba(255, 253, 248, .055);
-    }
-
-    .review-ledger b {
-      color: var(--signal);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .review-ledger span {
-      color: rgba(255, 253, 248, .78);
-      font-size: 14px;
-    }
-
-    .advisor-copy h2 {
-      max-width: 720px;
-    }
-
-    .advisor-copy p {
-      margin-top: 22px;
-      color: rgba(255, 253, 248, .72);
-      font-size: 18px;
-      max-width: 720px;
-    }
-
-    .advisor-facts {
-      margin-top: 34px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1px;
-      background: rgba(255, 253, 248, .2);
-      border: 1px solid rgba(255, 253, 248, .18);
-    }
-
-    .advisor-facts div {
-      min-height: 128px;
-      padding: 18px;
-      background: rgba(255, 253, 248, .055);
-    }
-
-    .advisor-facts b {
-      display: block;
-      color: var(--signal);
-      font-family: var(--mono);
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-
-    .advisor-facts span {
-      display: block;
-      color: rgba(255, 253, 248, .84);
-      font-size: 14px;
-    }
-
-    .boundary {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .boundary-col {
-      background: rgba(255, 253, 248, .9);
-      padding: clamp(24px, 4vw, 42px);
-    }
-
-    .boundary-col h3 {
-      font-family: var(--serif);
-      font-size: 34px;
-      line-height: 1.05;
-      margin-bottom: 22px;
-    }
-
-    .boundary-list {
-      display: grid;
-      gap: 1px;
-      background: var(--mist);
-    }
-
-    .boundary-list div {
-      background: rgba(255, 253, 248, .94);
-      padding: 15px 0;
-      display: grid;
-      grid-template-columns: 128px 1fr;
-      gap: 18px;
-    }
-
-    .boundary-list strong {
-      color: var(--surgical-2);
-      font-size: 14px;
-    }
-
-    .boundary-list span {
-      color: var(--ash);
-      font-size: 14px;
-    }
-
-    .boundary-col.no strong {
-      color: var(--danger);
+    .case-card a {
+      width: fit-content;
+      border-bottom: 1px solid var(--ink);
+      font-weight: 700;
     }
 
     .cta {
-      min-height: 520px;
-      display: grid;
-      align-items: center;
-      text-align: center;
+      position: relative;
+      padding: clamp(80px, 10vw, 138px) 0;
       color: var(--paper);
       background:
-        linear-gradient(180deg, rgba(22, 25, 21, .62), rgba(22, 25, 21, .96)),
-        repeating-linear-gradient(115deg, rgba(255,255,255,.055) 0 1px, transparent 1px 14px),
-        linear-gradient(90deg, rgba(12, 111, 98, .46), rgba(164, 95, 52, .22)),
-        #171a18;
-      border-top: 1px solid rgba(255, 253, 248, .18);
+        linear-gradient(120deg, rgba(15, 76, 67, .34), transparent 42%),
+        #171512;
+      overflow: hidden;
+    }
+
+    .cta::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("/static/medical-field-bg.png") center / cover;
+      opacity: .12;
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .cta .wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, .78fr) auto;
+      gap: 34px;
+      align-items: end;
     }
 
     .cta h2 {
-      max-width: 900px;
-      margin: 0 auto;
+      color: var(--paper);
     }
 
     .cta p {
-      margin: 22px auto 0;
-      max-width: 660px;
-      color: rgba(255, 253, 248, .78);
+      max-width: 640px;
+      margin-top: 20px;
+      color: rgba(251, 247, 239, .68);
       font-size: 18px;
     }
 
     .cta .btn {
-      margin-top: 34px;
-      border-color: rgba(255, 253, 248, .84);
-      background: rgba(255, 253, 248, .92);
-      color: var(--ink);
+      color: var(--paper);
+      border-color: rgba(251, 247, 239, .76);
     }
 
     .footer {
-      background: var(--ink);
-      color: rgba(255, 253, 248, .74);
-      padding: 30px 0;
+      padding: 28px 0;
+      color: var(--muted);
       font-size: 13px;
+      background: var(--cream);
     }
 
     .footer .wrap {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
-      align-items: center;
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 22px;
     }
 
     .reveal {
       opacity: 0;
-      transform: translateY(22px);
-      transition: opacity 650ms var(--ease), transform 650ms var(--ease);
+      transform: translateY(18px);
+      transition: opacity 700ms var(--ease), transform 700ms var(--ease);
     }
 
     .reveal.is-visible {
       opacity: 1;
-      transform: translateY(0);
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: .35; transform: scale(.9); }
-      50% { opacity: 1; transform: scale(1.08); }
+      transform: none;
     }
 
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .reveal,
-      .btn,
-      .pulse::before {
-        animation: none;
+      .btn {
         transition: none;
       }
       .reveal {
@@ -1122,40 +594,30 @@
       }
     }
 
-    @media (max-width: 1060px) {
-      .hero,
-      .product,
-      .advisor,
-      .method,
-      .specialty-module,
-      .section-head {
+    @media (max-width: 980px) {
+      .hero-inner,
+      .section-head,
+      .feature,
+      .cta .wrap {
         grid-template-columns: 1fr;
       }
 
-      .hero {
-        max-height: none;
+      .hero-aside {
+        max-width: 640px;
       }
 
-      .hero-visual {
-        min-height: 470px;
+      .service-row {
+        grid-template-columns: 86px 1fr;
       }
 
-      .studio-case {
-        min-height: 450px;
-      }
-
-      .service-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .method-sticky {
-        position: static;
+      .service-row p {
+        grid-column: 2;
       }
     }
 
-    @media (max-width: 760px) {
+    @media (max-width: 720px) {
       .nav {
-        width: min(100% - 28px, 1180px);
+        width: min(100% - 28px, 1220px);
         min-height: 64px;
       }
 
@@ -1164,101 +626,73 @@
         display: none;
       }
 
-      .brand strong {
-        font-size: 16px;
-      }
-
       .nav-action {
-        padding: 8px 11px;
+        padding: 8px 10px;
         font-size: 13px;
       }
 
       .wrap {
-        width: min(100% - 28px, 1180px);
+        width: min(100% - 28px, 1220px);
       }
 
       .hero {
-        padding-top: 34px;
         min-height: auto;
+        padding: 34px 0 20px;
+      }
+
+      .hero-art {
+        opacity: .54;
+      }
+
+      .hero::after {
+        background:
+          linear-gradient(180deg, rgba(244, 239, 230, .98), rgba(244, 239, 230, .76) 64%, rgba(244, 239, 230, .96));
       }
 
       h1 {
-        font-size: clamp(38px, 12.2vw, 56px);
+        font-size: clamp(42px, 11vw, 46px);
+        line-height: .98;
       }
 
       .hero-copy {
-        font-size: 17px;
+        font-size: 18px;
       }
 
-      .hero-note,
-      .studio-proof,
-      .boundary,
-      .advisor-facts {
+      .hero-aside {
+        border-left: 0;
+        border-top: 1px solid var(--line-strong);
+        padding-left: 0;
+        padding-top: 18px;
+      }
+
+      .hero-aside a {
+        padding: 12px 0;
+      }
+
+      .service-row {
         grid-template-columns: 1fr;
+        gap: 8px;
       }
 
-      .hero-visual {
-        min-height: auto;
+      .service-row p {
+        grid-column: auto;
       }
 
-      .studio-case {
-        min-height: auto;
-        grid-template-columns: 42px minmax(0, 1fr);
+      .feature-panel {
+        min-height: 260px;
       }
 
-      .case-sheet {
-        padding: 22px;
-        gap: 18px;
-        grid-template-rows: auto auto;
+      .panel-system {
+        inset: auto 22px 20px 22px;
       }
 
-      .case-sheet::after {
-        display: none;
+      .panel-line {
+        grid-template-columns: 1fr;
+        gap: 4px;
       }
 
       .case-grid {
-        display: none;
-      }
-
-      .service-grid {
         grid-template-columns: 1fr;
-      }
-
-      .specialty-row {
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
-
-      .process-step {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      .screen-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .screen-side {
-        border-right: none;
-        border-bottom: 1px solid var(--line);
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .screen-row {
-        grid-template-columns: 64px 1fr;
-      }
-
-      .screen-row i {
-        display: none;
-      }
-
-      .advisor-system {
-        min-height: 430px;
-      }
-
-      .boundary-list div {
-        grid-template-columns: 1fr;
-        gap: 4px;
       }
 
       .footer .wrap {
@@ -1280,65 +714,36 @@
           </span>
         </a>
         <div class="nav-links">
-          <a href="#services">服务能力</a>
+          <a href="#services">服务</a>
           <a href="/rhinitis-ai">专病 AI</a>
-          <a href="#product">数字人系统</a>
-          <a href="#advisor">专家协作</a>
-          <a href="#contact">联系咨询</a>
-          <a class="nav-action" href="/hospital-ai">数字人演示</a>
+          <a href="#digital-human">数字人</a>
+          <a href="#contact">联系</a>
+          <a class="nav-action" href="/hospital-ai">演示</a>
         </div>
       </nav>
     </header>
 
     <main id="main">
-      <section class="wrap hero" aria-label="首页首屏">
-        <div class="hero-copy-block">
-          <div class="kicker reveal">医疗内容与系统建设</div>
-          <h1 class="reveal">
-            <span class="h1-line">医疗机构 AI</span>
-            <span class="h1-line accent">信息化建设服务</span>
-          </h1>
-          <p class="hero-copy reveal">
-            为私立医院、专科科室与医疗管理团队提供医学内容数字化、科室知识库、智能文书、患者宣教与数字人展示系统建设服务。
-          </p>
-          <div class="hero-actions reveal">
-            <a class="btn primary" href="#services">了解服务能力</a>
-            <a class="btn secondary" href="#product">查看数字人系统</a>
-          </div>
-        </div>
-
-        <div class="hero-visual reveal" aria-label="工作室服务档案">
-          <aside class="studio-case">
-            <div class="case-rail"><span>Clinical AI Studio</span></div>
-            <div class="case-sheet">
-              <div class="case-kicker">服务档案</div>
-              <div class="case-title">
-                <strong>把医院已有内容整理成可上线的 AI 应用。</strong>
-                <span>面向科室知识、患者宣教、内部培训和数字人展示，提供从内容梳理到页面落地的完整建设支持。</span>
-              </div>
-              <div class="case-grid">
-                <div class="case-item">
-                  <b>01</b>
-                  <strong>科室知识库</strong>
-                  <span>SOP、FAQ、宣教材料与培训资料结构化维护。</span>
-                </div>
-                <div class="case-item">
-                  <b>02</b>
-                  <strong>智能文书助手</strong>
-                  <span>面向院办、运营和科室管理的材料整理工具。</span>
-                </div>
-                <div class="case-item">
-                  <b>03</b>
-                  <strong>患者宣教内容</strong>
-                  <span>把专业说明转成网页、屏幕、公众号可用内容。</span>
-                </div>
-                <div class="case-item">
-                  <b>04</b>
-                  <strong>数字人展示</strong>
-                  <span>用于服务介绍、常见问题和院内培训演示。</span>
-                </div>
-              </div>
+      <section class="hero" aria-label="首页首屏">
+        <img class="hero-art" src="/static/medical-field-bg.png" alt="" aria-hidden="true" />
+        <div class="wrap hero-inner">
+          <div>
+            <div class="eyebrow reveal">Clinical AI systems</div>
+            <h1 class="reveal">医疗 AI 系统，<br />落地到科室现场。</h1>
+            <p class="hero-copy reveal">
+              为私立医院与专科科室建设知识库、智能文书、患者宣教与数字人展示入口。
+            </p>
+            <div class="hero-actions reveal">
+              <a class="btn primary" href="#services">查看服务</a>
+              <a class="btn secondary" href="/hospital-ai">数字人演示</a>
             </div>
+          </div>
+
+          <aside class="hero-aside reveal" aria-label="项目入口">
+            <b>Studio focus</b>
+            <a href="#services">AI 信息化建设 <span>知识库、文书、宣教、培训</span></a>
+            <a href="/rhinitis-ai">耳鼻喉专病 AI <span>过敏性鼻炎预问诊场景</span></a>
+            <a href="/hospital-ai">医疗数字人 <span>语音问答与展示演示</span></a>
           </aside>
         </div>
       </section>
@@ -1347,159 +752,86 @@
         <div class="wrap">
           <div class="section-head">
             <div>
-              <div class="section-index reveal">Service Scope</div>
-              <h2 class="reveal">面向医疗机构的 AI 应用能力</h2>
+              <div class="label reveal">Service architecture</div>
+              <h2 class="reveal">把临床内容转化为可维护的 AI 应用能力。</h2>
             </div>
             <p class="reveal">
-              围绕医院运营、科室管理与患者沟通，提供可模块化部署的 AI 技术服务。
+              覆盖知识管理、办公文书、患者沟通与展示终端，按医疗机构实际流程分模块交付。
             </p>
           </div>
 
-          <div class="service-grid reveal">
-            <article class="service-card" data-code="01">
-              <h3>智能文书与办公助手</h3>
-              <p>面向院办、运营与科室管理场景，建设规范化文书生成与材料整理能力。</p>
-              <ul>
-                <li>文书模板库</li>
-                <li>提示词配置</li>
-                <li>员工使用培训</li>
-              </ul>
+          <div class="service-list reveal">
+            <article class="service-row">
+              <code>01</code>
+              <h3>科室知识库</h3>
+              <p>沉淀 SOP、FAQ、宣教材料与培训资料，形成统一检索和问答底座。</p>
             </article>
-            <article class="service-card" data-code="02">
-              <h3>科室知识库建设</h3>
-              <p>将 SOP、FAQ、宣教内容和培训资料结构化，支持检索、问答和持续更新。</p>
-              <ul>
-                <li>知识库结构设计</li>
-                <li>内容版本管理</li>
-                <li>问答入口配置</li>
-              </ul>
+            <article class="service-row">
+              <code>02</code>
+              <h3>智能文书</h3>
+              <p>支持运营、院办和科室管理材料的生成、整理与格式化输出。</p>
             </article>
-            <article class="service-card" data-code="03">
-              <h3>医学内容数字化</h3>
-              <p>将专科宣教、术前术后说明、常见问题整理为适合网页、屏幕和公众号的内容体系。</p>
-              <ul>
-                <li>宣教脚本</li>
-                <li>多端展示</li>
-                <li>审校流程</li>
-              </ul>
+            <article class="service-row">
+              <code>03</code>
+              <h3>患者宣教</h3>
+              <p>将专业内容转化为网页、候诊屏、公众号和随访触点可用的表达。</p>
             </article>
-            <article class="service-card" data-code="04">
-              <h3>数字人与交互展示</h3>
-              <p>基于院内确认内容构建数字人演示、互动问答页面和员工培训入口。</p>
-              <ul>
-                <li>数字人页面</li>
-                <li>互动问答</li>
-                <li>培训演示</li>
-              </ul>
+            <article class="service-row">
+              <code>04</code>
+              <h3>数字人展示</h3>
+              <p>用于服务介绍、常见问题、员工培训和专病宣教的互动展示。</p>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="section paper" id="specialty-ai">
-        <div class="wrap specialty-module reveal">
-          <div class="specialty-copy">
-            <div class="section-index">Specialty AI Application</div>
-            <h2>耳鼻喉专病 AI 预问诊</h2>
-            <p>
-              围绕过敏性鼻炎等高频专病场景，建设患者端信息采集、医生端病史摘要和数字人宣教入口，服务门诊接诊前的信息整理与患者沟通。
+      <section class="section alt" id="digital-human">
+        <div class="wrap feature">
+          <div class="feature-panel reveal" aria-hidden="true">
+            <div class="panel-system">
+              <div class="panel-line"><code>BASE</code><span>科室知识底座</span></div>
+              <div class="panel-line"><code>FLOW</code><span>预问诊与文书流程</span></div>
+              <div class="panel-line"><code>SCREEN</code><span>患者宣教与数字人展示</span></div>
+            </div>
+          </div>
+          <div class="feature-copy">
+            <div>
+              <div class="label reveal">Applications</div>
+              <h2 class="reveal">专病场景与数字人展示共享同一套内容底座。</h2>
+            </div>
+            <p class="large-copy reveal">
+              专病预问诊、医生摘要、患者宣教与院内培训，可以围绕同一份经过审校的科室知识持续扩展。
             </p>
-            <div class="specialty-actions">
-              <a class="btn primary" href="/rhinitis-ai">查看专病方案</a>
-              <a class="btn secondary" href="#product">关联数字人系统</a>
-            </div>
-          </div>
-          <div class="specialty-board" aria-label="耳鼻喉专病 AI 模块能力">
-            <div class="specialty-row">
-              <code>INTAKE</code>
-              <div><strong>结构化病史采集</strong><span>症状、诱因、过敏史、用药史与环境暴露信息整理。</span></div>
-            </div>
-            <div class="specialty-row">
-              <code>SUMMARY</code>
-              <div><strong>医生端摘要</strong><span>将患者描述转为清晰、可阅读的诊前信息摘要。</span></div>
-            </div>
-            <div class="specialty-row">
-              <code>EDU</code>
-              <div><strong>数字人宣教</strong><span>用于检查说明、常见问题和科室服务介绍的展示入口。</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section paper" id="product">
-        <div class="wrap product">
-          <div class="product-copy">
-            <div class="section-index reveal">Digital Human</div>
-            <h2 class="reveal">数字人宣教与展示系统</h2>
-            <p class="reveal">
-              将专科宣教、常见问题、培训材料与服务介绍转化为数字人交互入口，适用于官网、候诊屏、公众号和院内培训场景。
-            </p>
-            <div class="product-actions reveal">
-              <a class="btn primary" href="/hospital-ai">打开数字人演示</a>
-              <a class="btn secondary" href="#contact">联系咨询</a>
-            </div>
-          </div>
-
-          <div class="screen reveal" aria-label="医疗数字人产品界面示意">
-            <div class="screen-bar">
-              <div class="screen-dot"><i></i><i></i><i></i></div>
-              <span>DIGITAL HUMAN / EDUCATION NODE</span>
-            </div>
-            <div class="screen-grid">
-              <div class="screen-side">
-                <b>MODULES</b>
-                <div class="side-line"></div>
-                <div class="side-line short"></div>
-                <div class="side-line"></div>
-                <div class="side-line short"></div>
-              </div>
-              <div class="screen-main">
-                <div class="screen-title">
-                  <strong>AI 医疗宣教助手</strong>
-                  <span>content library</span>
+            <div class="case-grid reveal">
+              <article class="case-card">
+                <code>Specialty AI</code>
+                <div>
+                  <h3>耳鼻喉专病 AI</h3>
+                  <p>预问诊、病史摘要、宣教内容入口。</p>
                 </div>
-                <div class="screen-row"><code>Q&A</code><div>科室常见问题问答演示</div><i style="width: 84%;"></i></div>
-                <div class="screen-row"><code>EDU</code><div>术前术后宣教内容呈现</div><i style="width: 66%;"></i></div>
-                <div class="screen-row"><code>TRAIN</code><div>院内员工培训与话术练习</div><i style="width: 74%;"></i></div>
-                <div class="screen-row"><code>REVIEW</code><div>内容版本与审校记录</div><i style="width: 58%;"></i></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section dark" id="advisor">
-        <div class="wrap advisor">
-          <div class="advisor-system reveal" aria-label="医学顾问审核机制示意">
-            <h3>医学内容治理与技术实现协同完成。</h3>
-            <div class="review-ledger">
-              <div><b>01 / CONTENT</b><span>医学材料结构化整理。</span></div>
-              <div><b>02 / REVIEW</b><span>术语、表达与重点内容审校。</span></div>
-              <div><b>03 / SYSTEM</b><span>知识库、页面与交互工具配置。</span></div>
-            </div>
-          </div>
-          <div class="advisor-copy">
-            <div class="section-index reveal">Expert Collaboration</div>
-            <h2 class="reveal">医学专业与工程能力结合</h2>
-            <p class="reveal">
-              由医学专业顾问参与内容审校，工程团队负责知识结构、应用配置、界面设计和系统上线支持。
-            </p>
-            <div class="advisor-facts reveal">
-              <div><b>ROLE</b><span>医学专业顾问</span></div>
-              <div><b>FOCUS</b><span>专科内容审校与表达优化</span></div>
-              <div><b>交付</b><span>知识库、宣教、培训与质控资料</span></div>
+                <a href="/rhinitis-ai">查看专病页</a>
+              </article>
+              <article class="case-card">
+                <code>Digital human</code>
+                <div>
+                  <h3>数字人系统</h3>
+                  <p>语音问答、服务介绍、培训演示入口。</p>
+                </div>
+                <a href="/hospital-ai">打开演示</a>
+              </article>
             </div>
           </div>
         </div>
       </section>
 
       <section class="cta" id="contact">
-        <div class="wrap reveal">
-          <h2>为医疗机构建设可上线的 AI 内容与应用入口。</h2>
-          <p>
-            可从科室知识库、宣教数字人、智能文书或员工培训系统开始建设。
-          </p>
-          <a class="btn" href="/hospital-ai">先看医疗数字人演示</a>
+        <div class="wrap">
+          <div>
+            <div class="label reveal">Project start</div>
+            <h2 class="reveal">选择一个高频科室场景，上线第一版。</h2>
+            <p class="reveal">适用于私立医院、专科科室与门诊中心的 AI 信息化建设、医学内容数字化和展示系统项目。</p>
+          </div>
+          <a class="btn reveal" href="/hospital-ai">查看演示</a>
         </div>
       </section>
     </main>
@@ -1507,7 +839,7 @@
     <footer class="footer">
       <div class="wrap">
         <span>临床 AI 信息化工作室</span>
-        <span>医院 AI 流程工程 / 宣教数字人 / 知识库与培训系统</span>
+        <span>科室知识库 / 患者宣教 / 数字人展示 / 专病 AI</span>
       </div>
     </footer>
   </div>
@@ -1527,7 +859,7 @@
         });
       }, { threshold: 0.16 });
       revealTargets.forEach((el, index) => {
-        el.style.transitionDelay = `${Math.min(index % 4, 3) * 70}ms`;
+        el.style.transitionDelay = `${Math.min(index % 5, 4) * 55}ms`;
         observer.observe(el);
       });
     }
