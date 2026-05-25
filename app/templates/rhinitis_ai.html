@@ -194,8 +194,7 @@
       font-weight: 600;
     }
 
-    .hero-actions,
-    .module-actions {
+    .hero-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
@@ -441,49 +440,6 @@
       font-size: 15px;
     }
 
-    .link-panel {
-      display: grid;
-      grid-template-columns: minmax(0, .9fr) minmax(360px, 1.1fr);
-      gap: 1px;
-      background: var(--line);
-      border: 1px solid var(--line);
-    }
-
-    .link-copy,
-    .link-list {
-      background: rgba(255,253,248,.9);
-      padding: clamp(26px, 4vw, 46px);
-    }
-
-    .link-copy p {
-      margin-top: 18px;
-      color: var(--ink-soft);
-      font-size: 17px;
-    }
-
-    .link-list {
-      display: grid;
-      gap: 14px;
-      align-content: center;
-    }
-
-    .link-row {
-      display: grid;
-      grid-template-columns: 92px 1fr;
-      gap: 16px;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--mist);
-    }
-
-    .link-row:last-child { border-bottom: none; }
-    .link-row code {
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-    .link-row strong { display: block; margin-bottom: 4px; }
-    .link-row span { color: var(--ash); font-size: 14px; }
-
     .cta {
       color: var(--paper);
       padding: clamp(70px, 8vw, 108px) 0;
@@ -547,8 +503,7 @@
 
     @media (max-width: 1060px) {
       .hero,
-      .section-head,
-      .link-panel {
+      .section-head {
         grid-template-columns: 1fr;
       }
 
@@ -601,11 +556,6 @@
         grid-template-columns: 1fr;
       }
 
-      .link-row {
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
-
       .footer .wrap {
         display: grid;
       }
@@ -615,7 +565,7 @@
 <body>
   <header class="nav-wrap">
     <nav class="nav wrap" aria-label="主导航">
-      <a class="brand" href="/hospital-ai" aria-label="返回临床 AI 信息化工作室">
+      <a class="brand" href="/" aria-label="返回临床 AI 信息化工作室">
         <span class="brand-mark">医</span>
         <span class="brand-copy">
           <strong>临床 AI 信息化工作室</strong>
@@ -623,11 +573,10 @@
         </span>
       </a>
       <div class="nav-links">
-        <a href="/hospital-ai">工作室官网</a>
+        <a href="/">工作室官网</a>
         <a href="#modules">系统能力</a>
         <a href="#workflow">工作流</a>
-        <a href="#connection">官网结合</a>
-        <a class="nav-action" href="/">数字人演示</a>
+        <a class="nav-action" href="/hospital-ai">数字人演示</a>
       </div>
     </nav>
   </header>
@@ -645,7 +594,7 @@
         </p>
         <div class="hero-actions reveal">
           <a class="btn primary" href="#modules">查看系统能力</a>
-          <a class="btn secondary" href="/hospital-ai">返回工作室官网</a>
+          <a class="btn secondary" href="/">返回工作室官网</a>
         </div>
       </div>
 
@@ -740,43 +689,13 @@
       </div>
     </section>
 
-    <section class="section paper" id="connection">
-      <div class="wrap link-panel reveal">
-        <div class="link-copy">
-          <div class="section-index">Website Branch</div>
-          <h2>作为工作室官网的专病分支</h2>
-          <p>
-            作为工作室官网的专科应用入口，主站展示整体 AI 信息化能力，子页面呈现耳鼻喉专病场景的系统构成与应用价值。
-          </p>
-          <div class="module-actions">
-            <a class="btn primary" href="/hospital-ai">回到主站</a>
-            <a class="btn secondary" href="/">查看数字人演示</a>
-          </div>
-        </div>
-        <div class="link-list">
-          <div class="link-row">
-            <code>MAIN</code>
-            <div><strong>主官网入口</strong><span>展示医疗 AI 信息化、知识库和数字人服务能力。</span></div>
-          </div>
-          <div class="link-row">
-            <code>BRANCH</code>
-            <div><strong>专病系统页</strong><span>展示过敏性鼻炎预问诊、医生摘要和宣教数字人。</span></div>
-          </div>
-          <div class="link-row">
-            <code>DEMO</code>
-            <div><strong>数字人演示</strong><span>支持接入专病知识库，形成患者宣教演示版本。</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="cta">
       <div class="wrap reveal">
         <h2>面向耳鼻喉专病场景的 AI 信息化组件</h2>
         <p>
           可对接患者端表单、医生端摘要页和数字人宣教入口，并按医院现有流程接入知识库与内容审校机制。
         </p>
-        <a class="btn" href="/hospital-ai">返回临床 AI 信息化工作室</a>
+        <a class="btn" href="/">返回临床 AI 信息化工作室</a>
       </div>
     </section>
   </main>

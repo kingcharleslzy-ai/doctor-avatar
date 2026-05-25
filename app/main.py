@@ -299,7 +299,7 @@ def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_co
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(resolve_user_template(request), {"request": request, "v": _CACHE_BUST})
+    return templates.TemplateResponse("hospital_ai.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/desktop", response_class=HTMLResponse)
@@ -314,7 +314,7 @@ def mobile(request: Request) -> HTMLResponse:
 
 @app.get("/hospital-ai", response_class=HTMLResponse)
 def hospital_ai(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("hospital_ai.html", {"request": request, "v": _CACHE_BUST})
+    return templates.TemplateResponse("digital_human.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.get("/rhinitis-ai", response_class=HTMLResponse)
