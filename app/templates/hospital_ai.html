@@ -7,17 +7,18 @@
   <link rel="icon" href="/favicon.ico" />
   <style>
     :root {
-      --cream: #f4efe6;
-      --cream-2: #ebe3d7;
-      --paper: #fbf7ef;
-      --ink: #171512;
-      --ink-soft: #38332d;
-      --muted: #766d62;
-      --line: rgba(23, 21, 18, .16);
-      --line-strong: rgba(23, 21, 18, .32);
-      --green: #0f4c43;
-      --green-soft: #dfe9df;
-      --copper: #a96843;
+      --cream: #f2f1e8;
+      --cream-2: #e4eee9;
+      --paper: #fffdf6;
+      --ink: #1e2e2b;
+      --ink-soft: #3d504b;
+      --muted: #6f7e78;
+      --line: rgba(30, 46, 43, .15);
+      --line-strong: rgba(30, 46, 43, .30);
+      --green: #126b61;
+      --green-deep: #0d3e39;
+      --green-soft: #dcefe8;
+      --copper: #a46c4a;
       --ease: cubic-bezier(.22, 1, .36, 1);
       --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
       --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
@@ -45,7 +46,7 @@
       top: 12px;
       z-index: 80;
       transform: translateY(-160%);
-      background: var(--ink);
+      background: var(--green);
       color: var(--paper);
       padding: 10px 14px;
     }
@@ -56,8 +57,8 @@
       min-height: 100vh;
       overflow: clip;
       background:
-        linear-gradient(90deg, rgba(23, 21, 18, .032) 1px, transparent 1px) 0 0 / 78px 78px,
-        linear-gradient(180deg, var(--cream), #efe7da 54%, var(--cream));
+        linear-gradient(90deg, rgba(18, 107, 97, .045) 1px, transparent 1px) 0 0 / 78px 78px,
+        linear-gradient(180deg, var(--cream), var(--cream-2) 58%, var(--cream));
     }
 
     .nav-wrap {
@@ -65,7 +66,7 @@
       top: 0;
       z-index: 50;
       border-bottom: 1px solid var(--line);
-      background: rgba(244, 239, 230, .86);
+      background: rgba(242, 241, 232, .88);
       backdrop-filter: blur(18px);
     }
 
@@ -93,7 +94,7 @@
       place-items: center;
       position: relative;
       flex: 0 0 auto;
-      background: var(--ink);
+      background: var(--green);
       color: var(--paper);
       font-family: var(--serif);
       font-size: 18px;
@@ -106,7 +107,7 @@
       height: 14px;
       right: -5px;
       bottom: -5px;
-      background: #0fa18d;
+      background: #21b39e;
       border: 2px solid var(--cream);
     }
 
@@ -143,14 +144,14 @@
     .nav-links a:hover,
     .nav-links a:focus-visible {
       color: var(--ink);
-      border-bottom-color: var(--ink);
+      border-bottom-color: var(--green);
     }
 
     .nav-action {
       padding: 9px 13px;
       color: var(--paper);
-      background: var(--ink);
-      border: 1px solid var(--ink);
+      background: var(--green);
+      border: 1px solid var(--green);
     }
 
     .wrap {
@@ -183,8 +184,8 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, rgba(244, 239, 230, .98) 0%, rgba(244, 239, 230, .90) 43%, rgba(244, 239, 230, .48) 100%),
-        linear-gradient(180deg, rgba(244, 239, 230, .42), rgba(244, 239, 230, .88));
+        linear-gradient(90deg, rgba(242, 241, 232, .98) 0%, rgba(242, 241, 232, .90) 43%, rgba(220, 239, 232, .50) 100%),
+        linear-gradient(180deg, rgba(242, 241, 232, .40), rgba(242, 241, 232, .88));
       pointer-events: none;
     }
 
@@ -249,18 +250,18 @@
       align-items: center;
       justify-content: center;
       padding: 0 18px;
-      border: 1px solid var(--ink);
+      border: 1px solid var(--green);
       font-weight: 700;
       transition: transform 180ms var(--ease), background 180ms var(--ease), color 180ms var(--ease);
     }
 
     .btn.primary {
       color: var(--paper);
-      background: var(--ink);
+      background: var(--green);
     }
 
     .btn.secondary {
-      color: var(--ink);
+      color: var(--green-deep);
       background: transparent;
     }
 
@@ -289,7 +290,8 @@
       position: relative;
       overflow: hidden;
       color: var(--paper);
-      background: #171512;
+      background:
+        linear-gradient(135deg, rgba(18, 107, 97, .98), rgba(13, 62, 57, .98));
       border-radius: 8px;
       padding: 0;
     }
@@ -426,7 +428,7 @@
       position: relative;
       border: 1px solid var(--line-strong);
       background:
-        linear-gradient(90deg, rgba(244, 239, 230, .94), rgba(244, 239, 230, .52)),
+        linear-gradient(90deg, rgba(242, 241, 232, .94), rgba(220, 239, 232, .52)),
         url("/static/medical-field-bg.png") center / cover;
       overflow: hidden;
     }
@@ -463,8 +465,8 @@
       gap: 18px;
       align-items: baseline;
       padding: 16px 0;
-      border-top: 1px solid rgba(23, 21, 18, .2);
-      background: rgba(244, 239, 230, .18);
+      border-top: 1px solid rgba(30, 46, 43, .18);
+      background: rgba(220, 239, 232, .18);
       backdrop-filter: blur(3px);
     }
 
@@ -546,7 +548,7 @@
 
     .case-card a {
       width: fit-content;
-      border-bottom: 1px solid var(--ink);
+      border-bottom: 1px solid var(--green);
       font-weight: 700;
     }
 
@@ -555,8 +557,8 @@
       padding: clamp(80px, 10vw, 138px) 0;
       color: var(--paper);
       background:
-        linear-gradient(120deg, rgba(15, 76, 67, .34), transparent 42%),
-        #171512;
+        linear-gradient(120deg, rgba(33, 179, 158, .22), transparent 44%),
+        var(--green-deep);
       overflow: hidden;
     }
 
@@ -690,7 +692,7 @@
 
       .hero::after {
         background:
-          linear-gradient(180deg, rgba(244, 239, 230, .98), rgba(244, 239, 230, .76) 64%, rgba(244, 239, 230, .96));
+          linear-gradient(180deg, rgba(242, 241, 232, .98), rgba(220, 239, 232, .76) 64%, rgba(242, 241, 232, .96));
       }
 
       h1 {
