@@ -229,7 +229,8 @@ async function startRealtimeSession({ withMic = false } = {}) {
   setVisible("endConsultBtn", true);
 
   const protocol = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${protocol}://${location.host}/ws/doubao/realtime`);
+  const mode = withMic ? "voice" : "text";
+  const ws = new WebSocket(`${protocol}://${location.host}/ws/doubao/realtime?mode=${mode}`);
   state.ws = ws;
   ws.binaryType = "arraybuffer";
 

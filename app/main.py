@@ -327,6 +327,8 @@ def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLRes
 
 @app.websocket("/ws/doubao/realtime")
 async def doubao_realtime_ws(ws: WebSocket) -> None:
+    mode = (ws.query_params.get("mode") or "voice").strip().lower()
+    should_send_opening = mode != "text"
     await ws.accept()
     if not is_doubao_realtime_configured():
         missing = ", ".join(doubao_realtime_missing_fields())
@@ -366,16 +368,31 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 }
             )
             upstream_send_lock = asyncio.Lock()
+            session_ready = asyncio.Event()
             guided_queries: set[str] = set()
             rag_turn_active = False
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
 
+            async def _wait_session_ready() -> bool:
+                if session_ready.is_set():
+                    return True
+                try:
+                    await asyncio.wait_for(session_ready.wait(), timeout=10)
+                except asyncio.TimeoutError:
+                    await ws.send_json({"type": "error", "message": "MedFlow 实时语音会话尚未就绪，请稍后重试。"})
+                    return False
+                return True
+
             async def _send_json_event(event: int, payload: dict | None = None) -> None:
+                if not await _wait_session_ready():
+                    return
                 async with upstream_send_lock:
                     await upstream.send(encode_json_event(event, payload or {}, session_id=session_id))
 
             async def _send_audio_event(audio_bytes: bytes) -> None:
+                if not await _wait_session_ready():
+                    return
                 async with upstream_send_lock:
                     await upstream.send(encode_audio_event(ClientEvent.TASK_REQUEST, audio_bytes, session_id=session_id))
 
@@ -452,9 +469,10 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     if event == ServerEvent.CONNECTION_STARTED:
                         await ws.send_json({"type": "status", "status": "connection_started", "payload": payload})
                     elif event == ServerEvent.SESSION_STARTED:
+                        session_ready.set()
                         await ws.send_json({"type": "status", "status": "session_started", "payload": payload})
                         greeting = settings.doubao_realtime_opening_remark.strip()
-                        if greeting:
+                        if greeting and should_send_opening:
                             await _send_json_event(ClientEvent.SAY_HELLO, {"content": greeting})
                     elif event in (ServerEvent.CONNECTION_FAILED, ServerEvent.SESSION_FAILED):
                         await ws.send_json({"type": "error", "message": payload.get("error") or "MedFlow 实时语音连接失败。"})
