@@ -579,7 +579,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     elif msg_type == "text":
                         content = str(payload.get("content") or "").strip()
                         if content:
-                            await _guide_user_query(content)
+                            await _guide_user_query(content, send_rag=False)
+                            await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
                     elif msg_type == "say_hello":
                         content = str(payload.get("content") or "").strip()
                         if content:
