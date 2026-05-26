@@ -144,14 +144,9 @@ def robots() -> str:
 def favicon() -> Response:
     svg = """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#2563eb"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="18" fill="url(#g)"/>
-  <path d="M20 18h7v12h10V18h7v28h-7V36H27v10h-7z" fill="#ffffff"/>
+  <rect width="64" height="64" fill="#171512"/>
+  <rect x="45" y="45" width="14" height="14" fill="#0fa18d"/>
+  <path d="M16 45V19h6.8l9.2 14.3L41.2 19H48v26h-6.2V29.2L34 41h-4L22.2 29.2V45z" fill="#fbf7ef"/>
 </svg>
 """.strip()
     return Response(content=svg, media_type="image/svg+xml")

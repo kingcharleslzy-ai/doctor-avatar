@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>李勇医生 AI 医疗助手</title>
+  <title>医疗数字人系统 | MedFlow</title>
   <link rel="icon" href="/favicon.ico" />
   <script defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
@@ -124,8 +124,8 @@
       margin-top: 2px;
       color: var(--ash);
       font-size: 12px;
-      letter-spacing: .04em;
-      text-transform: uppercase;
+      letter-spacing: 0;
+      text-transform: none;
     }
 
     .nav-links {
@@ -1220,7 +1220,7 @@
       .topbar {
         min-height: 62px;
       }
-      .brand > span:not(.brand-mark) { display: none; }
+      .brand > span:not(.brand-mark) span { display: none; }
       .stage-header {
         padding: 10px 12px 0;
       }
@@ -1286,15 +1286,15 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <a class="brand" href="/" aria-label="返回临床 AI 信息化工作室">
-        <span class="brand-mark">医</span>
+      <a class="brand" href="/" aria-label="返回 MedFlow 官网">
+        <span class="brand-mark">M</span>
         <span>
-          <strong>李勇医生 AI 医疗助手</strong>
-          <span id="brandSubtitle">杭州市第一人民医院 · 耳鼻咽喉科</span>
+          <strong>MedFlow</strong>
+          <span>杭州 MedFlow 智能科技工作室</span>
         </span>
       </a>
       <nav class="nav-links" aria-label="页面导航">
-        <a href="/">工作室官网</a>
+        <a href="/">MedFlow 官网</a>
         <a href="/rhinitis-ai">专病 AI</a>
         <a class="nav-action" href="/hospital-ai">数字人系统</a>
       </nav>
