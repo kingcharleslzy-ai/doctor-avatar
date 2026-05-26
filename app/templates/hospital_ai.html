@@ -109,6 +109,7 @@
       bottom: -5px;
       background: #21b39e;
       border: 2px solid var(--cream);
+      animation: signalPulse 2.8s ease-in-out infinite;
     }
 
     .brand strong {
@@ -177,6 +178,8 @@
       object-fit: cover;
       opacity: .84;
       filter: saturate(.88) contrast(.96);
+      transform-origin: 58% 45%;
+      animation: fieldDrift 28s ease-in-out infinite alternate;
     }
 
     .hero::after {
@@ -296,9 +299,20 @@
       padding: 0;
     }
 
+    .hero-feature::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(100deg, transparent 12%, rgba(255, 253, 246, .16) 48%, transparent 82%);
+      transform: translateX(-115%);
+      animation: panelScan 8.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
     .hero-feature-copy {
       position: relative;
-      z-index: 1;
+      z-index: 2;
       display: grid;
       gap: 18px;
       align-content: center;
@@ -341,6 +355,8 @@
       object-position: center;
       display: block;
       border-left: 1px solid rgba(251, 247, 239, .12);
+      transform-origin: 64% 46%;
+      animation: imageDrift 18s ease-in-out infinite alternate;
     }
 
     .section {
@@ -450,6 +466,7 @@
       border-top: 1px solid var(--green);
       border-right: 1px solid var(--green);
       opacity: .72;
+      animation: cornerPulse 4.8s ease-in-out infinite;
     }
 
     .panel-system {
@@ -468,6 +485,18 @@
       border-top: 1px solid rgba(30, 46, 43, .18);
       background: rgba(220, 239, 232, .18);
       backdrop-filter: blur(3px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(33, 179, 158, .18), transparent);
+      transform: translateX(-110%);
+      animation: dataSweep 7.2s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .panel-line code {
@@ -623,11 +652,58 @@
       transform: none;
     }
 
+    @keyframes signalPulse {
+      0%, 100% {
+        box-shadow: 0 0 0 0 rgba(33, 179, 158, .30);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 7px rgba(33, 179, 158, 0);
+        transform: scale(1.08);
+      }
+    }
+
+    @keyframes fieldDrift {
+      from { transform: scale(1) translate3d(0, 0, 0); }
+      to { transform: scale(1.04) translate3d(-1.2%, .8%, 0); }
+    }
+
+    @keyframes imageDrift {
+      from { transform: scale(1.02) translate3d(0, 0, 0); }
+      to { transform: scale(1.07) translate3d(-1.6%, .8%, 0); }
+    }
+
+    @keyframes panelScan {
+      0%, 46% { transform: translateX(-115%); opacity: 0; }
+      58% { opacity: 1; }
+      82%, 100% { transform: translateX(115%); opacity: 0; }
+    }
+
+    @keyframes dataSweep {
+      0%, 52% { transform: translateX(-110%); opacity: 0; }
+      62% { opacity: 1; }
+      84%, 100% { transform: translateX(110%); opacity: 0; }
+    }
+
+    @keyframes cornerPulse {
+      0%, 100% { opacity: .44; transform: translate3d(0, 0, 0); }
+      50% { opacity: .92; transform: translate3d(-3px, 3px, 0); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .reveal,
       .btn {
         transition: none;
+      }
+      .brand-mark::after,
+      .hero-art,
+      .hero-feature::before,
+      .hero-feature-image,
+      .feature-panel::after,
+      .panel-line::after {
+        animation: none;
+        transform: none;
       }
       .reveal {
         opacity: 1;
