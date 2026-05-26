@@ -329,33 +329,6 @@
       z-index: 1;
     }
 
-    .stage-caption {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
-      z-index: 2;
-      display: grid;
-      gap: 4px;
-      padding: 12px 14px;
-      border: 1px solid rgba(12, 111, 98, .18);
-      background: rgba(255, 253, 248, .82);
-      backdrop-filter: blur(12px);
-    }
-
-    .stage-caption b {
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-
-    .stage-caption span {
-      color: var(--ink-soft);
-      font-size: 13px;
-    }
-
     .system-board {
       display: grid;
       grid-template-rows: repeat(3, minmax(0, 1fr));
@@ -994,18 +967,6 @@
         display: none;
       }
 
-      .stage-caption {
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
-        padding: 9px 11px;
-      }
-
-      .stage-caption span {
-        font-size: 12px;
-        line-height: 1.35;
-      }
-
       .action-bar {
         padding: 10px 24px 12px;
         gap: 8px;
@@ -1243,9 +1204,6 @@
       .stage-grid {
         min-height: 0;
       }
-      .stage-caption {
-        display: none;
-      }
       .avatar-core {
         font-size: 34px;
       }
@@ -1321,10 +1279,6 @@
                 <div class="avatar-ring"></div>
                 <div class="avatar-ring"></div>
                 <div class="avatar-core">AI</div>
-              </div>
-              <div class="stage-caption">
-                <b>Live Doctor Avatar</b>
-                <span>主舞台用于医生形象、语音状态和后续视频会话展示。</span>
               </div>
             </div>
 
