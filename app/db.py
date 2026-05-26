@@ -9,17 +9,18 @@ from typing import Iterable
 
 import yaml
 
-from .config import KNOWLEDGE_DIR, settings
+from .config import BASE_DIR, KNOWLEDGE_DIR, settings
 
 
-def _db_path() -> Path:
-    path = Path(settings.doctor_memory_db_path)
+def memory_db_path() -> Path:
+    configured_path = settings.doctor_memory_db_path.strip()
+    path = Path(configured_path) if configured_path else BASE_DIR / "data" / "doctor_memory.db"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def _connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(_db_path())
+    conn = sqlite3.connect(memory_db_path())
     conn.row_factory = sqlite3.Row
     return conn
 

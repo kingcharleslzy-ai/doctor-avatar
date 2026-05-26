@@ -79,14 +79,23 @@ cp .env.example .env
 
 然后编辑 `.env`，至少填：
 
-- `OPENAI_API_KEY`
-- `HEYGEN_API_KEY`
-- `HEYGEN_AVATAR_ID`
-- `HEYGEN_VOICE_ID`
+- `DOUBAO_REALTIME_API_KEY`（新版豆包语音控制台）
 
-如果你后面拿到了 HeyGen 的上下文配置，再补：
+数字人页面主流程只依赖豆包实时语音。
 
-- `HEYGEN_CONTEXT_ID`
+豆包端到端实时语音第二版可先在服务器上验证：
+
+```bash
+npm run validate:doubao-cloud
+```
+
+通过后再启动站点并检查：
+
+```bash
+curl -s http://127.0.0.1:8000/api/app-config
+```
+
+确认 `doubao_realtime.configured` 为 `true`。
 
 ## 启动
 
@@ -137,20 +146,18 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 拿到证书后，可以直接按上面的说明切换到 HTTPS 版 Nginx 配置。
 
-## 当前项目的设备分流
+## 当前项目页面
 
 项目现在支持：
 
-- `/` 自动判断设备类型
-  - 手机默认进入移动版
-  - 电脑默认进入桌面版
-- `/desktop` 强制桌面版
-- `/mobile` 强制手机版
+- `/` MedFlow 官网
+- `/hospital-ai` 医疗数字人实时语音问诊页
+- `/rhinitis-ai` 耳鼻喉专病 AI 页面
 - `/console` 后台控制台
 
 ## 推荐后续工作
 
 1. 先完成 ECS 首次部署
-2. 用真实 HeyGen 参数验证视频链路
+2. 验证豆包实时语音和问诊资料库
 3. 再接域名和 HTTPS
 4. 最后再做 CI/CD 自动发布

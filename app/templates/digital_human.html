@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>医疗数字人系统 | MedFlow</title>
   <link rel="icon" href="/favicon.ico" />
-  <script defer src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
   <style>
     :root {
       --porcelain: #f7f8f4;
@@ -403,7 +402,6 @@
     .conn-dot.live { background: var(--signal); }
 
     .primary-actions,
-    .aux-action-row,
     .input-row,
     .aux-row {
       display: flex;
@@ -413,7 +411,6 @@
     .btn,
     .start-consult-btn,
     .end-consult-btn,
-    .aux-action-btn,
     .aux-btn,
     .send-btn {
       min-height: 46px;
@@ -442,7 +439,6 @@
       color: #fff;
     }
 
-    .aux-action-btn,
     .aux-btn {
       min-height: 38px;
       padding: 0 13px;
@@ -455,7 +451,6 @@
     .btn:hover,
     .start-consult-btn:hover,
     .end-consult-btn:hover,
-    .aux-action-btn:hover,
     .aux-btn:hover,
     .send-btn:hover {
       transform: translateY(-2px);
@@ -1285,15 +1280,15 @@
             <div class="system-board" aria-label="演示能力">
               <div class="board-row">
                 <code>VOICE</code>
-                <div><strong>语音问诊</strong><span>支持语音输入、自动转写、回答朗读和状态同步。</span></div>
+                <div><strong>实时语音问诊</strong><span>豆包端到端语音识别、对话生成与语音输出。</span></div>
               </div>
               <div class="board-row">
                 <code>Q&A</code>
                 <div><strong>健康科普问答</strong><span>围绕耳鼻咽喉科常见问题提供健康科普和就医参考。</span></div>
               </div>
               <div class="board-row">
-                <code>DEMO</code>
-                <div><strong>数字人展示</strong><span>支持图文、语音和后续视频分身会话的统一展示。</span></div>
+                <code>RAG</code>
+                <div><strong>问诊资料检索</strong><span>结合问诊流程与院内资料生成更稳定的语音回复。</span></div>
               </div>
             </div>
           </div>
@@ -1311,10 +1306,6 @@
             <button id="startConsultBtn" class="start-consult-btn" type="button">开始问诊</button>
             <button id="endConsultBtn" class="end-consult-btn" type="button" style="display:none">结束问诊</button>
           </div>
-          <div class="aux-action-row">
-            <button id="keepAliveBtn" class="aux-action-btn" type="button" style="display:none">保持会话</button>
-            <button id="disconnectBtn" class="aux-action-btn danger-aux" type="button" style="display:none">断开连接</button>
-          </div>
         </div>
       </section>
 
@@ -1324,12 +1315,7 @@
           <span class="chat-model-badge">AI Assistant</span>
         </div>
 
-        <div id="chatHistory" class="chat-history">
-          <div class="msg-row ai">
-            <div class="ai-label">AI 医疗助手</div>
-            <div class="bubble">您好，我是李勇医生的 AI 助手，专注耳鼻咽喉科常见问题的健康科普与就医建议。请问有什么可以帮您？</div>
-          </div>
-        </div>
+        <div id="chatHistory" class="chat-history"></div>
 
         <div id="quickPrompts" class="quick-prompts"></div>
 
@@ -1352,7 +1338,6 @@
           </div>
           <div class="aux-row">
             <button id="voiceInputBtn" class="aux-btn" type="button">语音</button>
-            <button id="speakAnswerBtn" class="aux-btn" type="button">朗读</button>
             <button id="stopSpeechBtn" class="aux-btn" type="button">停止</button>
           </div>
         </div>

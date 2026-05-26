@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import io
 import json
 import secrets
 import time
+import base64
 from pathlib import Path
 
 import asyncio
 
-import httpx
 from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
@@ -16,26 +15,39 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .config import settings
-from .db import create_memory_entry, delete_memory_entries, init_memory_db, list_memory_entries, memory_kind_counts
-from .knowledge import invalidate_index, load_doctor_profile, search_knowledge
+from .consultation_flow import ConsultationOrchestrator
+from .db import (
+    create_memory_entry,
+    delete_memory_entries,
+    init_memory_db,
+    list_memory_entries,
+    memory_db_path,
+    memory_kind_counts,
+)
+from .doubao_realtime import (
+    AUDIO_SERVER_RESPONSE,
+    ClientEvent,
+    ServerEvent,
+    build_headers,
+    build_start_session_payload,
+    create_connect_id,
+    create_session_id,
+    decode_frame,
+    doubao_realtime_auth_mode,
+    doubao_realtime_missing_fields,
+    encode_audio_event,
+    encode_json_event,
+    is_doubao_realtime_configured,
+)
+from .knowledge import invalidate_index, load_doctor_profile
 from .memory_snapshot import MARKER_KIND, get_memory_status
 from .models import (
-    ChatRequest,
-    ChatResponse,
-    DittoGenerateRequest,
-    LiveAvatarSessionRequest,
-    LiveAvatarStartRequest,
-    LiveAvatarTokenResponse,
     MemoryEntryCreate,
     MemoryEntryDeleteRequest,
     MemoryEntryResponse,
     PresenceHeartbeatRequest,
-    TTSRequest,
 )
 from .ops import monitor_snapshot, record_presence, record_request
-from .speech import SpeechService
-from .stt import TranscriptionService
-from .services import ChatService, HeyGenService
 
 
 from contextlib import asynccontextmanager
@@ -48,10 +60,6 @@ async def lifespan(application):
 app = FastAPI(title="Doctor Avatar MVP", version="0.1.0", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
-chat_service = ChatService()
-heygen_service = HeyGenService()
-speech_service = SpeechService()
-transcription_service = TranscriptionService()
 doctor_profile = load_doctor_profile()
 console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
@@ -156,12 +164,8 @@ def favicon() -> Response:
 def app_config() -> dict[str, object]:
     build_meta = load_build_meta()
     memory_entries = list_memory_entries(limit=1)
-    memory_code = get_memory_status(Path(settings.doctor_memory_db_path))[0] if memory_entries else None
+    memory_code = get_memory_status(memory_db_path())[0] if memory_entries else None
     return {
-        "openai_configured": bool(settings.openai_api_key),
-        "heygen_configured": bool(settings.heygen_api_key),
-        "video_avatar_enabled": settings.enable_video_avatar,
-        "ditto_enabled": settings.ditto_enabled,
         "runtime": build_meta,
         "doctor_memory": {
             # db_path removed — don't expose internal filesystem paths
@@ -176,20 +180,19 @@ def app_config() -> dict[str, object]:
             "hospital": doctor_profile.get("hospital"),
             "department": doctor_profile.get("department"),
         },
-        "ditto_stream": {
-            "enabled": settings.ditto_stream_enabled,
-            "ws_url_configured": bool(settings.ditto_ws_url),
-        },
-        "stt": transcription_service.provider_status(),
-        "tts": speech_service.provider_status(),
-        "liveavatar": {
-            "mode": settings.heygen_mode,
-            "language": settings.heygen_language,
-            "sandbox": settings.heygen_use_sandbox,
-            "push_to_talk": settings.heygen_push_to_talk,
-            "avatar_configured": bool(settings.heygen_avatar_id),
-            "voice_configured": bool(settings.heygen_voice_id),
-            "context_configured": bool(settings.heygen_context_id),
+        "doubao_realtime": {
+            "enabled": settings.doubao_realtime_enabled,
+            "configured": is_doubao_realtime_configured(),
+            "auth_mode": doubao_realtime_auth_mode(),
+            "missing_fields": doubao_realtime_missing_fields(),
+            "model": settings.doubao_realtime_model,
+            "input_sample_rate": 16000,
+            "output_sample_rate": 24000,
+            "output_format": "pcm_s16le",
+            "bot_name": settings.doubao_realtime_bot_name,
+            "speaker": settings.doubao_realtime_speaker,
+            "opening_enabled": bool(settings.doubao_realtime_opening_remark.strip()),
+            "websearch_enabled": settings.doubao_realtime_enable_websearch,
         },
     }
 
@@ -236,7 +239,7 @@ def memory_summary(_: str = Depends(require_console_auth)) -> dict[str, object]:
     return {
         "total": len(rows),
         "kinds": counts,
-        "memory_code": get_memory_status(Path(settings.doctor_memory_db_path))[0] if rows else None,
+        "memory_code": get_memory_status(memory_db_path())[0] if rows else None,
     }
 
 
@@ -244,11 +247,11 @@ def memory_summary(_: str = Depends(require_console_auth)) -> dict[str, object]:
 def ops_overview(_: str = Depends(require_console_auth)) -> dict[str, object]:
     rows = [row for row in list_memory_entries(limit=None) if row["kind"] != MARKER_KIND]
     counts = [item for item in memory_kind_counts() if item["kind"] != MARKER_KIND]
-    snapshot = monitor_snapshot(Path(settings.doctor_memory_db_path))
+    snapshot = monitor_snapshot(memory_db_path())
     snapshot["doctor_memory"] = {
         "total": len(rows),
         "kinds": counts,
-        "memory_code": get_memory_status(Path(settings.doctor_memory_db_path))[0] if rows else None,
+        "memory_code": get_memory_status(memory_db_path())[0] if rows else None,
         "write_enabled": settings.console_memory_write_enabled,
     }
     return snapshot
@@ -272,7 +275,7 @@ def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_a
         source=payload.source,
         importance=payload.importance,
     )
-    get_memory_status(Path(settings.doctor_memory_db_path))
+    get_memory_status(memory_db_path())
     invalidate_index()
     return MemoryEntryResponse(**row)
 
@@ -287,7 +290,7 @@ def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_co
     }
     candidate_ids = [entry_id for entry_id in payload.entry_ids if entry_id not in protected_ids]
     deleted = delete_memory_entries(candidate_ids)
-    get_memory_status(Path(settings.doctor_memory_db_path))
+    get_memory_status(memory_db_path())
     invalidate_index()
     return {"deleted": deleted}
 
@@ -322,402 +325,271 @@ def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLRes
     return templates.TemplateResponse("console.html", {"request": request})
 
 
-@app.post("/api/voice-chat")
-async def voice_chat(payload: ChatRequest):
-    """流式语音聊天：DeepSeek streaming → 句级 Edge TTS → SSE 返回文本+音频。
-    前端只需一个请求，就能实现"边说边听"的实时通话体验。"""
-    import base64
-    import re
-    import edge_tts
-    from fastapi.responses import StreamingResponse
-
-    if chat_service.client is None:
-        raise HTTPException(status_code=503, detail="Chat 未配置。")
-
-    hits = search_knowledge(payload.message)
-    snippets = [hit.snippet for hit in hits]
-
-    async def _tts_bytes(text: str) -> bytes:
-        voice = settings.edge_tts_voice or "zh-CN-YunjianNeural"
-        communicate = edge_tts.Communicate(text, voice, rate="+10%", pitch="-5Hz")
-        buf = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                buf.write(chunk["data"])
-        return buf.getvalue()
-
-    async def _generate():
-        from .prompts import build_system_prompt, build_user_prompt
-        from .ops import record_openai_usage, record_openai_error
-
-        # Handle memory-code special case (same as ChatService.answer)
-        if chat_service._looks_like_memory_code_request(payload.message):
-            code_answer = chat_service._answer_memory_code()
-            if code_answer:
-                text = code_answer["answer"]
-                yield f"data: {json.dumps({'type': 'text', 'token': text}, ensure_ascii=False)}\n\n"
-                try:
-                    audio = await _tts_bytes(text)
-                    audio_b64 = base64.b64encode(audio).decode()
-                    yield f"data: {json.dumps({'type': 'audio', 'index': 1, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
-                except Exception:
-                    pass
-                yield f"data: {json.dumps({'type': 'done', 'full_text': text}, ensure_ascii=False)}\n\n"
-                return
-
-        try:
-            stream = chat_service.client.chat.completions.create(
-                model=settings.openai_model,
-                messages=[
-                    {"role": "system", "content": build_system_prompt(chat_service.profile)},
-                    *payload.conversation,
-                    {"role": "user", "content": build_user_prompt(payload.message, snippets)},
-                ],
-                stream=True,
-            )
-        except Exception:
-            record_openai_error()
-            raise
-
-        full_text = ""
-        sentence_buf = ""
-        sent_count = 0
-        sentence_ends = re.compile(r'[。！？\n.!?]')
-        MIN_TTS_LEN = 8
-
-        for chunk in stream:
-            delta = chunk.choices[0].delta
-            if delta.content:
-                token = delta.content
-                full_text += token
-                sentence_buf += token
-
-                # Send text token immediately for live display
-                yield f"data: {json.dumps({'type': 'text', 'token': token}, ensure_ascii=False)}\n\n"
-
-                # Check if we completed a sentence (and it's long enough)
-                if sentence_ends.search(token) and len(sentence_buf.strip()) >= MIN_TTS_LEN:
-                    sentence = sentence_buf.strip()
-                    sentence_buf = ""
-                    sent_count += 1
-                    try:
-                        audio = await _tts_bytes(sentence)
-                        audio_b64 = base64.b64encode(audio).decode()
-                        yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
-                    except Exception:
-                        pass  # Skip TTS errors, text still shows
-
-        # Handle remaining text
-        if sentence_buf.strip() and len(sentence_buf.strip()) > 2:
-            sent_count += 1
-            try:
-                audio = await _tts_bytes(sentence_buf.strip())
-                audio_b64 = base64.b64encode(audio).decode()
-                yield f"data: {json.dumps({'type': 'audio', 'index': sent_count, 'audio': audio_b64, 'format': 'audio/mpeg'}, ensure_ascii=False)}\n\n"
-            except Exception:
-                pass
-
-        yield f"data: {json.dumps({'type': 'done', 'full_text': full_text}, ensure_ascii=False)}\n\n"
-
-    return StreamingResponse(
-        _generate(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
-
-
-@app.post("/api/chat", response_model=ChatResponse)
-def chat(payload: ChatRequest) -> ChatResponse:
-    try:
-        result = chat_service.answer(payload.message, payload.conversation)
-    except Exception as exc:  # pragma: no cover - runtime integration fallback
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return ChatResponse(**result)
-
-
-@app.post("/api/stt")
-async def speech_to_text(request: Request) -> dict[str, str]:
-    if not (settings.stt_api_key or settings.openai_api_key):
-        raise HTTPException(status_code=503, detail="语音识别 API key 未配置。")
-    form = await request.form()
-    audio_file = form.get("audio")
-    if audio_file is None:
-        raise HTTPException(status_code=400, detail="缺少音频文件。")
-    try:
-        audio_bytes = await audio_file.read()
-        filename = getattr(audio_file, "filename", None) or "audio.webm"
-        result = await transcription_service.transcribe(audio_bytes, filename=filename)
-        return {
-            "text": result.text,
-            "provider": result.provider,
-            "model": result.model,
-        }
-    except Exception as exc:
-        message = str(exc).lower()
-        if "authentication" in message or "unauthorized" in message or "invalid api key" in message or "invalid_api_key" in message:
-            raise HTTPException(
-                status_code=503,
-                detail="语音识别服务认证失败，请检查服务器上的 STT_API_KEY 是否为有效的 OpenAI API key。",
-            ) from exc
-        raise HTTPException(status_code=500, detail=f"语音识别失败: {exc}") from exc
-
-
-@app.post("/api/tts")
-async def text_to_speech(payload: TTSRequest) -> Response:
-    try:
-        result = await speech_service.synthesize(
-            payload.text,
-            provider=payload.provider,
-            voice=payload.voice,
-        )
-        return Response(
-            content=result.audio,
-            media_type=result.media_type,
-            headers={
-                "X-TTS-Provider": result.provider,
-                "X-TTS-Voice": result.voice,
-            },
-        )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"TTS 失败: {exc}") from exc
-
-
-@app.post("/api/tts/stream")
-async def text_to_speech_stream(payload: TTSRequest):
-    """流式 TTS：边生成边返回 MP3 音频块，首包延迟 <400ms。默认走 Edge TTS。"""
-    from fastapi.responses import StreamingResponse
-    import edge_tts
-
-    voice = payload.voice or settings.edge_tts_voice or "zh-CN-YunjianNeural"
-
-    async def _generate():
-        communicate = edge_tts.Communicate(payload.text, voice, rate="+10%", pitch="-5Hz")
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                yield chunk["data"]
-
-    return StreamingResponse(
-        _generate(),
-        media_type="audio/mpeg",
-        headers={
-            "X-TTS-Provider": "edge-stream",
-            "X-TTS-Voice": voice,
-            "Cache-Control": "no-cache",
-        },
-    )
-
-
-def _ditto_clip_text(text: str, max_chars: int = 60) -> str:
-    """取第一个完整句子（不超过 max_chars 字），用于 Ditto 生成短片段而非全文。"""
-    for ch in "。！？.!?":
-        idx = text.find(ch)
-        if 0 < idx < max_chars:
-            return text[: idx + 1]
-    return text[:max_chars]
-
-
-@app.post("/api/ditto/generate")
-async def ditto_generate(payload: DittoGenerateRequest) -> Response:
-    if not settings.ditto_enabled:
-        raise HTTPException(status_code=409, detail="Ditto 视频生成未启用。")
-    try:
-        clip_text = _ditto_clip_text(payload.text)
-        speech = await speech_service.synthesize(clip_text)
-        audio_buf = io.BytesIO(speech.audio)
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{settings.ditto_service_url}/generate",
-                files={
-                    "audio": (
-                        f"audio{'.wav' if speech.media_type.endswith('wav') else '.mp3'}",
-                        audio_buf,
-                        speech.media_type,
-                    )
-                },
-            )
-        if resp.status_code != 200:
-            raise HTTPException(status_code=500, detail=f"Ditto 服务错误: {resp.text[:300]}")
-        return Response(content=resp.content, media_type="video/mp4")
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"视频生成失败: {exc}") from exc
-
-
-@app.post("/api/liveavatar/token", response_model=LiveAvatarTokenResponse)
-async def liveavatar_token(
-    payload: LiveAvatarSessionRequest | None = None,
-    _: str = Depends(require_console_auth),
-) -> LiveAvatarTokenResponse:
-    if not settings.enable_video_avatar:
-        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
-    payload = payload or LiveAvatarSessionRequest()
-    request_payload = {
-        "mode": payload.mode or settings.heygen_mode,
-        "avatar_id": payload.avatar_id or settings.heygen_avatar_id,
-        "is_sandbox": payload.is_sandbox if payload.is_sandbox is not None else settings.heygen_use_sandbox,
-        "avatar_persona": {
-            "voice_id": payload.voice_id or settings.heygen_voice_id,
-            "context_id": payload.context_id or settings.heygen_context_id,
-            "language": payload.language or settings.heygen_language,
-        },
-        **(
-            payload.extra
-            if payload.extra
-            else ({"interactivity_type": "PUSH_TO_TALK"} if settings.heygen_push_to_talk else {})
-        ),
-    }
-    avatar_persona = {key: value for key, value in request_payload["avatar_persona"].items() if value is not None}
-    if avatar_persona:
-        request_payload["avatar_persona"] = avatar_persona
-    else:
-        request_payload.pop("avatar_persona")
-    request_payload = {key: value for key, value in request_payload.items() if value is not None}
-
-    try:
-        result = await heygen_service.create_liveavatar_token(request_payload)
-    except Exception as exc:  # pragma: no cover - runtime integration fallback
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return LiveAvatarTokenResponse(data=result)
-
-
-@app.post("/api/liveavatar/session", response_model=LiveAvatarTokenResponse)
-async def liveavatar_session(
-    payload: LiveAvatarStartRequest,
-    _: str = Depends(require_console_auth),
-) -> LiveAvatarTokenResponse:
-    if not settings.enable_video_avatar:
-        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
-    try:
-        result = await heygen_service.start_liveavatar_session(payload.session_token)
-    except Exception as exc:  # pragma: no cover - runtime integration fallback
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return LiveAvatarTokenResponse(data=result)
-
-
-# ---------------------------------------------------------------------------
-# Ditto 流式 WebSocket 端点
-# 协议：
-#   浏览器 → 服务端：JSON {"text": "..."} 触发一次流式请求
-#   服务端 → 4090D：原始 PCM bytes（16kHz mono 16-bit），最后发 b"END"
-#   4090D → 服务端：JPEG 帧（bytes）或 JSON {"done":true}
-#   服务端 → 浏览器：转发 JPEG bytes；会话结束发 JSON {"done":true}
-# ---------------------------------------------------------------------------
-@app.websocket("/ws/ditto/stream")
-async def ditto_ws_stream(ws: WebSocket) -> None:
+@app.websocket("/ws/doubao/realtime")
+async def doubao_realtime_ws(ws: WebSocket) -> None:
     await ws.accept()
+    if not is_doubao_realtime_configured():
+        missing = ", ".join(doubao_realtime_missing_fields())
+        await ws.send_json({"type": "error", "message": f"豆包端到端实时语音未配置：{missing}。"})
+        await ws.close(code=1008)
+        return
+
     try:
-        if not settings.ditto_stream_enabled:
-            await ws.send_json({"error": "流式视频未启用。"})
-            await ws.close(code=1008)
-            return
+        import websockets
+    except Exception:
+        await ws.send_json({"type": "error", "message": "缺少 websockets 依赖，无法连接豆包实时语音。"})
+        await ws.close(code=1011)
+        return
 
-        # 1. 从浏览器接收待合成文本
-        try:
-            msg = await asyncio.wait_for(ws.receive_json(), timeout=10.0)
-        except asyncio.TimeoutError:
-            await ws.close(code=1008)
-            return
-        text = (msg.get("text") or "").strip()
-        if not text:
-            await ws.close(code=1003)
-            return
+    connect_id = create_connect_id()
+    session_id = create_session_id()
+    headers = build_headers(connect_id)
+    orchestrator = ConsultationOrchestrator(doctor_profile)
 
-        # 2. edge-tts → MP3 → ffmpeg → 16kHz mono PCM WAV
-        speech = await speech_service.synthesize(text)
-        audio_bytes = speech.audio
-
-        proc = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-y", "-i", "pipe:0",
-            "-ar", "16000", "-ac", "1", "-f", "wav", "pipe:1",
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        wav_data, _ = await proc.communicate(input=audio_bytes)
-        if not wav_data or len(wav_data) <= 44:
-            await ws.send_json({"error": "TTS 转换失败。"})
-            await ws.close(code=1011)
-            return
-
-        pcm_data = wav_data[44:]  # 跳过 WAV 头，取裸 PCM
-
-        # 3. 连接 4090D 流式服务
-        import websockets as _ws_lib
-        try:
-            ditto_conn = await _ws_lib.connect(
-                settings.ditto_ws_url,
-                max_size=20 * 1024 * 1024,
-                open_timeout=10,
+    try:
+        async with websockets.connect(
+            settings.doubao_realtime_ws_url,
+            extra_headers=headers,
+            max_size=None,
+            open_timeout=10,
+            ping_interval=20,
+            ping_timeout=20,
+        ) as upstream:
+            response_headers = getattr(upstream, "response_headers", {}) or {}
+            await ws.send_json(
+                {
+                    "type": "status",
+                    "status": "upstream_connected",
+                    "connect_id": connect_id,
+                    "session_id": session_id,
+                    "log_id": response_headers.get("X-Tt-Logid") or response_headers.get("x-tt-logid"),
+                }
             )
-        except Exception as exc:
-            await ws.send_json({"error": f"无法连接 Ditto 流式服务：{exc}"})
-            await ws.close(code=1011)
-            return
+            upstream_send_lock = asyncio.Lock()
+            guided_queries: set[str] = set()
+            rag_turn_active = False
+            active_tts_type: str | None = None
+            pending_chat_end_payload: dict | None = None
 
-        try:
-            CHUNK = int(0.4 * 16000 * 2)  # 0.4s × 16kHz × 2bytes = 12800 bytes
+            async def _send_json_event(event: int, payload: dict | None = None) -> None:
+                async with upstream_send_lock:
+                    await upstream.send(encode_json_event(event, payload or {}, session_id=session_id))
 
-            async def _send() -> None:
-                for i in range(0, len(pcm_data), CHUNK):
-                    await ditto_conn.send(pcm_data[i : i + CHUNK])
-                    await asyncio.sleep(0.01)
-                await ditto_conn.send(b"END")
+            async def _send_audio_event(audio_bytes: bytes) -> None:
+                async with upstream_send_lock:
+                    await upstream.send(encode_audio_event(ClientEvent.TASK_REQUEST, audio_bytes, session_id=session_id))
 
-            async def _recv() -> None:
-                async for frame in ditto_conn:
-                    if isinstance(frame, bytes):
-                        await ws.send_bytes(frame)
+            async def _guide_user_query(user_text: str, *, send_rag: bool = True) -> None:
+                nonlocal rag_turn_active, active_tts_type
+                normalized = " ".join((user_text or "").split()).strip()
+                if not normalized or normalized in guided_queries:
+                    return
+                guided_queries.add(normalized)
+                try:
+                    turn = await asyncio.to_thread(orchestrator.prepare_turn, normalized)
+                    await ws.send_json(
+                        {
+                            "type": "rag_context",
+                            "stage": turn.stage,
+                            "stage_label": turn.stage_label,
+                            "sources": turn.hit_sources,
+                        }
+                    )
+                    await _send_json_event(ClientEvent.UPDATE_CONFIG, turn.update_config)
+                    if send_rag:
+                        rag_turn_active = True
+                        active_tts_type = None
+                        await _send_json_event(ClientEvent.CHAT_RAG_TEXT, {"external_rag": turn.external_rag})
+                except Exception as exc:
+                    await ws.send_json({"type": "error", "message": f"问诊资料检索失败: {exc}"})
+
+            await upstream.send(encode_json_event(ClientEvent.START_CONNECTION, {}))
+            start_payload = build_start_session_payload()
+            start_payload["dialog"].update(orchestrator.start_dialog_config())
+            await upstream.send(
+                encode_json_event(
+                    ClientEvent.START_SESSION,
+                    start_payload,
+                    session_id=session_id,
+                )
+            )
+
+            async def _upstream_to_browser() -> None:
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
+                async for upstream_message in upstream:
+                    if isinstance(upstream_message, str):
+                        upstream_bytes = upstream_message.encode("utf-8")
                     else:
+                        upstream_bytes = bytes(upstream_message)
+
+                    try:
+                        frame = decode_frame(upstream_bytes)
+                    except Exception as exc:
+                        await ws.send_json({"type": "error", "message": f"豆包响应解析失败: {exc}"})
+                        continue
+
+                    if frame.message_type == AUDIO_SERVER_RESPONSE or frame.event == ServerEvent.TTS_RESPONSE:
+                        if rag_turn_active and active_tts_type not in ("external_rag", "chat_tts_text"):
+                            continue
+                        await ws.send_json(
+                            {
+                                "type": "audio",
+                                "format": "pcm_s16le",
+                                "sample_rate": 24000,
+                                "audio": base64.b64encode(frame.payload).decode("ascii"),
+                            }
+                        )
+                        continue
+
+                    payload = {}
+                    if frame.payload:
                         try:
-                            payload = json.loads(frame)
+                            payload = frame.json_payload()
                         except Exception:
-                            payload = {}
-                        if payload.get("done"):
-                            await ws.send_json({"done": True})
-                            return
+                            payload = {"raw": frame.payload.decode("utf-8", errors="replace")}
 
-            results = await asyncio.gather(_send(), _recv(), return_exceptions=True)
-            for r in results:
-                if isinstance(r, BaseException) and not isinstance(r, asyncio.CancelledError):
-                    raise r
-        finally:
-            await ditto_conn.close()
+                    event = frame.event
+                    if event == ServerEvent.CONNECTION_STARTED:
+                        await ws.send_json({"type": "status", "status": "connection_started", "payload": payload})
+                    elif event == ServerEvent.SESSION_STARTED:
+                        await ws.send_json({"type": "status", "status": "session_started", "payload": payload})
+                        greeting = settings.doubao_realtime_opening_remark.strip()
+                        if greeting:
+                            await _send_json_event(ClientEvent.SAY_HELLO, {"content": greeting})
+                    elif event in (ServerEvent.CONNECTION_FAILED, ServerEvent.SESSION_FAILED):
+                        await ws.send_json({"type": "error", "message": payload.get("error") or "豆包实时语音连接失败。"})
+                    elif event == ServerEvent.ASR_INFO:
+                        await ws.send_json({"type": "asr_start", "payload": payload})
+                    elif event == ServerEvent.ASR_RESPONSE:
+                        results = payload.get("results") or []
+                        best = results[-1] if results else {}
+                        best_text = best.get("text", "")
+                        is_interim = bool(best.get("is_interim"))
+                        await ws.send_json(
+                            {
+                                "type": "asr",
+                                "text": best_text,
+                                "is_interim": is_interim,
+                                "payload": payload,
+                            }
+                        )
+                        if best_text and not is_interim:
+                            await _guide_user_query(best_text)
+                    elif event == ServerEvent.ASR_ENDED:
+                        await ws.send_json({"type": "asr_end", "payload": payload})
+                    elif event == ServerEvent.CHAT_RESPONSE:
+                        if rag_turn_active:
+                            continue
+                        await ws.send_json(
+                            {
+                                "type": "chat",
+                                "content": payload.get("content", ""),
+                                "question_id": payload.get("question_id"),
+                                "reply_id": payload.get("reply_id"),
+                                "payload": payload,
+                            }
+                        )
+                    elif event == ServerEvent.CHAT_ENDED:
+                        if rag_turn_active:
+                            continue
+                        pending_chat_end_payload = payload
+                    elif event == ServerEvent.TTS_SENTENCE_START:
+                        active_tts_type = str(payload.get("tts_type") or "")
+                        if rag_turn_active and active_tts_type not in ("external_rag", "chat_tts_text"):
+                            continue
+                        if rag_turn_active and payload.get("text"):
+                            await ws.send_json(
+                                {
+                                    "type": "chat",
+                                    "content": payload.get("text", ""),
+                                    "question_id": payload.get("question_id"),
+                                    "reply_id": payload.get("reply_id"),
+                                    "payload": payload,
+                                }
+                            )
+                        await ws.send_json({"type": "tts_start", "text": payload.get("text", ""), "payload": payload})
+                    elif event == ServerEvent.TTS_SENTENCE_END:
+                        await ws.send_json({"type": "tts_sentence_end", "payload": payload})
+                    elif event == ServerEvent.TTS_ENDED:
+                        if payload.get("status_code") == "20000002":
+                            await ws.send_json({"type": "status", "status": "user_exit_intent", "payload": payload})
+                        if rag_turn_active and active_tts_type in ("external_rag", "chat_tts_text"):
+                            rag_turn_active = False
+                            await ws.send_json({"type": "chat_end", "payload": payload})
+                            active_tts_type = None
+                        elif pending_chat_end_payload is not None:
+                            await ws.send_json({"type": "chat_end", "payload": pending_chat_end_payload})
+                            pending_chat_end_payload = None
+                        await ws.send_json({"type": "tts_end", "payload": payload})
+                    elif event == ServerEvent.USAGE_RESPONSE:
+                        await ws.send_json({"type": "usage", "payload": payload})
+                    elif event in (ServerEvent.SESSION_FINISHED, ServerEvent.CONNECTION_FINISHED):
+                        if pending_chat_end_payload is not None:
+                            await ws.send_json({"type": "chat_end", "payload": pending_chat_end_payload})
+                            pending_chat_end_payload = None
+                        await ws.send_json({"type": "status", "status": "finished", "payload": payload})
+                        return
+                    else:
+                        await ws.send_json({"type": "event", "event": event, "payload": payload})
 
+            async def _browser_to_upstream() -> None:
+                while True:
+                    message = await ws.receive()
+                    if message["type"] == "websocket.disconnect":
+                        return
+
+                    audio_bytes = message.get("bytes")
+                    if audio_bytes:
+                        await _send_audio_event(audio_bytes)
+                        continue
+
+                    text = message.get("text")
+                    if not text:
+                        continue
+
+                    try:
+                        payload = json.loads(text)
+                    except json.JSONDecodeError:
+                        await ws.send_json({"type": "error", "message": "浏览器消息不是有效 JSON。"})
+                        continue
+
+                    msg_type = payload.get("type")
+                    if msg_type == "end_asr":
+                        await _send_json_event(ClientEvent.END_ASR, {})
+                    elif msg_type == "interrupt":
+                        await _send_json_event(ClientEvent.CLIENT_INTERRUPT, {})
+                    elif msg_type == "text":
+                        content = str(payload.get("content") or "").strip()
+                        if content:
+                            await _guide_user_query(content, send_rag=False)
+                            await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
+                    elif msg_type == "say_hello":
+                        content = str(payload.get("content") or "").strip()
+                        if content:
+                            await _send_json_event(ClientEvent.SAY_HELLO, {"content": content})
+                    elif msg_type == "finish":
+                        await _send_json_event(ClientEvent.FINISH_SESSION, {})
+                        async with upstream_send_lock:
+                            await upstream.send(encode_json_event(ClientEvent.FINISH_CONNECTION, {}))
+                        return
+
+            tasks = [
+                asyncio.create_task(_upstream_to_browser()),
+                asyncio.create_task(_browser_to_upstream()),
+            ]
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in pending:
+                task.cancel()
+            for task in done:
+                task.result()
     except WebSocketDisconnect:
-        pass
+        return
     except Exception as exc:
         try:
-            await ws.send_json({"error": str(exc)})
+            await ws.send_json({"type": "error", "message": f"豆包实时语音代理异常: {exc}"})
         except Exception:
             pass
-    finally:
         try:
-            await ws.close()
+            await ws.close(code=1011)
         except Exception:
             pass
-
-
-@app.get("/api/liveavatar/sessions", response_model=LiveAvatarTokenResponse)
-async def liveavatar_sessions(_: str = Depends(require_console_auth)) -> LiveAvatarTokenResponse:
-    if not settings.enable_video_avatar:
-        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
-    try:
-        result = await heygen_service.list_sessions()
-    except Exception as exc:  # pragma: no cover - runtime integration fallback
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return LiveAvatarTokenResponse(data=result)
-
-
-@app.post("/api/liveavatar/keepalive", response_model=LiveAvatarTokenResponse)
-async def liveavatar_keepalive(
-    payload: LiveAvatarStartRequest,
-    _: str = Depends(require_console_auth),
-) -> LiveAvatarTokenResponse:
-    if not settings.enable_video_avatar:
-        raise HTTPException(status_code=409, detail="视频分身能力当前未启用。")
-    try:
-        result = await heygen_service.keep_alive(payload.session_token)
-    except Exception as exc:  # pragma: no cover - runtime integration fallback
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return LiveAvatarTokenResponse(data=result)

@@ -16,12 +16,6 @@ _REQUESTS_TOTAL = 0
 _REQUEST_ERRORS = 0
 _REQUEST_TIME_MS = 0.0
 _PATH_COUNTS: Counter[str] = Counter()
-_OPENAI_CALLS = 0
-_OPENAI_ERRORS = 0
-_OPENAI_INPUT_TOKENS = 0
-_OPENAI_OUTPUT_TOKENS = 0
-_OPENAI_TOTAL_TOKENS = 0
-_OPENAI_LAST_MODEL = ""
 _PRESENCE: dict[str, dict[str, Any]] = {}
 
 
@@ -34,25 +28,6 @@ def record_request(path: str, status_code: int, duration_ms: float) -> None:
             _REQUEST_ERRORS += 1
         _REQUEST_TIME_MS += duration_ms
         _PATH_COUNTS[normalized_path] += 1
-
-
-def record_openai_usage(model: str, usage: Any) -> None:
-    global _OPENAI_CALLS, _OPENAI_INPUT_TOKENS, _OPENAI_OUTPUT_TOKENS, _OPENAI_TOTAL_TOKENS, _OPENAI_LAST_MODEL
-    input_tokens = _usage_value(usage, "input_tokens")
-    output_tokens = _usage_value(usage, "output_tokens")
-    total_tokens = _usage_value(usage, "total_tokens")
-    with _LOCK:
-        _OPENAI_CALLS += 1
-        _OPENAI_INPUT_TOKENS += input_tokens
-        _OPENAI_OUTPUT_TOKENS += output_tokens
-        _OPENAI_TOTAL_TOKENS += total_tokens
-        _OPENAI_LAST_MODEL = model
-
-
-def record_openai_error() -> None:
-    global _OPENAI_ERRORS
-    with _LOCK:
-        _OPENAI_ERRORS += 1
 
 
 def record_presence(session_id: str, user_agent: str | None = None) -> None:
@@ -70,12 +45,6 @@ def monitor_snapshot(db_path: Path) -> dict[str, Any]:
         request_errors = _REQUEST_ERRORS
         request_time_ms = _REQUEST_TIME_MS
         path_counts = _PATH_COUNTS.most_common(6)
-        openai_calls = _OPENAI_CALLS
-        openai_errors = _OPENAI_ERRORS
-        openai_input_tokens = _OPENAI_INPUT_TOKENS
-        openai_output_tokens = _OPENAI_OUTPUT_TOKENS
-        openai_total_tokens = _OPENAI_TOTAL_TOKENS
-        openai_last_model = _OPENAI_LAST_MODEL
         active_users = len(_PRESENCE)
 
     uptime_seconds = max(0, int(now - _STARTED_AT))
@@ -96,36 +65,8 @@ def monitor_snapshot(db_path: Path) -> dict[str, Any]:
             "avg_latency_ms": avg_latency_ms,
             "top_paths": [{"path": path, "count": count} for path, count in path_counts],
         },
-        "api_usage": {
-            "openai_calls": openai_calls,
-            "openai_errors": openai_errors,
-            "openai_input_tokens": openai_input_tokens,
-            "openai_output_tokens": openai_output_tokens,
-            "openai_total_tokens": openai_total_tokens,
-            "openai_last_model": openai_last_model or None,
-        },
+        "api_usage": {},
     }
-
-
-def _usage_value(usage: Any, key: str) -> int:
-    if usage is None:
-        return 0
-    candidate_keys = [key]
-    if key == "input_tokens":
-        candidate_keys.extend(["prompt_tokens", "promptTokens"])
-    elif key == "output_tokens":
-        candidate_keys.extend(["completion_tokens", "completionTokens"])
-    elif key == "total_tokens":
-        candidate_keys.extend(["totalTokens"])
-
-    value = None
-    for candidate in candidate_keys:
-        value = getattr(usage, candidate, None)
-        if value is None and isinstance(usage, dict):
-            value = usage.get(candidate)
-        if value is not None:
-            break
-    return int(value or 0)
 
 
 def _prune_presence_locked(now: float) -> None:
