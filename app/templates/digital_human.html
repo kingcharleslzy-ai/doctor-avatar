@@ -7,19 +7,21 @@
   <link rel="icon" href="/favicon.ico" />
   <style>
     :root {
-      --porcelain: #f7f8f4;
-      --paper: #fffdf8;
-      --ink: #161915;
-      --ink-soft: #343a35;
-      --ash: #6d746e;
-      --mist: #dfe6df;
-      --line: #cbd5cc;
-      --surgical: #0c6f62;
-      --surgical-2: #12453d;
-      --copper: #a45f34;
-      --signal: #11a28d;
+      --porcelain: #f4efe6;
+      --cream-2: #ebe3d7;
+      --paper: #fbf7ef;
+      --ink: #171512;
+      --ink-soft: #38332d;
+      --ash: #766d62;
+      --mist: #e7ded1;
+      --line: rgba(23, 21, 18, .16);
+      --line-strong: rgba(23, 21, 18, .32);
+      --surgical: #0f4c43;
+      --surgical-2: #0f4c43;
+      --copper: #a96843;
+      --signal: #0fa18d;
       --danger: #8f3430;
-      --shadow: 0 26px 70px rgba(22, 25, 21, 0.12);
+      --shadow: 0 24px 58px rgba(23, 21, 18, 0.10);
       --ease: cubic-bezier(.22, 1, .36, 1);
       --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
       --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
@@ -32,8 +34,8 @@
       margin: 0;
       color: var(--ink);
       background:
-        linear-gradient(90deg, rgba(12, 111, 98, .05) 1px, transparent 1px) 0 0 / 42px 42px,
-        linear-gradient(180deg, var(--porcelain), #edf2ef 58%, #f7f8f4);
+        linear-gradient(90deg, rgba(23, 21, 18, .032) 1px, transparent 1px) 0 0 / 78px 78px,
+        linear-gradient(180deg, var(--porcelain), #efe7da 58%, var(--porcelain));
       font-family: var(--sans);
       line-height: 1.65;
       overflow: hidden;
@@ -47,10 +49,11 @@
       z-index: -1;
       pointer-events: none;
       background:
-        repeating-linear-gradient(115deg, rgba(22, 25, 21, .035) 0 1px, transparent 1px 8px),
-        radial-gradient(circle at 78% 18%, rgba(164, 95, 52, .12), transparent 28%),
-        radial-gradient(circle at 5% 92%, rgba(12, 111, 98, .10), transparent 30%);
-      opacity: .82;
+        linear-gradient(90deg, rgba(244, 239, 230, .98) 0%, rgba(244, 239, 230, .86) 48%, rgba(244, 239, 230, .62) 100%),
+        linear-gradient(180deg, rgba(244, 239, 230, .42), rgba(244, 239, 230, .92)),
+        url("/static/medical-field-bg.png") center / cover no-repeat;
+      opacity: .72;
+      filter: saturate(.88) contrast(.96);
     }
 
     a { color: inherit; text-decoration: none; }
@@ -60,10 +63,12 @@
     .app-shell {
       height: 100dvh;
       min-height: 560px;
-      padding: 18px;
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: 18px clamp(18px, 3vw, 34px);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
-      gap: 16px;
+      gap: clamp(22px, 4vh, 44px);
     }
 
     .topbar {
@@ -72,10 +77,10 @@
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
       gap: 24px;
-      padding: 10px 18px;
-      border: 1px solid rgba(203, 213, 204, .82);
-      background: rgba(247, 248, 244, .86);
-      backdrop-filter: blur(16px);
+      padding: 0 0 14px;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      backdrop-filter: none;
     }
 
     .brand {
@@ -94,7 +99,6 @@
       flex: 0 0 auto;
       color: var(--paper);
       background: var(--ink);
-      border: 1px solid rgba(255, 255, 255, .22);
       font-family: var(--serif);
       font-size: 18px;
       line-height: 1;
@@ -138,25 +142,26 @@
 
     .nav-action {
       color: var(--paper);
-      background: var(--surgical-2);
+      background: var(--ink);
       padding: 10px 15px;
-      border: 1px solid var(--surgical-2);
+      border: 1px solid var(--ink);
     }
 
     .workspace {
       min-height: 0;
       height: 100%;
       display: grid;
-      grid-template-columns: minmax(390px, .92fr) minmax(480px, 1.08fr);
-      gap: 16px;
+      grid-template-columns: minmax(360px, .82fr) minmax(460px, .9fr);
+      gap: clamp(34px, 7vw, 96px);
+      align-items: stretch;
     }
 
     .panel {
       min-height: 0;
-      border: 1px solid rgba(203, 213, 204, .95);
-      background: rgba(255, 253, 248, .78);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
     }
 
     .stage-panel {
@@ -169,7 +174,7 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 18px;
-      padding: clamp(16px, 2.5vh, 24px) 28px 0;
+      padding: 0;
     }
 
     .kicker {
@@ -195,10 +200,10 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 12px;
-      border: 1px solid rgba(12, 111, 98, .24);
+      padding: 0;
+      border: 0;
       color: var(--surgical-2);
-      background: rgba(255, 253, 248, .7);
+      background: transparent;
       font-family: var(--mono);
       font-size: 11px;
       white-space: nowrap;
@@ -219,17 +224,41 @@
 
     .stage-body {
       min-height: 0;
-      padding: clamp(12px, 2vh, 18px) 28px 0;
+      padding: clamp(26px, 5vh, 48px) 0 0;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: clamp(10px, 1.7vh, 16px);
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: clamp(20px, 3.2vh, 30px);
       overflow: hidden;
+    }
+
+    .medflow-art {
+      width: min(82%, 360px);
+      aspect-ratio: 1.18;
+      display: grid;
+      place-items: center;
+      position: relative;
+      justify-self: center;
+      color: var(--surgical);
+    }
+
+    .medflow-art::before {
+      content: "";
+      position: absolute;
+      inset: 11% 4% 9% 14%;
+      border: 1px solid rgba(23, 21, 18, .12);
+    }
+
+    .medflow-art svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: relative;
     }
 
     .title-block h1 {
       margin: 0;
       font-family: var(--serif);
-      font-size: clamp(38px, 4.1vw, 58px);
+      font-size: clamp(38px, 4.8vw, 64px);
       line-height: .98;
       letter-spacing: 0;
       font-weight: 700;
@@ -243,138 +272,18 @@
 
     .title-block p {
       max-width: 620px;
-      margin: clamp(10px, 1.6vh, 16px) 0 0;
+      margin: clamp(14px, 2.1vh, 20px) 0 0;
       color: var(--ink-soft);
-      font-size: 16px;
-      line-height: 1.58;
-    }
-
-    .stage-grid {
-      min-height: 0;
-      height: 100%;
-      display: grid;
-      grid-template-columns: minmax(230px, .86fr) minmax(220px, .74fr);
-      gap: 14px;
-      align-items: stretch;
-    }
-
-    .video-stage {
-      position: relative;
-      min-height: 0;
-      height: 100%;
-      border: 1px solid rgba(22, 25, 21, .22);
-      background:
-        linear-gradient(90deg, rgba(12, 111, 98, .08) 1px, transparent 1px) 0 0 / 34px 34px,
-        linear-gradient(180deg, rgba(255, 253, 248, .92), rgba(226, 234, 227, .92));
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-    }
-
-    .video-stage::before {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border: 1px solid rgba(12, 111, 98, .18);
-      pointer-events: none;
-    }
-
-    .video-stage video,
-    .video-stage canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      position: relative;
-      z-index: 2;
-    }
-
-    .avatar-specimen {
-      position: relative;
-      width: min(68%, 260px);
-      aspect-ratio: 1;
-      display: grid;
-      place-items: center;
-      color: var(--surgical-2);
-    }
-
-    .avatar-ring {
-      position: absolute;
-      inset: 0;
-      border: 1px solid rgba(12, 111, 98, .25);
-      border-radius: 50%;
-      animation: breathe 3.6s ease-in-out infinite;
-    }
-
-    .avatar-ring:nth-child(2) {
-      inset: 14%;
-      animation-delay: .3s;
-    }
-
-    @keyframes breathe {
-      0%, 100% { opacity: .55; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.04); }
-    }
-
-    .avatar-core {
-      width: 55%;
-      aspect-ratio: 1;
-      display: grid;
-      place-items: center;
-      background: rgba(255, 253, 248, .82);
-      border: 1px solid rgba(22, 25, 21, .2);
-      box-shadow: 0 22px 54px rgba(22, 25, 21, .10);
-      font-family: var(--serif);
-      font-size: 54px;
-      z-index: 1;
-    }
-
-    .system-board {
-      display: grid;
-      grid-template-rows: repeat(3, minmax(0, 1fr));
-      min-height: 0;
-      gap: 1px;
-      border: 1px solid rgba(203, 213, 204, .95);
-      background: var(--line);
-      overflow: hidden;
-    }
-
-    .board-row {
-      display: grid;
-      grid-template-columns: 62px 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: clamp(10px, 1.45vh, 16px);
-      background: rgba(255, 253, 248, .72);
-      min-height: 0;
-      overflow: hidden;
-    }
-
-    .board-row code {
-      color: var(--copper);
-      font-family: var(--mono);
-      font-size: 12px;
-    }
-
-    .board-row strong {
-      display: block;
-      font-size: 15px;
-      line-height: 1.25;
-      margin-bottom: 5px;
-    }
-
-    .board-row span {
-      display: block;
-      color: var(--ash);
-      font-size: 12px;
-      line-height: 1.58;
+      font-size: clamp(17px, 1.55vw, 21px);
+      line-height: 1.68;
     }
 
     .action-bar {
       display: grid;
       gap: 10px;
-      padding: clamp(12px, 1.9vh, 16px) 28px clamp(14px, 2.2vh, 20px);
-      border-top: 1px solid rgba(203, 213, 204, .9);
-      background: rgba(247, 248, 244, .58);
+      padding: 0 0 clamp(10px, 1.8vh, 18px);
+      border-top: 0;
+      background: transparent;
     }
 
     .status-line {
@@ -443,8 +352,8 @@
       min-height: 38px;
       padding: 0 13px;
       color: var(--ink-soft);
-      border-color: rgba(22, 25, 21, .22);
-      background: rgba(255, 253, 248, .64);
+      border-color: rgba(23, 21, 18, .22);
+      background: rgba(251, 247, 239, .64);
       font-size: 13px;
     }
 
@@ -459,6 +368,9 @@
     .chat-panel {
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto auto;
+      padding-left: clamp(22px, 4vw, 56px);
+      border-left: 1px solid var(--line);
+      overflow: hidden;
     }
 
     .chat-header {
@@ -467,15 +379,15 @@
       align-items: center;
       justify-content: space-between;
       gap: 18px;
-      padding: clamp(14px, 2vh, 18px) 22px;
-      border-bottom: 1px solid rgba(203, 213, 204, .9);
-      background: rgba(247, 248, 244, .58);
+      padding: 0 0 clamp(18px, 3vh, 28px);
+      border-bottom: 1px solid var(--line);
+      background: transparent;
     }
 
     .chat-header h2 {
       margin: 0;
       font-family: var(--serif);
-      font-size: 26px;
+      font-size: clamp(28px, 3.1vw, 44px);
       line-height: 1.1;
     }
 
@@ -485,9 +397,9 @@
       align-items: center;
       gap: 8px;
       padding: 7px 11px;
-      border: 1px solid rgba(12, 111, 98, .22);
+      border: 1px solid rgba(15, 76, 67, .22);
       color: var(--surgical-2);
-      background: rgba(255, 253, 248, .72);
+      background: rgba(251, 247, 239, .72);
       font-family: var(--mono);
       font-size: 11px;
       white-space: nowrap;
@@ -497,10 +409,10 @@
       min-height: 0;
       max-height: none;
       overflow-y: auto;
-      padding: 22px;
+      padding: clamp(28px, 5vh, 58px) 0 clamp(18px, 3vh, 30px);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       scroll-behavior: smooth;
     }
 
@@ -528,7 +440,7 @@
     }
 
     .bubble {
-      max-width: min(86%, 680px);
+      max-width: min(82%, 620px);
       white-space: pre-wrap;
       word-break: break-word;
       font-size: 15px;
@@ -536,9 +448,9 @@
     }
 
     .msg-row.ai .bubble {
-      padding: 14px 16px;
-      border: 1px solid rgba(203, 213, 204, .92);
-      background: rgba(255, 253, 248, .74);
+      padding: 0;
+      border: 0;
+      background: transparent;
       color: var(--ink-soft);
     }
 
@@ -570,29 +482,13 @@
       50% { opacity: 1; transform: translateY(-5px); }
     }
 
-    .quick-prompts {
-      padding: 0 22px 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .prompt-pill {
-      padding: 8px 13px;
-      border: 1px solid rgba(12, 111, 98, .2);
-      background: rgba(255, 253, 248, .72);
-      color: var(--surgical-2);
-      font-size: 13px;
-      cursor: pointer;
-    }
-
     .details-section {
-      border-top: 1px solid rgba(203, 213, 204, .9);
-      background: rgba(247, 248, 244, .48);
+      border-top: 1px solid var(--line);
+      background: transparent;
     }
 
     .details-section summary {
-      padding: 13px 22px;
+      padding: 15px 0;
       cursor: pointer;
       list-style: none;
       display: flex;
@@ -614,10 +510,10 @@
     .details-body {
       max-height: 170px;
       overflow-y: auto;
-      padding: 0 22px 16px;
+      padding: 0 0 16px;
       display: grid;
       gap: 11px;
-      border-top: 1px solid rgba(203, 213, 204, .74);
+      border-top: 1px solid var(--line);
     }
 
     .notice,
@@ -633,7 +529,7 @@
       padding: 10px 12px;
       border: 1px solid rgba(164, 95, 52, .22);
       color: #7d5a35;
-      background: rgba(255, 253, 248, .72);
+      background: rgba(251, 247, 239, .72);
     }
 
     .output { white-space: pre-wrap; }
@@ -649,18 +545,18 @@
 
     .chip {
       padding: 5px 10px;
-      border: 1px solid rgba(12, 111, 98, .2);
-      background: rgba(255, 253, 248, .72);
+      border: 1px solid rgba(15, 76, 67, .2);
+      background: rgba(251, 247, 239, .72);
       color: var(--surgical-2);
       font-size: 12px;
     }
 
     .chat-footer {
-      padding: 14px 22px 18px;
-      border-top: 1px solid rgba(203, 213, 204, .9);
+      padding: 16px 0 18px;
+      border-top: 1px solid var(--line);
       display: grid;
       gap: 10px;
-      background: rgba(255, 253, 248, .82);
+      background: transparent;
     }
 
     .voice-hint {
@@ -677,13 +573,13 @@
       outline: none;
       padding: 12px 14px;
       color: var(--ink);
-      background: rgba(247, 248, 244, .78);
-      border: 1px solid rgba(22, 25, 21, .2);
+      background: rgba(251, 247, 239, .58);
+      border: 1px solid rgba(23, 21, 18, .2);
     }
 
     .chat-textarea:focus {
       border-color: var(--surgical);
-      box-shadow: 0 0 0 3px rgba(12, 111, 98, .10);
+      box-shadow: 0 0 0 3px rgba(15, 76, 67, .10);
     }
 
     .send-btn {
@@ -936,12 +832,16 @@
       }
 
       .stage-header {
-        padding: 12px 24px 0;
+        padding: 0;
       }
 
       .stage-body {
-        padding: 10px 24px 0;
-        gap: 10px;
+        padding-top: 18px;
+        gap: 14px;
+      }
+
+      .medflow-art {
+        width: min(76%, 300px);
       }
 
       .title-block h1 {
@@ -954,16 +854,8 @@
         line-height: 1.48;
       }
 
-      .stage-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .system-board {
-        display: none;
-      }
-
       .action-bar {
-        padding: 10px 24px 12px;
+        padding: 0;
         gap: 8px;
       }
 
@@ -974,7 +866,7 @@
       }
 
       .chat-header {
-        padding: 12px 20px;
+        padding: 0 0 12px;
       }
 
       .chat-header h2 {
@@ -982,7 +874,7 @@
       }
 
       .chat-history {
-        padding: 16px 20px;
+        padding: 16px 0;
         gap: 10px;
       }
 
@@ -992,11 +884,11 @@
       }
 
       .details-section summary {
-        padding: 11px 20px;
+        padding: 11px 0;
       }
 
       .chat-footer {
-        padding: 10px 20px 12px;
+        padding: 10px 0 12px;
         gap: 8px;
       }
 
@@ -1017,8 +909,12 @@
         grid-template-columns: 1fr;
         grid-template-rows: minmax(250px, 46%) minmax(0, 1fr);
       }
-      .stage-grid { grid-template-columns: 1fr; }
-      .system-board { display: none; }
+      .chat-panel {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+      .medflow-art { width: min(50vw, 280px); }
     }
 
     @media (max-width: 760px) {
@@ -1063,8 +959,7 @@
       }
 
       .kicker {
-        grid-template-columns: 56px auto;
-        font-size: 11px;
+        display: none;
       }
 
       .mode-chip {
@@ -1073,8 +968,15 @@
       }
 
       .stage-body {
-        padding: 8px 16px 0;
-        gap: 8px;
+        padding: 14px 16px 0;
+        grid-template-columns: 108px minmax(0, 1fr);
+        grid-template-rows: auto;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .medflow-art {
+        width: 108px;
       }
 
       .title-block h1 {
@@ -1085,18 +987,6 @@
         font-size: 13px;
         line-height: 1.55;
         margin-top: 8px;
-      }
-
-      .video-stage {
-        min-height: 0;
-      }
-
-      .stage-grid {
-        display: none;
-      }
-
-      .system-board {
-        display: none;
       }
 
       .action-bar {
@@ -1122,6 +1012,7 @@
       .chat-panel {
         min-height: 0;
         border-top: 0;
+        padding-left: 0;
       }
 
       .chat-header {
@@ -1170,8 +1061,8 @@
     @media (max-width: 760px) and (max-height: 680px) {
       .app-shell { min-height: 0; }
       .workspace {
-        grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
-        grid-template-rows: 1fr;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(168px, 38%) minmax(0, 62%);
       }
       .topbar {
         min-height: 62px;
@@ -1189,18 +1080,17 @@
       .mode-chip { display: none; }
       .stage-body {
         padding: 8px 12px 0;
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 10px;
+      }
+      .medflow-art {
+        width: 72px;
       }
       .title-block h1 {
         font-size: clamp(24px, 6.4vw, 34px);
       }
       .title-block p {
         display: none;
-      }
-      .stage-grid {
-        min-height: 0;
-      }
-      .avatar-core {
-        font-size: 34px;
       }
       .action-bar {
         padding: 8px 12px;
@@ -1225,7 +1115,7 @@
         padding: 10px 12px;
       }
       .msg-row.ai .bubble {
-        padding: 10px 12px;
+        padding: 0;
       }
       .chat-footer {
         padding: 8px 12px;
@@ -1261,36 +1151,31 @@
         </div>
 
         <div class="stage-body">
+          <div class="medflow-art" aria-label="MedFlow 抽象标识">
+            <svg viewBox="0 0 520 420" role="img" aria-labelledby="medflowArtTitle">
+              <title id="medflowArtTitle">MedFlow geometric mark</title>
+              <defs>
+                <linearGradient id="flowInk" x1="112" x2="394" y1="312" y2="118" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#171512" />
+                  <stop offset=".62" stop-color="#0f4c43" />
+                  <stop offset="1" stop-color="#0fa18d" />
+                </linearGradient>
+              </defs>
+              <rect x="120" y="70" width="280" height="280" fill="none" stroke="#171512" stroke-opacity=".16" />
+              <path d="M166 312V128L260 250L354 128V312" fill="none" stroke="url(#flowInk)" stroke-width="18" stroke-linecap="square" stroke-linejoin="miter" />
+              <path d="M86 210h54M380 210h54M120 104h48M352 104h48M120 316h48M352 316h48" fill="none" stroke="#171512" stroke-opacity=".26" stroke-width="2" />
+              <path d="M120 128v-32h32M400 292v32h-32" fill="none" stroke="#a96843" stroke-width="3" stroke-linecap="square" />
+              <rect x="386" y="118" width="16" height="16" fill="#0fa18d" />
+              <rect x="118" y="286" width="10" height="10" fill="#a96843" />
+              <text x="260" y="382" text-anchor="middle" fill="#766d62" font-family="SFMono-Regular, Cascadia Mono, Roboto Mono, monospace" font-size="12" letter-spacing="3">MEDFLOW</text>
+            </svg>
+          </div>
+
           <div class="title-block">
             <h1 id="heroTitle">李勇医生<span>AI 医疗助手</span></h1>
             <p id="heroDescription">
               专注耳鼻咽喉科常见问题的健康科普与就医建议，可通过文字或语音进行咨询。
             </p>
-          </div>
-
-          <div class="stage-grid">
-            <div class="video-stage" id="videoStage">
-              <div class="avatar-specimen" aria-hidden="true">
-                <div class="avatar-ring"></div>
-                <div class="avatar-ring"></div>
-                <div class="avatar-core">AI</div>
-              </div>
-            </div>
-
-            <div class="system-board" aria-label="演示能力">
-              <div class="board-row">
-                <code>VOICE</code>
-                <div><strong>实时语音问诊</strong><span>豆包端到端语音识别、对话生成与语音输出。</span></div>
-              </div>
-              <div class="board-row">
-                <code>Q&A</code>
-                <div><strong>健康科普问答</strong><span>围绕耳鼻咽喉科常见问题提供健康科普和就医参考。</span></div>
-              </div>
-              <div class="board-row">
-                <code>RAG</code>
-                <div><strong>问诊资料检索</strong><span>结合问诊流程与院内资料生成更稳定的语音回复。</span></div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1316,8 +1201,6 @@
         </div>
 
         <div id="chatHistory" class="chat-history"></div>
-
-        <div id="quickPrompts" class="quick-prompts"></div>
 
         <details class="details-section">
           <summary>医生信息与资料来源</summary>

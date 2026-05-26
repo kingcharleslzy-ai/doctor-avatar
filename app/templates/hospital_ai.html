@@ -160,10 +160,10 @@
 
     .hero {
       position: relative;
-      min-height: calc(100svh - 112px);
-      padding: clamp(54px, 8vh, 92px) 0 clamp(38px, 6vh, 62px);
+      min-height: calc(100svh - 74px);
+      padding: clamp(72px, 10vh, 116px) 0 clamp(42px, 6vh, 70px);
       display: grid;
-      align-items: center;
+      align-items: start;
       overflow: hidden;
       border-bottom: 1px solid var(--line);
     }
@@ -192,8 +192,9 @@
       position: relative;
       z-index: 2;
       display: grid;
-      grid-template-columns: minmax(0, .94fr) minmax(300px, .46fr);
-      gap: clamp(34px, 7vw, 96px);
+      grid-template-columns: minmax(0, .96fr) minmax(320px, .52fr);
+      column-gap: clamp(36px, 8vw, 118px);
+      row-gap: clamp(58px, 8vh, 86px);
       align-items: end;
     }
 
@@ -269,37 +270,75 @@
     }
 
     .hero-aside {
-      border-left: 1px solid var(--line-strong);
-      padding-left: 24px;
-      color: var(--ink-soft);
-      font-size: 15px;
+      align-self: start;
+      max-width: 520px;
+      padding-top: clamp(92px, 12vh, 128px);
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: clamp(23px, 2.25vw, 34px);
+      line-height: 1.25;
     }
 
-    .hero-aside b {
-      display: block;
-      margin-bottom: 16px;
+    .hero-feature {
+      grid-column: 1 / -1;
+      min-height: clamp(260px, 30vw, 380px);
+      display: grid;
+      grid-template-columns: minmax(280px, .38fr) minmax(0, .62fr);
+      gap: 0;
+      align-items: stretch;
+      position: relative;
+      overflow: hidden;
+      color: var(--paper);
+      background: #171512;
+      border-radius: 8px;
+      padding: 0;
+    }
+
+    .hero-feature-copy {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 18px;
+      align-content: center;
+      justify-items: center;
+      text-align: center;
+      padding: clamp(28px, 5vw, 60px) clamp(24px, 4vw, 46px);
+    }
+
+    .hero-feature-copy b {
       color: var(--copper);
       font-family: var(--mono);
       font-size: 12px;
-      letter-spacing: .12em;
+      letter-spacing: .13em;
       text-transform: uppercase;
     }
 
-    .hero-aside a {
-      display: block;
-      padding: 15px 0;
-      border-top: 1px solid var(--line);
+    .hero-feature-copy h2 {
+      color: var(--paper);
+      font-size: clamp(28px, 3.3vw, 48px);
+      line-height: 1;
     }
 
-    .hero-aside a:last-child {
-      border-bottom: 1px solid var(--line);
+    .hero-feature-copy p {
+      color: rgba(251, 247, 239, .70);
+      font-size: 16px;
     }
 
-    .hero-aside span {
+    .hero-feature-copy a {
+      width: fit-content;
+      border-bottom: 1px solid rgba(251, 247, 239, .72);
+      color: var(--paper);
+      font-weight: 700;
+    }
+
+    .hero-feature-image {
+      width: 100%;
+      height: 100%;
+      min-height: clamp(280px, 32vw, 420px);
+      object-fit: cover;
+      object-position: center;
       display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 13px;
+      border-left: 1px solid rgba(251, 247, 239, .12);
     }
 
     .section {
@@ -603,7 +642,12 @@
       }
 
       .hero-aside {
+        padding-top: 0;
         max-width: 640px;
+      }
+
+      .hero-feature {
+        grid-template-columns: 1fr;
       }
 
       .service-row {
@@ -659,14 +703,16 @@
       }
 
       .hero-aside {
-        border-left: 0;
-        border-top: 1px solid var(--line-strong);
-        padding-left: 0;
-        padding-top: 18px;
+        padding-top: 0;
+        font-size: 21px;
       }
 
-      .hero-aside a {
-        padding: 12px 0;
+      .hero-feature {
+        min-height: 360px;
+      }
+
+      .hero-feature-image {
+        min-height: 280px;
       }
 
       .service-row {
@@ -739,12 +785,19 @@
             </div>
           </div>
 
-          <aside class="hero-aside reveal" aria-label="项目入口">
-            <b>Studio focus</b>
-            <a href="#services">AI 信息化建设 <span>知识库、文书、宣教、培训</span></a>
-            <a href="/rhinitis-ai">耳鼻喉专病 AI <span>过敏性鼻炎预问诊场景</span></a>
-            <a href="/hospital-ai">医疗数字人 <span>语音问答与展示演示</span></a>
+          <aside class="hero-aside reveal" aria-label="品牌说明">
+            为私立医院与专科科室建设清晰、可维护、能上线的 AI 内容系统。
           </aside>
+
+          <div class="hero-feature reveal" aria-label="MedFlow 项目入口">
+            <div class="hero-feature-copy">
+              <b>Featured system</b>
+              <h2>专病 AI 与数字人共享同一套内容底座。</h2>
+              <p>从过敏性鼻炎预问诊开始，延伸到科室知识库、患者宣教和语音问答展示。</p>
+              <a href="/rhinitis-ai">查看专病应用</a>
+            </div>
+            <img class="hero-feature-image" src="/static/medflow-systems-hero.png" alt="" aria-hidden="true" />
+          </div>
         </div>
       </section>
 

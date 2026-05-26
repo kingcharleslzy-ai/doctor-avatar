@@ -330,14 +330,14 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
     await ws.accept()
     if not is_doubao_realtime_configured():
         missing = ", ".join(doubao_realtime_missing_fields())
-        await ws.send_json({"type": "error", "message": f"豆包端到端实时语音未配置：{missing}。"})
+        await ws.send_json({"type": "error", "message": f"MedFlow 实时语音未配置：{missing}。"})
         await ws.close(code=1008)
         return
 
     try:
         import websockets
     except Exception:
-        await ws.send_json({"type": "error", "message": "缺少 websockets 依赖，无法连接豆包实时语音。"})
+        await ws.send_json({"type": "error", "message": "缺少 websockets 依赖，无法连接 MedFlow 实时语音。"})
         await ws.close(code=1011)
         return
 
@@ -425,7 +425,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     try:
                         frame = decode_frame(upstream_bytes)
                     except Exception as exc:
-                        await ws.send_json({"type": "error", "message": f"豆包响应解析失败: {exc}"})
+                        await ws.send_json({"type": "error", "message": f"MedFlow 响应解析失败: {exc}"})
                         continue
 
                     if frame.message_type == AUDIO_SERVER_RESPONSE or frame.event == ServerEvent.TTS_RESPONSE:
@@ -457,7 +457,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         if greeting:
                             await _send_json_event(ClientEvent.SAY_HELLO, {"content": greeting})
                     elif event in (ServerEvent.CONNECTION_FAILED, ServerEvent.SESSION_FAILED):
-                        await ws.send_json({"type": "error", "message": payload.get("error") or "豆包实时语音连接失败。"})
+                        await ws.send_json({"type": "error", "message": payload.get("error") or "MedFlow 实时语音连接失败。"})
                     elif event == ServerEvent.ASR_INFO:
                         await ws.send_json({"type": "asr_start", "payload": payload})
                     elif event == ServerEvent.ASR_RESPONSE:
@@ -586,7 +586,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
         return
     except Exception as exc:
         try:
-            await ws.send_json({"type": "error", "message": f"豆包实时语音代理异常: {exc}"})
+            await ws.send_json({"type": "error", "message": f"MedFlow 实时语音代理异常: {exc}"})
         except Exception:
             pass
         try:

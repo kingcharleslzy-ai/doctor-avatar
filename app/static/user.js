@@ -19,12 +19,6 @@ const state = {
   presenceId: `web-${Date.now()}-${Math.random().toString(16).slice(2)}`,
 };
 
-const quickPrompts = [
-  "我最近鼻塞、打喷嚏，需要先补充哪些信息？",
-  "过敏性鼻炎平时应该怎么做日常管理？",
-  "鼻内镜检查前后有什么需要注意？",
-];
-
 const $ = (id) => document.getElementById(id);
 
 function setText(id, text) {
@@ -119,10 +113,10 @@ async function loadAppConfig() {
   state.appConfig = await response.json();
   const realtime = state.appConfig.doubao_realtime || {};
   if (realtime.configured) {
-    setMode("豆包端到端实时语音");
+    setMode("MedFlow 实时语音");
     setVoiceStatus("语音待命");
   } else {
-    setMode("豆包未配置");
+    setMode("MedFlow 未配置");
     setVoiceStatus(`缺少配置：${(realtime.missing_fields || []).join("、") || "DOUBAO_REALTIME_API_KEY"}`);
   }
 }
@@ -167,25 +161,6 @@ async function loadProfile() {
       sources.appendChild(a);
     });
   }
-}
-
-function renderQuickPrompts() {
-  const container = $("quickPrompts");
-  if (!container) return;
-  container.innerHTML = "";
-  quickPrompts.forEach((prompt) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = prompt;
-    button.addEventListener("click", () => {
-      const input = $("message");
-      if (input) {
-        input.value = prompt;
-        input.focus();
-      }
-    });
-    container.appendChild(button);
-  });
 }
 
 function canStartRealtime() {
@@ -238,7 +213,7 @@ async function startRealtimeSession({ withMic = false } = {}) {
   if (!canStartRealtime()) {
     await loadAppConfig();
     if (!canStartRealtime()) {
-      setVoiceStatus("豆包实时语音未配置");
+      setVoiceStatus("MedFlow 实时语音未配置");
       return;
     }
   }
@@ -246,7 +221,7 @@ async function startRealtimeSession({ withMic = false } = {}) {
   await ensureAudioContext();
   resetCurrentAiBubble();
   stopPlayback();
-  setMode("正在连接豆包");
+  setMode("正在连接 MedFlow");
   setVoiceStatus("正在连接...");
   setStage("thinking");
   showOverlay(withMic);
@@ -260,7 +235,7 @@ async function startRealtimeSession({ withMic = false } = {}) {
 
   ws.addEventListener("open", async () => {
     state.sessionActive = true;
-    setMode("豆包端到端实时语音");
+    setMode("MedFlow 实时语音");
     setVoiceStatus(withMic ? "正在打开麦克风..." : "会话已连接");
     setStage(withMic ? "listening" : "idle");
     if (withMic) await startMic();
@@ -287,7 +262,7 @@ async function startRealtimeSession({ withMic = false } = {}) {
   });
 
   ws.addEventListener("error", () => {
-    setVoiceStatus("豆包连接异常");
+    setVoiceStatus("MedFlow 连接异常");
     setStage("idle");
   });
 
@@ -299,7 +274,7 @@ function waitForSocketOpen(ws) {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => {
       cleanup();
-      reject(new Error("豆包连接超时"));
+      reject(new Error("MedFlow 连接超时"));
     }, 10000);
     function cleanup() {
       window.clearTimeout(timer);
@@ -313,11 +288,11 @@ function waitForSocketOpen(ws) {
     }
     function onError() {
       cleanup();
-      reject(new Error("豆包连接异常"));
+      reject(new Error("MedFlow 连接异常"));
     }
     function onClose() {
       cleanup();
-      reject(new Error("豆包连接已关闭"));
+      reject(new Error("MedFlow 连接已关闭"));
     }
     ws.addEventListener("open", onOpen);
     ws.addEventListener("error", onError);
@@ -327,7 +302,7 @@ function waitForSocketOpen(ws) {
 
 function handleRealtimeMessage(message) {
   if (message.type === "error") {
-    setVoiceStatus(message.message || "豆包实时语音异常");
+    setVoiceStatus(message.message || "MedFlow 实时语音异常");
     appendMessage("ai", message.message || "连接异常，请稍后重试。");
     setStage("idle");
     return;
@@ -571,7 +546,6 @@ async function sendPresence() {
 
 async function init() {
   bindEvents();
-  renderQuickPrompts();
   const history = $("chatHistory");
   if (history) history.innerHTML = "";
   appendMessage("ai", "您好，我是李勇医生的 AI 助手，专注耳鼻咽喉科常见问题的健康科普与就医建议。请问有什么可以帮您？");
