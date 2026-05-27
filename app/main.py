@@ -256,24 +256,25 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
 
-            def _should_ask_direct_question(turn) -> bool:
-                return turn.stage in {"symptoms", "duration_trigger", "history"} and turn.next_question.endswith("？")
+            def _should_send_direct_response(turn) -> bool:
+                return bool(getattr(turn, "direct_response", ""))
 
-            async def _ask_direct_question(turn) -> None:
+            async def _send_direct_response(turn) -> None:
                 nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
+                content = turn.direct_response
                 rag_turn_active = False
                 active_tts_type = None
-                pending_chat_end_payload = {"direct_question": True, "stage": turn.stage}
+                pending_chat_end_payload = {"direct_response": True, "stage": turn.stage}
                 await ws.send_json(
                     {
                         "type": "chat",
-                        "content": turn.next_question,
+                        "content": content,
                         "question_id": None,
                         "reply_id": None,
                         "payload": pending_chat_end_payload,
                     }
                 )
-                await _send_json_event(ClientEvent.SAY_HELLO, {"content": turn.next_question})
+                await _send_json_event(ClientEvent.SAY_HELLO, {"content": content})
 
             async def _wait_session_ready() -> bool:
                 if session_ready.is_set():
@@ -314,8 +315,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         }
                     )
                     await _send_json_event(ClientEvent.UPDATE_CONFIG, turn.update_config)
-                    if send_rag and _should_ask_direct_question(turn):
-                        await _ask_direct_question(turn)
+                    if send_rag and _should_send_direct_response(turn):
+                        await _send_direct_response(turn)
                     elif send_rag:
                         rag_turn_active = True
                         active_tts_type = None
@@ -485,8 +486,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         content = str(payload.get("content") or "").strip()
                         if content:
                             turn = await _guide_user_query(content, send_rag=False)
-                            if turn and _should_ask_direct_question(turn):
-                                await _ask_direct_question(turn)
+                            if turn and _should_send_direct_response(turn):
+                                await _send_direct_response(turn)
                             else:
                                 await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
                     elif msg_type == "say_hello":

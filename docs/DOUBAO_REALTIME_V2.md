@@ -17,6 +17,7 @@
 | ASR 停顿判断 | `DOUBAO_REALTIME_END_SMOOTH_WINDOW_MS` / `asr.extra.end_smooth_window_ms` | 默认 1200ms |
 | ASR 热词 | `DOUBAO_REALTIME_HOTWORDS` / `asr.extra.context.hotwords` | 耳鼻喉常见词 |
 | 用户退出意图 | `DOUBAO_REALTIME_ENABLE_USER_QUERY_EXIT` | 开启后 `TTSEnded` 可能带退出信号 |
+| 打断体验 | `ASRInfo(450)` -> 前端停止本地播报 | `keep_alive` 模式下优先使用服务端首字识别信号，不用音量阈值乱发 `ClientInterrupt` |
 
 ## 2. 当前请求流程
 
@@ -30,15 +31,19 @@ SayHello
 
 用户语音:
   TaskRequest PCM 16k -> ASRResponse -> 后端问诊状态机
-  UpdateConfig -> ChatRAGText external_rag
+  UpdateConfig -> 单问题/阶段总结走 SayHello
+  复杂说明才走 ChatRAGText external_rag
   TTSResponse PCM 24k -> 浏览器播放
 
 用户文字:
-  UpdateConfig -> ChatTextQuery
+  UpdateConfig -> 单问题/阶段总结走 SayHello
+  复杂说明才走 ChatTextQuery/ChatRAGText
   TTSResponse PCM 24k -> 浏览器播放
 ```
 
-语音路径使用 `ChatRAGText`，因为它适合把后端检索出的问诊流程和医疗资料交给豆包总结、口语化并直接输出语音。文字路径继续用 `ChatTextQuery`，避免文本消息和外部 RAG 同时提交时出现重复或闲聊抢答。
+语音和文字路径都优先由后端状态机决定本轮唯一问题或阶段总结，再用 `SayHello` 输出语音；只有需要结合外部资料做复杂说明时才使用 `ChatRAGText`。这样能减少实时语音中模型追加多个问题、重复追问或偏离主诉。
+
+麦克风常开使用 `input_mod=keep_alive`。前端按官方建议把上行音频切成 16kHz PCM、20ms 左右的小包；当服务端返回 `ASRInfo(450)` 表示识别到用户首字时，前端停止本地播报并等待新的 ASR 结果。`ClientInterrupt(515)` 主要保留给 `push_to_talk` 场景，当前页面不把普通环境声或音量阈值直接当成上游打断事件。
 
 ## 3. 为什么默认关闭联网
 

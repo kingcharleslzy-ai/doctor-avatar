@@ -20,13 +20,14 @@ const state = {
   assistantSpeaking: false,
   suppressOutputUntil: 0,
   lastInterruptAt: 0,
-  autoSpeechStartedAt: 0,
-  noiseFloor: 0.012,
+  bargeInActive: false,
+  expectingAssistantResponse: false,
+  micPcmRemainder: new Int16Array(0),
 };
 
-const AUTO_INTERRUPT_MIN_MS = 850;
-const AUTO_INTERRUPT_COOLDOWN_MS = 2600;
 const OUTPUT_SUPPRESS_MS = 1600;
+const BARGE_IN_SUPPRESS_MS = 5000;
+const MIC_FRAME_SAMPLES = 320; // 20ms at 16kHz, matching Doubao realtime guidance.
 
 const $ = (id) => document.getElementById(id);
 
@@ -99,7 +100,8 @@ function isSuppressingOutput() {
 
 function resetInterruptState() {
   state.suppressOutputUntil = 0;
-  state.autoSpeechStartedAt = 0;
+  state.bargeInActive = false;
+  state.expectingAssistantResponse = false;
 }
 
 function appendAiText(text) {
@@ -334,9 +336,18 @@ function handleRealtimeMessage(message) {
     if (message.status === "user_exit_intent") setVoiceStatus("已识别到结束意图");
     return;
   }
+  if (message.type === "asr_start") {
+    if (state.assistantSpeaking) {
+      stopAssistantPlayback({ source: "voice", suppressMs: BARGE_IN_SUPPRESS_MS });
+    }
+    setVoiceStatus("正在听...");
+    setStage("listening");
+    return;
+  }
   if (message.type === "rag_context") {
     setVoiceStatus(message.stage_label ? `问诊阶段：${message.stage_label}` : "正在整理资料");
     setStage("thinking");
+    state.expectingAssistantResponse = true;
     resetCurrentAiBubble();
     return;
   }
@@ -345,11 +356,11 @@ function handleRealtimeMessage(message) {
     if (!text) return;
     if (message.is_interim) {
       if (state.assistantSpeaking && text.length >= 2) {
-        sendInterrupt({ source: "voice" });
+        stopAssistantPlayback({ source: "voice", suppressMs: BARGE_IN_SUPPRESS_MS });
       }
       setVoiceStatus(`正在听：${text}`);
     } else {
-      resetInterruptState();
+      if (!state.bargeInActive) resetInterruptState();
       appendMessage("user", text);
       setVoiceStatus("正在生成回答...");
       setStage("thinking");
@@ -358,6 +369,7 @@ function handleRealtimeMessage(message) {
     return;
   }
   if (message.type === "chat") {
+    if (state.expectingAssistantResponse) resetInterruptState();
     if (isSuppressingOutput()) return;
     state.assistantSpeaking = true;
     appendAiText(message.content || "");
@@ -373,6 +385,7 @@ function handleRealtimeMessage(message) {
     return;
   }
   if (message.type === "tts_start") {
+    if (state.expectingAssistantResponse) resetInterruptState();
     if (isSuppressingOutput()) return;
     state.assistantSpeaking = true;
     if (message.text) appendAiText(message.text);
@@ -422,59 +435,19 @@ async function startMic() {
   });
   state.micStream = stream;
   state.micSource = context.createMediaStreamSource(stream);
-  state.micProcessor = context.createScriptProcessor(4096, 1, 1);
+  state.micPcmRemainder = new Int16Array(0);
+  state.micProcessor = context.createScriptProcessor(1024, 1, 1);
   state.micProcessor.onaudioprocess = (event) => {
     event.outputBuffer.getChannelData(0).fill(0);
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return;
     const input = event.inputBuffer.getChannelData(0);
-    maybeAutoInterrupt(input);
-    const pcm = downsampleToPcm16(input, context.sampleRate, 16000);
-    if (pcm.byteLength > 0) state.ws.send(pcm);
+    const pcm = downsampleToPcm16Samples(input, context.sampleRate, 16000);
+    sendMicPcmFrames(pcm);
   };
   state.micSource.connect(state.micProcessor);
   state.micProcessor.connect(context.destination);
   setVoiceStatus("请直接说话");
   setStage("listening");
-}
-
-function audioRms(input) {
-  let sum = 0;
-  const step = Math.max(1, Math.floor(input.length / 512));
-  let count = 0;
-  for (let i = 0; i < input.length; i += step) {
-    sum += input[i] * input[i];
-    count += 1;
-  }
-  return Math.sqrt(sum / Math.max(1, count));
-}
-
-function maybeAutoInterrupt(input) {
-  const rms = audioRms(input);
-  const now = Date.now();
-  const threshold = Math.max(0.026, state.noiseFloor * 3.2);
-  const strongSpeech = rms > threshold;
-
-  if (!state.assistantSpeaking && !strongSpeech) {
-    state.noiseFloor = Math.max(0.006, Math.min(0.04, state.noiseFloor * 0.96 + rms * 0.04));
-    state.autoSpeechStartedAt = 0;
-    return;
-  }
-
-  if (!state.assistantSpeaking || now - state.lastInterruptAt < AUTO_INTERRUPT_COOLDOWN_MS) {
-    if (!strongSpeech) state.autoSpeechStartedAt = 0;
-    return;
-  }
-
-  if (!strongSpeech) {
-    state.autoSpeechStartedAt = 0;
-    return;
-  }
-
-  if (!state.autoSpeechStartedAt) state.autoSpeechStartedAt = now;
-  if (now - state.autoSpeechStartedAt >= AUTO_INTERRUPT_MIN_MS) {
-    sendInterrupt({ source: "voice" });
-    state.autoSpeechStartedAt = 0;
-  }
 }
 
 function stopMic() {
@@ -491,10 +464,11 @@ function stopMic() {
     state.micStream.getTracks().forEach((track) => track.stop());
     state.micStream = null;
   }
+  state.micPcmRemainder = new Int16Array(0);
 }
 
-function downsampleToPcm16(input, inputRate, outputRate) {
-  if (inputRate === outputRate) return floatToInt16(input).buffer;
+function downsampleToPcm16Samples(input, inputRate, outputRate) {
+  if (inputRate === outputRate) return floatToInt16(input);
   const ratio = inputRate / outputRate;
   const length = Math.floor(input.length / ratio);
   const result = new Float32Array(length);
@@ -505,7 +479,22 @@ function downsampleToPcm16(input, inputRate, outputRate) {
     for (let j = start; j < end; j += 1) sum += input[j];
     result[i] = sum / Math.max(1, end - start);
   }
-  return floatToInt16(result).buffer;
+  return floatToInt16(result);
+}
+
+function sendMicPcmFrames(samples) {
+  if (!samples.length || !state.ws || state.ws.readyState !== WebSocket.OPEN) return;
+  const combined = new Int16Array(state.micPcmRemainder.length + samples.length);
+  combined.set(state.micPcmRemainder, 0);
+  combined.set(samples, state.micPcmRemainder.length);
+
+  let offset = 0;
+  while (combined.length - offset >= MIC_FRAME_SAMPLES) {
+    const frame = combined.slice(offset, offset + MIC_FRAME_SAMPLES);
+    state.ws.send(frame.buffer);
+    offset += MIC_FRAME_SAMPLES;
+  }
+  state.micPcmRemainder = combined.slice(offset);
 }
 
 function floatToInt16(input) {
@@ -546,18 +535,20 @@ function stopPlayback() {
   if (state.audioContext) state.playbackAt = state.audioContext.currentTime;
 }
 
-function sendInterrupt({ source = "manual" } = {}) {
+function stopAssistantPlayback({ source = "manual", suppressMs = OUTPUT_SUPPRESS_MS } = {}) {
   const now = Date.now();
-  if (source !== "manual" && now - state.lastInterruptAt < AUTO_INTERRUPT_COOLDOWN_MS) return;
   state.lastInterruptAt = now;
-  state.suppressOutputUntil = now + OUTPUT_SUPPRESS_MS;
+  state.suppressOutputUntil = now + suppressMs;
+  if (source === "voice") state.bargeInActive = true;
   state.assistantSpeaking = false;
   stopPlayback();
-  if (state.ws?.readyState === WebSocket.OPEN) {
-    state.ws.send(JSON.stringify({ type: "interrupt", source }));
-  }
-  setVoiceStatus(source === "manual" ? "已停止播放" : "已打断，请继续说");
+  setVoiceStatus(source === "manual" ? "已停止播放" : "已听到，请继续说");
   setStage(state.sessionActive && !state.muted ? "listening" : "idle");
+}
+
+function sendInterrupt(eventOrOptions = {}) {
+  const source = eventOrOptions?.source || "manual";
+  stopAssistantPlayback({ source });
 }
 
 function toggleMute() {
