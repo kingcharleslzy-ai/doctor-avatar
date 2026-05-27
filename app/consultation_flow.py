@@ -259,8 +259,8 @@ class ConsultationOrchestrator:
         return "我先帮你归纳一下：目前信息还不算完整，建议把最主要的不舒服、持续时间和有没有发热或明显加重先说清楚。"
 
     def _throat_summary(self) -> str:
-        duration = self.facts.get("duration", "时间不长")
-        quality = self.facts.get("throat_quality", "咽喉不适")
+        duration = _plain_fact(self.facts.get("duration"), "时间不长")
+        quality = _plain_fact(self.facts.get("throat_quality"), "咽喉不适")
         red_flags = self.facts.get("red_flags", "")
         lifestyle = self.facts.get("throat_lifestyle", "")
         medication = self.facts.get("medication", "")
@@ -279,9 +279,9 @@ class ConsultationOrchestrator:
         )
 
     def _nose_summary(self) -> str:
-        duration = self.facts.get("duration", "时间不明确")
-        discharge = self.facts.get("discharge", "鼻涕性质还不明确")
-        trigger = self.facts.get("trigger", "诱因不明确")
+        duration = _plain_fact(self.facts.get("duration"), "时间不明确")
+        discharge = _plain_fact(self.facts.get("discharge"), "鼻涕性质还不明确")
+        trigger = _plain_fact(self.facts.get("trigger"), "诱因不明确")
         return (
             f"我先归纳一下：你主要是鼻部不舒服，持续情况是{duration}，{discharge}，{trigger}。"
             "如果是反复鼻塞、清水涕、喷嚏鼻痒，常见方向包括过敏性鼻炎；如果黄脓涕、头面部胀痛或超过十天不缓解，要考虑鼻窦炎方向。"
@@ -289,8 +289,8 @@ class ConsultationOrchestrator:
         )
 
     def _ear_summary(self) -> str:
-        duration = self.facts.get("duration", "时间不明确")
-        detail = self.facts.get("ear_detail", "耳部表现还不完整")
+        duration = _plain_fact(self.facts.get("duration"), "时间不明确")
+        detail = _plain_fact(self.facts.get("ear_detail"), "耳部表现还不完整")
         return (
             f"我先归纳一下：你主要是耳部不适，持续情况是{duration}，表现为{detail}。"
             "如果有听力突然下降、明显眩晕、发热或耳朵流脓，需要尽快耳鼻喉科就诊。"
@@ -456,7 +456,7 @@ def _is_negative(text: str) -> bool:
     compact = re.sub(r"[，。,.！!？?\s]", "", text)
     if _has_any(compact, ["有没有", "有没"]):
         return False
-    return compact in {"不", "不会", "没有", "没", "无", "不是", "否"} or _has_any(text, ["没有", "没用", "没吃", "不会", "不是", "无明显", "否认"])
+    return compact in {"不", "不会", "没有", "没", "无", "不是", "否", "未"} or _has_any(text, ["没有", "没用", "没吃", "不会", "不是", "无明显", "否认", "未自行"])
 
 
 def _answer_value(text: str, *, negative: str) -> str:
@@ -464,6 +464,11 @@ def _answer_value(text: str, *, negative: str) -> str:
     if _is_negative(text):
         return negative
     return cleaned
+
+
+def _plain_fact(value: str | None, fallback: str) -> str:
+    cleaned = re.sub(r"[，。,.！!？?\s]+$", "", value or "").strip()
+    return cleaned or fallback
 
 
 def _merge_fact(old: str | None, new: str) -> str:
