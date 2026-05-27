@@ -95,7 +95,7 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
         )
         await ws.send(encode_server_json_event(ServerEvent.ASR_ENDED, {}, session_id))
 
-        while "rag_event" not in observed:
+        while "direct_question_event" not in observed and "rag_event" not in observed:
             frame = decode_frame(await ws.recv())
             if frame.event == ClientEvent.UPDATE_CONFIG:
                 observed["update_config_event"] = frame.event
@@ -104,6 +104,9 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
             elif frame.event == ClientEvent.CHAT_RAG_TEXT:
                 observed["rag_event"] = frame.event
                 observed["rag_payload"] = frame.json_payload()
+            elif frame.event == ClientEvent.SAY_HELLO:
+                observed["direct_question_event"] = frame.event
+                observed["direct_question_payload"] = frame.json_payload()
             else:
                 observed.setdefault("post_asr_client_events", []).append(frame.event)
 
@@ -175,8 +178,11 @@ async def validate() -> dict[str, Any]:
         assert observed["audio_event"] == 200
         assert observed["audio_payload_len"] == 640
         assert observed["update_config_event"] == 201
-        assert observed["rag_event"] == 502
-        assert "external_rag" in observed["rag_payload"]
+        assert observed.get("direct_question_event") == 300 or observed.get("rag_event") == 502
+        if "direct_question_payload" in observed:
+            assert observed["direct_question_payload"]["content"].count("？") <= 1
+        if "rag_payload" in observed:
+            assert "external_rag" in observed["rag_payload"]
 
         types = [message.get("type") for message in messages]
         assert "status" in types

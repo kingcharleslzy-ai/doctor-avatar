@@ -256,6 +256,25 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
 
+            def _should_ask_direct_question(turn) -> bool:
+                return turn.stage in {"symptoms", "duration_trigger", "history"} and turn.next_question.endswith("？")
+
+            async def _ask_direct_question(turn) -> None:
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
+                rag_turn_active = False
+                active_tts_type = None
+                pending_chat_end_payload = {"direct_question": True, "stage": turn.stage}
+                await ws.send_json(
+                    {
+                        "type": "chat",
+                        "content": turn.next_question,
+                        "question_id": None,
+                        "reply_id": None,
+                        "payload": pending_chat_end_payload,
+                    }
+                )
+                await _send_json_event(ClientEvent.SAY_HELLO, {"content": turn.next_question})
+
             async def _wait_session_ready() -> bool:
                 if session_ready.is_set():
                     return True
@@ -278,11 +297,11 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 async with upstream_send_lock:
                     await upstream.send(encode_audio_event(ClientEvent.TASK_REQUEST, audio_bytes, session_id=session_id))
 
-            async def _guide_user_query(user_text: str, *, send_rag: bool = True) -> None:
+            async def _guide_user_query(user_text: str, *, send_rag: bool = True):
                 nonlocal rag_turn_active, active_tts_type
                 normalized = " ".join((user_text or "").split()).strip()
                 if not normalized or normalized in guided_queries:
-                    return
+                    return None
                 guided_queries.add(normalized)
                 try:
                     turn = await asyncio.to_thread(orchestrator.prepare_turn, normalized)
@@ -295,12 +314,16 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         }
                     )
                     await _send_json_event(ClientEvent.UPDATE_CONFIG, turn.update_config)
-                    if send_rag:
+                    if send_rag and _should_ask_direct_question(turn):
+                        await _ask_direct_question(turn)
+                    elif send_rag:
                         rag_turn_active = True
                         active_tts_type = None
                         await _send_json_event(ClientEvent.CHAT_RAG_TEXT, {"external_rag": turn.external_rag})
+                    return turn
                 except Exception as exc:
                     await ws.send_json({"type": "error", "message": f"问诊资料检索失败: {exc}"})
+                    return None
 
             await upstream.send(encode_json_event(ClientEvent.START_CONNECTION, {}))
             start_payload = build_start_session_payload()
@@ -461,8 +484,11 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     elif msg_type == "text":
                         content = str(payload.get("content") or "").strip()
                         if content:
-                            await _guide_user_query(content, send_rag=False)
-                            await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
+                            turn = await _guide_user_query(content, send_rag=False)
+                            if turn and _should_ask_direct_question(turn):
+                                await _ask_direct_question(turn)
+                            else:
+                                await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
                     elif msg_type == "say_hello":
                         content = str(payload.get("content") or "").strip()
                         if content:
