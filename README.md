@@ -71,10 +71,13 @@ http://127.0.0.1:8001/hospital-ai
 ## 验证
 
 ```bash
+npm ci
 python -m compileall app scripts/validate_doubao_realtime.py scripts/validate_doubao_cloud.py
 node --check app/static/user.js
+npm run validate:consultation-flow
 npm run validate:doubao-realtime
 npm run validate:doubao-cloud
+npm run validate:user
 ```
 
 ## 豆包官方配置口径

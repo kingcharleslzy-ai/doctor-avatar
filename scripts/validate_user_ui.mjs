@@ -2,11 +2,36 @@ import { chromium, devices } from "playwright";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const url = process.env.USER_URL || "https://liyong828.com/";
+const url = process.env.USER_URL || "https://liyong828.com/hospital-ai";
 const outputDir = path.resolve("output");
 const desktopShot = path.join(outputDir, "user-desktop-validation.png");
 const mobileShot = path.join(outputDir, "user-mobile-validation.png");
 const dumpPath = path.join(outputDir, "user-validation.json");
+
+const chromeCandidates = [
+  process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "/Applications/Chromium.app/Contents/MacOS/Chromium",
+  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+].filter(Boolean);
+
+async function firstExisting(paths) {
+  for (const candidate of paths) {
+    try {
+      await fs.access(candidate);
+      return candidate;
+    } catch (_) {}
+  }
+  return null;
+}
+
+async function launchBrowser() {
+  const executablePath = await firstExisting(chromeCandidates);
+  return chromium.launch({
+    headless: true,
+    ...(executablePath ? { executablePath } : {}),
+  });
+}
 
 async function validateDesktop(browser) {
   const context = await browser.newContext({
@@ -55,7 +80,7 @@ async function validateMobile(browser) {
 
 async function main() {
   await fs.mkdir(outputDir, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await launchBrowser();
   const desktop = await validateDesktop(browser);
   const mobile = await validateMobile(browser);
   const summary = {

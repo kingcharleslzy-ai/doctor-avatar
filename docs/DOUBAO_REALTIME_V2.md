@@ -65,10 +65,13 @@ SayHello
 ## 5. 常用验证
 
 ```bash
+npm ci
 python -m compileall app scripts/validate_doubao_realtime.py scripts/validate_doubao_cloud.py
 node --check app/static/user.js
+npm run validate:consultation-flow
 npm run validate:doubao-realtime
 npm run validate:doubao-cloud
+npm run validate:user
 ```
 
 官方文档：<https://www.volcengine.com/docs/6561/1594356?lang=zh>
