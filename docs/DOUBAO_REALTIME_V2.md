@@ -61,7 +61,7 @@ SayHello
 
 ```bash
 python -m compileall app scripts/validate_doubao_realtime.py scripts/validate_doubao_cloud.py
-node --check app/static/user.js app/static/console.js
+node --check app/static/user.js
 npm run validate:doubao-realtime
 npm run validate:doubao-cloud
 ```

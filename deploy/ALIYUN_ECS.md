@@ -4,7 +4,7 @@
 
 - 让项目长期运行在云端，不依赖本地电脑常开
 - 通过公网 IP 或域名访问
-- 保留 `/` 用户端、`/console` 控制台
+- 保留 `/` 官网、`/hospital-ai` 数字人页面和 `/rhinitis-ai` 专病页面
 
 ## 推荐部署形态
 
@@ -108,8 +108,9 @@ docker compose -f docker-compose.prod.yml ps
 
 启动成功后：
 
-- 用户端：`http://你的公网IP/`
-- 控制台：`http://你的公网IP/console`
+- 官网：`http://你的公网IP/`
+- 数字人页面：`http://你的公网IP/hospital-ai`
+- 专病页面：`http://你的公网IP/rhinitis-ai`
 
 ## 查看日志
 
@@ -153,7 +154,6 @@ docker compose -f docker-compose.prod.yml up -d --build
 - `/` MedFlow 官网
 - `/hospital-ai` 医疗数字人实时语音问诊页
 - `/rhinitis-ai` 耳鼻喉专病 AI 页面
-- `/console` 后台控制台
 
 ## 推荐后续工作
 

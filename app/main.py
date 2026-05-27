@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import json
-import secrets
 import time
 import base64
 from pathlib import Path
 
 import asyncio
 
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,12 +15,9 @@ from fastapi.templating import Jinja2Templates
 from .config import settings
 from .consultation_flow import ConsultationOrchestrator
 from .db import (
-    create_memory_entry,
-    delete_memory_entries,
     init_memory_db,
     list_memory_entries,
     memory_db_path,
-    memory_kind_counts,
 )
 from .doubao_realtime import (
     AUDIO_SERVER_RESPONSE,
@@ -39,15 +34,10 @@ from .doubao_realtime import (
     encode_json_event,
     is_doubao_realtime_configured,
 )
-from .knowledge import invalidate_index, load_doctor_profile
-from .memory_snapshot import MARKER_KIND, get_memory_status
-from .models import (
-    MemoryEntryCreate,
-    MemoryEntryDeleteRequest,
-    MemoryEntryResponse,
-    PresenceHeartbeatRequest,
-)
-from .ops import monitor_snapshot, record_presence, record_request
+from .knowledge import load_doctor_profile
+from .memory_snapshot import get_memory_status
+from .models import PresenceHeartbeatRequest
+from .ops import record_presence, record_request
 
 
 from contextlib import asynccontextmanager
@@ -61,7 +51,6 @@ app = FastAPI(title="Doctor Avatar MVP", version="0.1.0", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 doctor_profile = load_doctor_profile()
-console_auth = HTTPBasic(auto_error=False)
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
 _CACHE_BUST = str(int(time.time()))
 
@@ -69,36 +58,6 @@ _CACHE_BUST = str(int(time.time()))
 
 def resolve_user_template(request: Request) -> str:
     return "digital_human.html"
-
-
-def require_console_auth(credentials: HTTPBasicCredentials | None = Depends(console_auth)) -> str:
-    if settings.console_auth_mode == "off":
-        return "console-auth-disabled"
-
-    if not settings.console_username or not settings.console_password:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="控制台认证已启用，但尚未配置 CONSOLE_USERNAME / CONSOLE_PASSWORD。",
-        )
-
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="控制台认证失败。",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-
-    username_ok = secrets.compare_digest(credentials.username, settings.console_username)
-    password_ok = secrets.compare_digest(credentials.password, settings.console_password)
-
-    if username_ok and password_ok:
-        return credentials.username
-
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="控制台认证失败。",
-        headers={"WWW-Authenticate": "Basic"},
-    )
 
 
 def load_build_meta() -> dict[str, str]:
@@ -172,7 +131,6 @@ def app_config() -> dict[str, object]:
             "bootstrap_enabled": settings.doctor_memory_bootstrap,
             "has_entries": bool(memory_entries),
             "memory_code": memory_code,
-            "write_enabled": settings.console_memory_write_enabled,
         },
         "doctor": {
             "name": doctor_profile.get("name"),
@@ -218,81 +176,10 @@ def public_doctor_profile() -> dict[str, object]:
     }
 
 
-@app.get("/api/memory/entries", response_model=list[MemoryEntryResponse])
-def memory_entries(
-    kind: str | None = None,
-    q: str | None = None,
-    limit: int = 100,
-    _: str = Depends(require_console_auth),
-) -> list[MemoryEntryResponse]:
-    rows = list_memory_entries(kind=kind, query=q, limit=None)
-    if kind != MARKER_KIND:
-        rows = [row for row in rows if row["kind"] != MARKER_KIND]
-    rows = rows[: max(1, min(limit, 5000))]
-    return [MemoryEntryResponse(**row) for row in rows]
-
-
-@app.get("/api/memory/summary")
-def memory_summary(_: str = Depends(require_console_auth)) -> dict[str, object]:
-    rows = [row for row in list_memory_entries(limit=None) if row["kind"] != MARKER_KIND]
-    counts = [item for item in memory_kind_counts() if item["kind"] != MARKER_KIND]
-    return {
-        "total": len(rows),
-        "kinds": counts,
-        "memory_code": get_memory_status(memory_db_path())[0] if rows else None,
-    }
-
-
-@app.get("/api/ops/overview")
-def ops_overview(_: str = Depends(require_console_auth)) -> dict[str, object]:
-    rows = [row for row in list_memory_entries(limit=None) if row["kind"] != MARKER_KIND]
-    counts = [item for item in memory_kind_counts() if item["kind"] != MARKER_KIND]
-    snapshot = monitor_snapshot(memory_db_path())
-    snapshot["doctor_memory"] = {
-        "total": len(rows),
-        "kinds": counts,
-        "memory_code": get_memory_status(memory_db_path())[0] if rows else None,
-        "write_enabled": settings.console_memory_write_enabled,
-    }
-    return snapshot
-
-
 @app.post("/api/ops/presence")
 def ops_presence(payload: PresenceHeartbeatRequest, request: Request) -> dict[str, str]:
     record_presence(payload.session_id, request.headers.get("user-agent"))
     return {"status": "ok"}
-
-
-@app.post("/api/memory/entries", response_model=MemoryEntryResponse)
-def create_memory(payload: MemoryEntryCreate, _: str = Depends(require_console_auth)) -> MemoryEntryResponse:
-    if not settings.console_memory_write_enabled:
-        raise HTTPException(status_code=403, detail="当前控制台处于只读模式，已禁用资料写入。")
-    row = create_memory_entry(
-        kind=payload.kind,
-        title=payload.title,
-        content=payload.content,
-        tags=payload.tags,
-        source=payload.source,
-        importance=payload.importance,
-    )
-    get_memory_status(memory_db_path())
-    invalidate_index()
-    return MemoryEntryResponse(**row)
-
-
-@app.post("/api/memory/entries/delete")
-def delete_memory(payload: MemoryEntryDeleteRequest, _: str = Depends(require_console_auth)) -> dict[str, int | str]:
-    if not settings.console_memory_write_enabled:
-        raise HTTPException(status_code=403, detail="当前控制台处于只读模式，已禁用资料删除。")
-    protected_ids = {
-        row["id"]
-        for row in list_memory_entries(kind=MARKER_KIND, limit=None)
-    }
-    candidate_ids = [entry_id for entry_id in payload.entry_ids if entry_id not in protected_ids]
-    deleted = delete_memory_entries(candidate_ids)
-    get_memory_status(memory_db_path())
-    invalidate_index()
-    return {"deleted": deleted}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -318,11 +205,6 @@ def hospital_ai(request: Request) -> HTMLResponse:
 @app.get("/rhinitis-ai", response_class=HTMLResponse)
 def rhinitis_ai(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("rhinitis_ai.html", {"request": request, "v": _CACHE_BUST})
-
-
-@app.get("/console", response_class=HTMLResponse)
-def console(request: Request, _: str = Depends(require_console_auth)) -> HTMLResponse:
-    return templates.TemplateResponse("console.html", {"request": request})
 
 
 @app.websocket("/ws/doubao/realtime")

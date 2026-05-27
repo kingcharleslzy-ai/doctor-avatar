@@ -1,6 +1,6 @@
 # MedFlow 医疗数字人项目
 
-MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项目。当前仓库包含工作室官网、耳鼻喉专病 AI 子页面、医疗数字人问诊页面和运维控制台。
+MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项目。当前仓库包含工作室官网、耳鼻喉专病 AI 子页面和医疗数字人问诊页面。
 
 ## 当前主链路
 
@@ -16,18 +16,17 @@ MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项�
   -> 浏览器 Web Audio 播放
 ```
 
-前端和后台只暴露当前豆包实时语音方案。
+前端只暴露当前豆包实时语音方案，生产环境不提供公网后台。
 
 ## 页面
 
 - `/`：MedFlow 工作室官网
 - `/hospital-ai`：医疗数字人实时语音问诊页
 - `/rhinitis-ai`：耳鼻喉专病 AI 分支页面
-- `/console`：运维控制台，需要 Basic Auth
 
 ## 核心目录
 
-- `app/main.py`：FastAPI 路由、豆包 WebSocket 代理、资料库接口
+- `app/main.py`：FastAPI 路由、豆包 WebSocket 代理、公开运行状态接口
 - `app/doubao_realtime.py`：豆包 RealtimeAPI v3 帧协议、鉴权头、StartSession 配置
 - `app/consultation_flow.py`：耳鼻喉问诊状态机、每轮人设更新、外部 RAG 组织
 - `app/knowledge.py`：本地 Markdown + SQLite 医生资料检索
@@ -41,8 +40,6 @@ MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项�
 
 ```bash
 DOUBAO_REALTIME_API_KEY=你的豆包语音APIKey
-CONSOLE_USERNAME=...
-CONSOLE_PASSWORD=...
 ```
 
 主要可调项：
@@ -75,7 +72,7 @@ http://127.0.0.1:8001/hospital-ai
 
 ```bash
 python -m compileall app scripts/validate_doubao_realtime.py scripts/validate_doubao_cloud.py
-node --check app/static/user.js app/static/console.js
+node --check app/static/user.js
 npm run validate:doubao-realtime
 npm run validate:doubao-cloud
 ```

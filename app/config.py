@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,9 +9,6 @@ KNOWLEDGE_DIR = BASE_DIR / "knowledge"
 
 
 class Settings(BaseSettings):
-    console_auth_mode: Literal["off", "basic"] = Field(default="basic", alias="CONSOLE_AUTH_MODE")
-    console_username: str | None = Field(default=None, alias="CONSOLE_USERNAME")
-    console_password: str | None = Field(default=None, alias="CONSOLE_PASSWORD")
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
 
@@ -81,7 +77,6 @@ class Settings(BaseSettings):
 
     doctor_memory_db_path: str = Field(default=str(BASE_DIR / "data" / "doctor_memory.db"), alias="DOCTOR_MEMORY_DB_PATH")
     doctor_memory_bootstrap: bool = Field(default=True, alias="DOCTOR_MEMORY_BOOTSTRAP")
-    console_memory_write_enabled: bool = Field(default=False, alias="CONSOLE_MEMORY_WRITE_ENABLED")
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
