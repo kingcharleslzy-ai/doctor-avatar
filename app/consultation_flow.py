@@ -104,11 +104,12 @@ class ConsultationOrchestrator:
             "summary": "当前任务是做简短阶段性分析，必要时只给一个下一步建议。",
         }.get(stage, "当前任务是继续完成耳鼻咽喉科问诊。")
         facts = self._facts_summary()
-        source_context = self._source_context(hits)
         return (
             f"{self._base_system_role()} 已收集信息：{facts} {stage_rule} "
-            f"本轮优先话术：{next_question} 必须围绕这一个点说，不能额外追加第二串问题。"
-            f"{source_context}"
+            f"本轮唯一允许追问的问题是：{next_question} "
+            "如果这句话是问句，你必须只问这一句；可以有一句很短的承接，但禁止追加第二个问句。"
+            "不要追问鼻涕性质、诱因、用药、检查或危险信号等其他信息，除非它们正是本轮唯一问题。"
+            "普通追问总长度尽量不超过35个汉字。"
         )
 
     def _speaking_style(self) -> str:
@@ -144,7 +145,7 @@ class ConsultationOrchestrator:
             return "你现在最主要的不舒服是什么？"
         if stage == "symptoms":
             if "duration" not in self.facts and symptoms:
-                return "先说一个最关键的：这次症状持续几天了？"
+                return "这次症状持续几天了？"
             if "discharge" not in self.facts and _has_any(symptoms, ["流鼻涕", "流涕", "鼻塞"]):
                 return "鼻涕是清水样，还是黄脓鼻涕？"
             return "现在最困扰你的是鼻塞、流涕，还是打喷嚏鼻痒？"
@@ -205,9 +206,10 @@ class ConsultationOrchestrator:
             f"患者本轮说：{user_text}\n"
             f"当前问诊阶段：{STAGE_LABELS.get(stage, stage)}\n"
             f"已收集病史：{self._facts_summary()}\n"
-            f"本轮优先话术：{next_question}\n"
-            "回答要求：继续以医生口吻说话。信息不足时，只追问本轮优先话术里的一个问题；"
+            f"本轮唯一允许追问的问题：{next_question}\n"
+            "回答要求：继续以医生口吻说话。信息不足时，只追问上面这一句话里的一个问题；"
             "最多两句话，普通追问只出现一个问号，问完立刻停下来等患者回答。"
+            "不要顺手补问鼻涕性质、诱因、用药、检查或危险信号等其他信息。"
             "若信息已经足够，再做阶段性分析，但仍保持简短。不要写成列表，不要报资料来源，不要说正在读取数据库。"
         )
         items = [{"title": "问诊流程与本轮回答要求", "content": instructions}]
