@@ -251,7 +251,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             )
             upstream_send_lock = asyncio.Lock()
             session_ready = asyncio.Event()
-            guided_queries: set[str] = set()
+            last_guided_query = ""
+            last_guided_at = 0.0
             rag_turn_active = False
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
@@ -299,11 +300,15 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     await upstream.send(encode_audio_event(ClientEvent.TASK_REQUEST, audio_bytes, session_id=session_id))
 
             async def _guide_user_query(user_text: str, *, send_rag: bool = True):
-                nonlocal rag_turn_active, active_tts_type
+                nonlocal rag_turn_active, active_tts_type, last_guided_query, last_guided_at
                 normalized = " ".join((user_text or "").split()).strip()
-                if not normalized or normalized in guided_queries:
+                if not normalized:
                     return None
-                guided_queries.add(normalized)
+                now = asyncio.get_running_loop().time()
+                if normalized == last_guided_query and now - last_guided_at < 1.2:
+                    return None
+                last_guided_query = normalized
+                last_guided_at = now
                 try:
                     turn = await asyncio.to_thread(orchestrator.prepare_turn, normalized)
                     await ws.send_json(
@@ -488,7 +493,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                             turn = await _guide_user_query(content, send_rag=False)
                             if turn and _should_send_direct_response(turn):
                                 await _send_direct_response(turn)
-                            else:
+                            elif turn:
                                 await _send_json_event(ClientEvent.CHAT_TEXT_QUERY, {"content": content})
                     elif msg_type == "say_hello":
                         content = str(payload.get("content") or "").strip()
