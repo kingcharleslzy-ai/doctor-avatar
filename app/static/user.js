@@ -17,7 +17,16 @@ const state = {
   timerStartedAt: 0,
   timerId: null,
   presenceId: `web-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  assistantSpeaking: false,
+  suppressOutputUntil: 0,
+  lastInterruptAt: 0,
+  autoSpeechStartedAt: 0,
+  noiseFloor: 0.012,
 };
+
+const AUTO_INTERRUPT_MIN_MS = 850;
+const AUTO_INTERRUPT_COOLDOWN_MS = 2600;
+const OUTPUT_SUPPRESS_MS = 1600;
 
 const $ = (id) => document.getElementById(id);
 
@@ -82,6 +91,15 @@ function updateBubble(bubble, text) {
 function resetCurrentAiBubble() {
   state.currentAiBubble = null;
   state.currentAiText = "";
+}
+
+function isSuppressingOutput() {
+  return Date.now() < state.suppressOutputUntil;
+}
+
+function resetInterruptState() {
+  state.suppressOutputUntil = 0;
+  state.autoSpeechStartedAt = 0;
 }
 
 function appendAiText(text) {
@@ -220,6 +238,8 @@ async function startRealtimeSession({ withMic = false } = {}) {
 
   await ensureAudioContext();
   resetCurrentAiBubble();
+  resetInterruptState();
+  state.assistantSpeaking = false;
   stopPlayback();
   setMode("正在连接 MedFlow");
   setVoiceStatus("正在连接...");
@@ -324,8 +344,12 @@ function handleRealtimeMessage(message) {
     const text = (message.text || "").trim();
     if (!text) return;
     if (message.is_interim) {
+      if (state.assistantSpeaking && text.length >= 2) {
+        sendInterrupt({ source: "voice" });
+      }
       setVoiceStatus(`正在听：${text}`);
     } else {
+      resetInterruptState();
       appendMessage("user", text);
       setVoiceStatus("正在生成回答...");
       setStage("thinking");
@@ -334,27 +358,35 @@ function handleRealtimeMessage(message) {
     return;
   }
   if (message.type === "chat") {
+    if (isSuppressingOutput()) return;
+    state.assistantSpeaking = true;
     appendAiText(message.content || "");
     setStage("speaking");
     setVoiceStatus("正在回答");
     return;
   }
   if (message.type === "chat_end") {
+    state.assistantSpeaking = false;
     resetCurrentAiBubble();
     setVoiceStatus(state.muted ? "已静音" : "请继续说话");
     setStage(state.muted ? "idle" : "listening");
     return;
   }
   if (message.type === "tts_start") {
+    if (isSuppressingOutput()) return;
+    state.assistantSpeaking = true;
     if (message.text) appendAiText(message.text);
     setStage("speaking");
     return;
   }
   if (message.type === "tts_end") {
+    state.assistantSpeaking = false;
     setStage(state.muted ? "idle" : "listening");
     return;
   }
   if (message.type === "audio") {
+    if (isSuppressingOutput()) return;
+    state.assistantSpeaking = true;
     playPcm16(message.audio, message.sample_rate || 24000);
   }
 }
@@ -370,6 +402,7 @@ async function sendTextFromBox() {
   }
   input.value = "";
   appendMessage("user", content);
+  resetInterruptState();
   resetCurrentAiBubble();
   setVoiceStatus("正在生成回答...");
   setStage("thinking");
@@ -393,13 +426,55 @@ async function startMic() {
   state.micProcessor.onaudioprocess = (event) => {
     event.outputBuffer.getChannelData(0).fill(0);
     if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return;
-    const pcm = downsampleToPcm16(event.inputBuffer.getChannelData(0), context.sampleRate, 16000);
+    const input = event.inputBuffer.getChannelData(0);
+    maybeAutoInterrupt(input);
+    const pcm = downsampleToPcm16(input, context.sampleRate, 16000);
     if (pcm.byteLength > 0) state.ws.send(pcm);
   };
   state.micSource.connect(state.micProcessor);
   state.micProcessor.connect(context.destination);
   setVoiceStatus("请直接说话");
   setStage("listening");
+}
+
+function audioRms(input) {
+  let sum = 0;
+  const step = Math.max(1, Math.floor(input.length / 512));
+  let count = 0;
+  for (let i = 0; i < input.length; i += step) {
+    sum += input[i] * input[i];
+    count += 1;
+  }
+  return Math.sqrt(sum / Math.max(1, count));
+}
+
+function maybeAutoInterrupt(input) {
+  const rms = audioRms(input);
+  const now = Date.now();
+  const threshold = Math.max(0.026, state.noiseFloor * 3.2);
+  const strongSpeech = rms > threshold;
+
+  if (!state.assistantSpeaking && !strongSpeech) {
+    state.noiseFloor = Math.max(0.006, Math.min(0.04, state.noiseFloor * 0.96 + rms * 0.04));
+    state.autoSpeechStartedAt = 0;
+    return;
+  }
+
+  if (!state.assistantSpeaking || now - state.lastInterruptAt < AUTO_INTERRUPT_COOLDOWN_MS) {
+    if (!strongSpeech) state.autoSpeechStartedAt = 0;
+    return;
+  }
+
+  if (!strongSpeech) {
+    state.autoSpeechStartedAt = 0;
+    return;
+  }
+
+  if (!state.autoSpeechStartedAt) state.autoSpeechStartedAt = now;
+  if (now - state.autoSpeechStartedAt >= AUTO_INTERRUPT_MIN_MS) {
+    sendInterrupt({ source: "voice" });
+    state.autoSpeechStartedAt = 0;
+  }
 }
 
 function stopMic() {
@@ -443,6 +518,7 @@ function floatToInt16(input) {
 }
 
 async function playPcm16(base64Audio, sampleRate) {
+  if (isSuppressingOutput()) return;
   if (!base64Audio) return;
   const context = await ensureAudioContext();
   const binary = atob(base64Audio);
@@ -470,12 +546,17 @@ function stopPlayback() {
   if (state.audioContext) state.playbackAt = state.audioContext.currentTime;
 }
 
-function sendInterrupt() {
+function sendInterrupt({ source = "manual" } = {}) {
+  const now = Date.now();
+  if (source !== "manual" && now - state.lastInterruptAt < AUTO_INTERRUPT_COOLDOWN_MS) return;
+  state.lastInterruptAt = now;
+  state.suppressOutputUntil = now + OUTPUT_SUPPRESS_MS;
+  state.assistantSpeaking = false;
   stopPlayback();
   if (state.ws?.readyState === WebSocket.OPEN) {
-    state.ws.send(JSON.stringify({ type: "interrupt" }));
+    state.ws.send(JSON.stringify({ type: "interrupt", source }));
   }
-  setVoiceStatus(state.sessionActive ? "已停止播放" : "语音待命");
+  setVoiceStatus(source === "manual" ? "已停止播放" : "已打断，请继续说");
   setStage(state.sessionActive && !state.muted ? "listening" : "idle");
 }
 
@@ -501,6 +582,8 @@ function endRealtimeSession({ closeSocket = true } = {}) {
   state.ws = null;
   state.sessionActive = false;
   state.muted = false;
+  state.assistantSpeaking = false;
+  resetInterruptState();
   setVisible("startConsultBtn", true);
   setVisible("endConsultBtn", false);
   setMode("语音待命");
