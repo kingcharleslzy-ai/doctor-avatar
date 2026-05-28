@@ -146,8 +146,8 @@
       display: grid;
       grid-template-columns: minmax(0, .95fr) minmax(330px, .54fr);
       gap: clamp(38px, 8vw, 118px);
-      align-items: center;
-      padding: clamp(54px, 8vh, 92px) 0 clamp(44px, 7vh, 72px);
+      align-items: start;
+      padding: clamp(46px, 7vh, 76px) 0 clamp(44px, 7vh, 72px);
       border-bottom: 1px solid var(--line);
     }
 
@@ -250,6 +250,17 @@
       overflow: hidden;
     }
 
+    .specialty-mark.product {
+      width: min(100%, 420px);
+      aspect-ratio: .98;
+      place-items: stretch;
+      padding: 18px;
+      border: 1px solid var(--line-strong);
+      background:
+        linear-gradient(135deg, rgba(255, 253, 246, .80), rgba(220, 239, 232, .44)),
+        radial-gradient(circle at 76% 18%, rgba(33, 179, 158, .22), transparent 30%);
+    }
+
     .specialty-mark::before {
       content: "";
       position: absolute;
@@ -273,6 +284,77 @@
       display: block;
       position: relative;
       animation: medflowFloat 8s ease-in-out infinite;
+    }
+
+    .intake-console {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 100%;
+      border: 1px solid rgba(30, 46, 43, .20);
+      background: rgba(255, 253, 246, .70);
+      backdrop-filter: blur(8px);
+      box-shadow: 18px 22px 0 rgba(18, 107, 97, .08);
+      animation: medflowFloat 8s ease-in-out infinite;
+    }
+
+    .console-top,
+    .console-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .console-bottom {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      color: var(--green);
+    }
+
+    .consult-strip {
+      display: grid;
+      gap: 14px;
+      padding: 22px 20px;
+    }
+
+    .consult-line {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 13px 0;
+      border-bottom: 1px solid rgba(30, 46, 43, .12);
+    }
+
+    .consult-line code,
+    .summary-note code {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .10em;
+    }
+
+    .consult-line strong {
+      display: block;
+      margin-bottom: 4px;
+      font-family: var(--serif);
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .consult-line span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
     }
 
     .specialty-terms {
@@ -370,6 +452,115 @@
       max-width: 580px;
       color: var(--muted);
       font-size: 16px;
+    }
+
+    .product-stage {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(320px, .56fr);
+      gap: clamp(30px, 7vw, 90px);
+      align-items: stretch;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .questionnaire,
+    .summary-board {
+      min-height: 420px;
+      padding: clamp(24px, 3.4vw, 40px);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 246, .42);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .questionnaire::after,
+    .summary-board::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(33, 179, 158, .12), transparent);
+      transform: translateX(-110%);
+      animation: dataSweep 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .questionnaire {
+      display: grid;
+      align-content: space-between;
+      gap: 32px;
+      border-left: 1px solid var(--line);
+    }
+
+    .question-copy {
+      display: grid;
+      gap: 18px;
+      max-width: 620px;
+    }
+
+    .question-copy h3,
+    .summary-board h3 {
+      font-family: var(--serif);
+      font-size: clamp(30px, 4vw, 56px);
+      line-height: 1.02;
+      font-weight: 700;
+    }
+
+    .question-copy p,
+    .summary-board p {
+      color: var(--ink-soft);
+      font-size: 17px;
+    }
+
+    .symptom-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 620px;
+    }
+
+    .symptom-chip {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(30, 46, 43, .16);
+      background: rgba(220, 239, 232, .24);
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .symptom-chip span {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .08em;
+    }
+
+    .summary-board {
+      display: grid;
+      align-content: start;
+      gap: 20px;
+      background: rgba(220, 239, 232, .30);
+    }
+
+    .summary-note {
+      display: grid;
+      gap: 10px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(30, 46, 43, .14);
+    }
+
+    .summary-note strong {
+      font-family: var(--serif);
+      font-size: 22px;
+      line-height: 1.16;
+    }
+
+    .summary-note span {
+      color: var(--muted);
+      font-size: 15px;
     }
 
     .flow {
@@ -527,6 +718,7 @@
     @media (max-width: 980px) {
       .hero,
       .section-head,
+      .product-stage,
       .cta .wrap {
         grid-template-columns: 1fr;
       }
@@ -541,6 +733,15 @@
 
       .flow {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .questionnaire,
+      .summary-board {
+        min-height: auto;
+      }
+
+      .summary-board {
+        border-left: 1px solid var(--line);
       }
     }
 
@@ -580,10 +781,20 @@
         width: min(72vw, 300px);
       }
 
+      .specialty-mark.product {
+        width: 100%;
+        padding: 12px;
+      }
+
       .specialty-terms div,
+      .consult-line,
       .module-row {
         grid-template-columns: 1fr;
         gap: 8px;
+      }
+
+      .symptom-grid {
+        grid-template-columns: 1fr;
       }
 
       .flow {
@@ -622,43 +833,60 @@
   <main>
     <section class="hero wrap" aria-label="耳鼻喉专病 AI 首屏">
       <div>
-        <div class="eyebrow reveal">ENT Specialty AI / MedFlow</div>
+        <div class="eyebrow reveal">MedFlow Specialty System</div>
         <h1 class="reveal">
-          过敏性鼻炎
-          <span>预问诊系统</span>
+          鼻敏智诊
+          <span>Rhinitis AI</span>
         </h1>
         <p class="hero-copy reveal">
-          面向耳鼻喉科高频专病，整理患者症状、诱因、病史与用药信息，生成医生接诊前可阅读的结构化摘要。
+          过敏性鼻炎诊前采集与医生摘要系统。将患者症状、诱因、过敏史、用药史和检查材料整理为接诊前可读信息。
         </p>
         <div class="hero-actions reveal">
-          <a class="btn primary" href="#modules">查看能力</a>
-          <a class="btn secondary" href="/hospital-ai">数字人演示</a>
+          <a class="btn primary" href="#product">查看系统构成</a>
+          <a class="btn secondary" href="/hospital-ai">连接数字人</a>
         </div>
       </div>
 
       <aside class="specialty-visual reveal" aria-label="专病 AI 结构示意">
-        <div class="specialty-mark" aria-hidden="true">
-          <svg viewBox="0 0 520 420">
-            <defs>
-              <linearGradient id="rhinitisFlowInk" x1="112" x2="394" y1="312" y2="118" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#0d3e39" />
-                <stop offset=".62" stop-color="#126b61" />
-                <stop offset="1" stop-color="#21b39e" />
-              </linearGradient>
-            </defs>
-            <rect x="120" y="70" width="280" height="280" fill="none" stroke="#1e2e2b" stroke-opacity=".14" />
-            <path d="M166 312V128L260 250L354 128V312" fill="none" stroke="url(#rhinitisFlowInk)" stroke-width="18" stroke-linecap="square" stroke-linejoin="miter" />
-            <path d="M86 210h54M380 210h54M120 104h48M352 104h48M120 316h48M352 316h48" fill="none" stroke="#126b61" stroke-opacity=".28" stroke-width="2" />
-            <path d="M120 128v-32h32M400 292v32h-32" fill="none" stroke="#a96843" stroke-width="3" stroke-linecap="square" />
-            <rect x="386" y="118" width="16" height="16" fill="#21b39e" />
-            <rect x="118" y="286" width="10" height="10" fill="#a96843" />
-            <text x="260" y="382" text-anchor="middle" fill="#6f7e78" font-family="SFMono-Regular, Cascadia Mono, Roboto Mono, monospace" font-size="12" letter-spacing="3">MEDFLOW</text>
-          </svg>
+        <div class="specialty-mark product" aria-hidden="true">
+          <div class="intake-console">
+            <div class="console-top">
+              <span>Rhinitis intake</span>
+              <span>01</span>
+            </div>
+            <div class="consult-strip">
+              <div class="consult-line">
+                <code>SX</code>
+                <div>
+                  <strong>症状谱</strong>
+                  <span>鼻塞、喷嚏、流涕、鼻痒、眼部症状</span>
+                </div>
+              </div>
+              <div class="consult-line">
+                <code>TRG</code>
+                <div>
+                  <strong>诱因</strong>
+                  <span>季节、花粉、尘螨、冷空气、环境暴露</span>
+                </div>
+              </div>
+              <div class="consult-line">
+                <code>HX</code>
+                <div>
+                  <strong>病史</strong>
+                  <span>过敏史、用药史、检查史、家族史</span>
+                </div>
+              </div>
+            </div>
+            <div class="console-bottom">
+              <span>Doctor summary ready</span>
+              <span>MedFlow</span>
+            </div>
+          </div>
         </div>
         <div class="specialty-terms">
-          <div><code>INTAKE</code><span>患者端信息采集</span></div>
-          <div><code>SUMMARY</code><span>医生端病史摘要</span></div>
-          <div><code>EDU</code><span>数字人宣教入口</span></div>
+          <div><code>INPUT</code><span>患者症状与病史采集</span></div>
+          <div><code>OUTPUT</code><span>医生接诊摘要</span></div>
+          <div><code>FOLLOW</code><span>宣教与复诊提醒</span></div>
         </div>
       </aside>
     </section>
@@ -667,43 +895,94 @@
       <div class="wrap">
         <div class="section-head">
           <div>
-            <div class="label reveal">Core modules</div>
-            <h2 class="reveal">让专病信息在接诊前变得清楚。</h2>
+            <div class="label reveal">Clinical modules</div>
+            <h2 class="reveal">把患者叙述转成门诊可用信息。</h2>
           </div>
           <p class="reveal">
-            系统用于信息采集、医学内容整理和院内宣教展示，不替代医生诊断与治疗决策。
+            面向耳鼻喉门诊的诊前环节，减少重复询问，让医生更快看到病情脉络。
           </p>
         </div>
 
         <div class="module-list reveal">
           <article class="module-row">
             <code>01</code>
-            <h3>预问诊采集</h3>
-            <p>围绕鼻塞、喷嚏、流涕、鼻痒、眼部症状、季节诱因、过敏史和既往用药收集信息。</p>
+            <h3>患者预问诊</h3>
+            <p>按鼻部症状、发作时间、诱因暴露、伴随症状、过敏史与用药史进行分层追问。</p>
           </article>
           <article class="module-row">
             <code>02</code>
-            <h3>结构化摘要</h3>
-            <p>把患者自然语言描述整理为主诉、现病史、诱因暴露、既往检查与待确认事项。</p>
+            <h3>医生摘要</h3>
+            <p>输出主诉、现病史、诱因线索、既往治疗和需进一步确认的问题，方便接诊前浏览。</p>
           </article>
           <article class="module-row">
             <code>03</code>
-            <h3>宣教入口</h3>
-            <p>将检查说明、常见问题、用药注意和日常管理内容同步到网页或数字人展示。</p>
+            <h3>专病宣教</h3>
+            <p>将院内确认的检查说明、用药注意、环境控制和复诊提醒，转化为患者容易理解的内容。</p>
+          </article>
+          <article class="module-row">
+            <code>04</code>
+            <h3>反馈闭环</h3>
+            <p>保留医生修订和内容版本记录，让专病知识库随科室实际工作持续更新。</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section alt" id="workflow">
+    <section class="section alt" id="product">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="label reveal">Product view</div>
+            <h2 class="reveal">一端采集，一端摘要。</h2>
+          </div>
+          <p class="reveal">
+            患者端保持简洁，医生端突出主诉、诱因、病史和待确认项。
+          </p>
+        </div>
+
+        <div class="product-stage reveal">
+          <article class="questionnaire">
+            <div class="question-copy">
+              <div class="label">Patient intake</div>
+              <h3>按症状逻辑追问</h3>
+              <p>系统根据回答动态进入下一组问题，优先确认主诉、持续时间、诱因和危险信号。</p>
+            </div>
+            <div class="symptom-grid" aria-label="预问诊字段">
+              <div class="symptom-chip">鼻塞 <span>severity</span></div>
+              <div class="symptom-chip">喷嚏流涕 <span>frequency</span></div>
+              <div class="symptom-chip">鼻痒眼痒 <span>trigger</span></div>
+              <div class="symptom-chip">既往用药 <span>history</span></div>
+            </div>
+          </article>
+
+          <article class="summary-board">
+            <div class="label">Doctor desk</div>
+            <h3>接诊前摘要</h3>
+            <p>摘要保留患者原始表达，并按门诊阅读习惯拆分为主诉、线索和待确认项。</p>
+            <div class="summary-note">
+              <code>CHIEF</code>
+              <strong>鼻塞伴喷嚏流涕，反复发作</strong>
+              <span>系统自动提取主诉与持续时间，保留患者原始表达。</span>
+            </div>
+            <div class="summary-note">
+              <code>CLUE</code>
+              <strong>疑似季节或环境诱发</strong>
+              <span>提示医生重点确认过敏原、鼻内镜和既往治疗情况。</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="workflow">
       <div class="wrap">
         <div class="section-head">
           <div>
             <div class="label reveal">Workflow</div>
-            <h2 class="reveal">从患者描述，到医生可读摘要。</h2>
+            <h2 class="reveal">适配门诊真实节奏。</h2>
           </div>
           <p class="reveal">
-            按门诊前、中、后的信息流组织，便于和医院现有分诊、接诊、宣教流程衔接。
+            诊前采集、接诊浏览、诊后宣教保持独立模块，便于医院按阶段上线。
           </p>
         </div>
 
@@ -711,29 +990,29 @@
           <article class="flow-step">
             <code>Before</code>
             <div>
-              <h3>采集</h3>
-              <p>患者在就诊前补充症状、诱因、病史和用药。</p>
+              <h3>诊前采集</h3>
+              <p>患者在预约后或候诊时完成预问诊。</p>
             </div>
           </article>
           <article class="flow-step">
             <code>During</code>
             <div>
-              <h3>摘要</h3>
-              <p>医生查看结构化病史和需要重点确认的信息。</p>
+              <h3>医生浏览</h3>
+              <p>接诊前查看摘要、待确认项和重点线索。</p>
             </div>
           </article>
           <article class="flow-step">
             <code>After</code>
             <div>
-              <h3>宣教</h3>
-              <p>患者通过网页或数字人查看院内确认内容。</p>
+              <h3>患者宣教</h3>
+              <p>诊后推送科室确认过的管理建议和复诊提醒。</p>
             </div>
           </article>
           <article class="flow-step">
             <code>Maintain</code>
             <div>
-              <h3>更新</h3>
-              <p>知识库和宣教内容按科室版本持续维护。</p>
+              <h3>内容维护</h3>
+              <p>医生反馈进入版本管理，持续优化问诊路径。</p>
             </div>
           </article>
         </div>
@@ -744,8 +1023,8 @@
       <div class="wrap reveal">
         <div>
           <div class="label">Specialty application</div>
-          <h2>形成可上线的专病 AI 应用样板。</h2>
-          <p>从过敏性鼻炎等高频场景开始，逐步扩展到其他耳鼻喉专病内容、预问诊流程与宣教系统。</p>
+          <h2>从过敏性鼻炎，延展到更多耳鼻喉专病。</h2>
+          <p>鼻敏智诊服务诊前信息整理、医生辅助阅读与患者宣教，适合门诊前后衔接。</p>
         </div>
         <a class="btn" href="/">返回 MedFlow 官网</a>
       </div>

@@ -13,3 +13,4 @@ output/
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+tmp/pdfs/
