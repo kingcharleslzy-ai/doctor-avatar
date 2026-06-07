@@ -18,6 +18,7 @@ const state = {
   timerId: null,
   presenceId: `web-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   assistantSpeaking: false,
+  playbackGeneration: 0,
   suppressOutputUntil: 0,
   lastInterruptAt: 0,
   bargeInActive: false,
@@ -102,6 +103,13 @@ function resetInterruptState() {
   state.suppressOutputUntil = 0;
   state.bargeInActive = false;
   state.expectingAssistantResponse = false;
+}
+
+function hasPendingAssistantPlayback() {
+  const context = state.audioContext;
+  return state.assistantSpeaking
+    || state.audioSources.size > 0
+    || Boolean(context && state.playbackAt > context.currentTime + 0.05);
 }
 
 function appendAiText(text) {
@@ -337,7 +345,7 @@ function handleRealtimeMessage(message) {
     return;
   }
   if (message.type === "asr_start") {
-    if (state.assistantSpeaking) {
+    if (hasPendingAssistantPlayback()) {
       stopAssistantPlayback({ source: "voice", suppressMs: BARGE_IN_SUPPRESS_MS });
     }
     setVoiceStatus("正在听...");
@@ -355,7 +363,7 @@ function handleRealtimeMessage(message) {
     const text = (message.text || "").trim();
     if (!text) return;
     if (message.is_interim) {
-      if (state.assistantSpeaking && text.length >= 2) {
+      if (text.length >= 2 && hasPendingAssistantPlayback()) {
         stopAssistantPlayback({ source: "voice", suppressMs: BARGE_IN_SUPPRESS_MS });
       }
       setVoiceStatus(`正在听：${text}`);
@@ -509,7 +517,9 @@ function floatToInt16(input) {
 async function playPcm16(base64Audio, sampleRate) {
   if (isSuppressingOutput()) return;
   if (!base64Audio) return;
+  const playbackGeneration = state.playbackGeneration;
   const context = await ensureAudioContext();
+  if (playbackGeneration !== state.playbackGeneration || isSuppressingOutput()) return;
   const binary = atob(base64Audio);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
@@ -517,6 +527,7 @@ async function playPcm16(base64Audio, sampleRate) {
   const buffer = context.createBuffer(1, samples.length, sampleRate);
   const channel = buffer.getChannelData(0);
   for (let i = 0; i < samples.length; i += 1) channel[i] = samples[i] / 32768;
+  if (playbackGeneration !== state.playbackGeneration || isSuppressingOutput()) return;
   const source = context.createBufferSource();
   source.buffer = buffer;
   source.connect(context.destination);
@@ -528,6 +539,7 @@ async function playPcm16(base64Audio, sampleRate) {
 }
 
 function stopPlayback() {
+  state.playbackGeneration += 1;
   state.audioSources.forEach((source) => {
     try { source.stop(); } catch (_) {}
   });

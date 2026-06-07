@@ -30,6 +30,8 @@ def configure_environment(fake_upstream_url: str) -> None:
     os.environ["DOUBAO_REALTIME_ENABLED"] = "true"
     os.environ["DOUBAO_REALTIME_API_KEY"] = "test-api-key"
     os.environ["DOUBAO_REALTIME_WS_URL"] = fake_upstream_url
+    os.environ["DOUBAO_REALTIME_MODEL"] = "1.2.1.1"
+    os.environ["DOUBAO_REALTIME_SPEAKER"] = "zh_male_yunzhou_jupiter_bigtts"
 
 
 async def wait_for_http(url: str, timeout: float = 8.0) -> None:
