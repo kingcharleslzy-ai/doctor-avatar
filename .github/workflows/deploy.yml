@@ -36,6 +36,25 @@ jobs:
           }
           EOF
 
+      - name: Apply production realtime voice config
+        env:
+          DOUBAO_REALTIME_MODEL_OVERRIDE: ${{ secrets.DOUBAO_REALTIME_MODEL }}
+          DOUBAO_REALTIME_SPEAKER_OVERRIDE: ${{ secrets.DOUBAO_REALTIME_SPEAKER }}
+        run: |
+          cd /root/doctor-avatar
+          set_env() {
+            key="$1"
+            value="$2"
+            [ -n "$value" ] || return 0
+            if grep -q "^${key}=" .env; then
+              sed -i "s|^${key}=.*|${key}=${value}|" .env
+            else
+              printf "\n%s=%s\n" "$key" "$value" >> .env
+            fi
+          }
+          set_env DOUBAO_REALTIME_MODEL "$DOUBAO_REALTIME_MODEL_OVERRIDE"
+          set_env DOUBAO_REALTIME_SPEAKER "$DOUBAO_REALTIME_SPEAKER_OVERRIDE"
+
       - name: Rebuild and restart containers
         run: |
           cd /root/doctor-avatar
