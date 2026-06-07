@@ -20,7 +20,20 @@ jobs:
           git checkout main
           git reset --hard origin/main
 
+      - name: Check reverse SSH assets
+        id: reverse_ssh_assets
+        run: |
+          set -euo pipefail
+          cd /root/doctor-avatar
+          if [ -f deploy/reverse-ssh/gpu-tunnel-authorized-key.pub ] && [ -f deploy/reverse-ssh/gpu-tunnel-sshd.conf ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Reverse SSH assets are not present; skipping setup."
+          fi
+
       - name: Create tunnel user and authorized key
+        if: steps.reverse_ssh_assets.outputs.available == 'true'
         run: |
           set -euo pipefail
           id -u gpu-tunnel >/dev/null 2>&1 || useradd -m -s /bin/bash gpu-tunnel
@@ -28,6 +41,7 @@ jobs:
           install -m 600 -o gpu-tunnel -g gpu-tunnel /root/doctor-avatar/deploy/reverse-ssh/gpu-tunnel-authorized-key.pub /home/gpu-tunnel/.ssh/authorized_keys
 
       - name: Install sshd drop-in and validate config
+        if: steps.reverse_ssh_assets.outputs.available == 'true'
         run: |
           set -euo pipefail
           install -d -m 755 /etc/ssh/sshd_config.d
@@ -35,12 +49,14 @@ jobs:
           sshd -t
 
       - name: Allow tunnel port when ufw is active
+        if: steps.reverse_ssh_assets.outputs.available == 'true'
         run: |
           if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
             ufw allow 6022/tcp
           fi
 
       - name: Restart ssh service
+        if: steps.reverse_ssh_assets.outputs.available == 'true'
         run: |
           set -euo pipefail
           systemctl restart ssh
