@@ -77,6 +77,15 @@ class Settings(BaseSettings):
 
     doctor_memory_db_path: str = Field(default=str(BASE_DIR / "data" / "doctor_memory.db"), alias="DOCTOR_MEMORY_DB_PATH")
     doctor_memory_bootstrap: bool = Field(default=True, alias="DOCTOR_MEMORY_BOOTSTRAP")
+    rhinitis_evidence_db_path: str = Field(
+        default=str(BASE_DIR / "data" / "rhinitis_evidence.db"),
+        alias="RHINITIS_EVIDENCE_DB_PATH",
+    )
+    rhinitis_evidence_review_enabled: bool = Field(default=False, alias="RHINITIS_EVIDENCE_REVIEW_ENABLED")
+    rhinitis_evidence_seed_snapshot_enabled: bool = Field(
+        default=True,
+        alias="RHINITIS_EVIDENCE_SEED_SNAPSHOT_ENABLED",
+    )
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",

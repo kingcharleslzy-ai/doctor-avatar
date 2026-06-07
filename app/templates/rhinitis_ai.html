@@ -563,6 +563,259 @@
       font-size: 15px;
     }
 
+    .evidence-lab {
+      display: grid;
+      grid-template-columns: minmax(0, .74fr) minmax(320px, .44fr);
+      gap: clamp(26px, 6vw, 78px);
+      align-items: start;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .evidence-console {
+      display: grid;
+      gap: 24px;
+      padding: clamp(22px, 3.2vw, 36px) 0 0;
+      min-width: 0;
+    }
+
+    .evidence-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+    }
+
+    .metric-tile {
+      min-height: 116px;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      padding: 18px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 246, .42);
+    }
+
+    .metric-tile code,
+    .source-row code,
+    .result-row code {
+      color: var(--copper);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .metric-tile strong {
+      font-family: var(--serif);
+      font-size: clamp(26px, 3.4vw, 44px);
+      line-height: 1;
+      color: var(--green-deep);
+    }
+
+    .evidence-search {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .evidence-search input,
+    .evidence-search select {
+      min-width: 0;
+      min-height: 48px;
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 0;
+      background: rgba(255, 253, 246, .72);
+      color: var(--ink);
+      padding: 0 14px;
+      font: inherit;
+    }
+
+    .evidence-search button {
+      min-height: 48px;
+      border: 1px solid var(--green);
+      background: var(--green);
+      color: var(--paper);
+      padding: 0 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .result-list,
+    .source-list {
+      display: grid;
+      border-top: 1px solid var(--line-strong);
+      width: 100%;
+      min-width: 0;
+    }
+
+    .result-row,
+    .source-row {
+      display: grid;
+      gap: 8px;
+      padding: 17px 0;
+      border-bottom: 1px solid var(--line);
+      min-width: 0;
+    }
+
+    .result-row > *,
+    .source-row > * {
+      min-width: 0;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .result-row strong,
+    .source-row strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .result-row p,
+    .source-row span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .review-panel {
+      margin-top: clamp(24px, 4vw, 42px);
+      border-top: 1px solid var(--line-strong);
+      padding-top: 22px;
+      display: grid;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .review-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .review-head h3 {
+      font-family: var(--serif);
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.05;
+      margin: 6px 0 0;
+    }
+
+    .review-toolbar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .review-toolbar select {
+      min-width: 0;
+      min-height: 44px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 253, 246, .72);
+      color: var(--ink);
+      padding: 0 12px;
+      font: inherit;
+      border-radius: 0;
+    }
+
+    .review-status {
+      color: var(--muted);
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .review-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .review-actions button {
+      border: 1px solid var(--line-strong);
+      background: rgba(255, 253, 246, .7);
+      color: var(--ink);
+      padding: 8px 11px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .review-actions button[data-review-action="approve_patient"],
+    .review-actions button[data-review-action="approve_doctor"] {
+      border-color: var(--green);
+      color: var(--green-deep);
+    }
+
+    .review-actions button[data-review-action="reject"] {
+      color: #8d3d2f;
+      border-color: rgba(141, 61, 47, .45);
+    }
+
+    .review-actions button:disabled {
+      cursor: not-allowed;
+      opacity: .45;
+    }
+
+    .pack-list {
+      display: grid;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .pack-group {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+      border-top: 1px solid var(--line-strong);
+      padding-top: 16px;
+    }
+
+    .pack-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pack-head strong {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--green-deep);
+    }
+
+    .evidence-side {
+      display: grid;
+      gap: 26px;
+      padding: clamp(22px, 3.2vw, 36px) 0 0;
+      border-left: 1px solid var(--line);
+      padding-left: clamp(22px, 3vw, 34px);
+      min-width: 0;
+    }
+
+    .empty-state {
+      padding: 18px 0;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+    }
+
     .flow {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -735,6 +988,16 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .evidence-lab {
+        grid-template-columns: 1fr;
+      }
+
+      .evidence-side {
+        border-left: 0;
+        border-top: 1px solid var(--line-strong);
+        padding-left: 0;
+      }
+
       .questionnaire,
       .summary-board {
         min-height: auto;
@@ -797,6 +1060,12 @@
         grid-template-columns: 1fr;
       }
 
+      .evidence-metrics,
+      .evidence-search,
+      .review-toolbar {
+        grid-template-columns: 1fr;
+      }
+
       .flow {
         grid-template-columns: 1fr;
       }
@@ -824,6 +1093,7 @@
       <div class="nav-links">
         <a href="/">MedFlow 官网</a>
         <a href="#modules">能力</a>
+        <a href="/rhinitis-evidence">证据检索</a>
         <a href="#workflow">流程</a>
         <a class="nav-action" href="/hospital-ai">数字人演示</a>
       </div>
@@ -974,6 +1244,76 @@
       </div>
     </section>
 
+    <section class="section" id="evidence">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <div class="label reveal">Evidence library</div>
+            <h2 class="reveal">候选库尽量大，回答库严格小。</h2>
+          </div>
+          <p class="reveal">
+            证据库已经拆成检索页和审核页，介绍页只展示当前底座状态和进入入口。
+          </p>
+        </div>
+
+        <div class="evidence-lab reveal">
+          <div class="evidence-console">
+            <div class="evidence-metrics" aria-label="证据库统计">
+              <div class="metric-tile">
+                <code>Raw</code>
+                <strong id="evRawDocs">--</strong>
+                <span>候选资料</span>
+              </div>
+              <div class="metric-tile">
+                <code>Curated</code>
+                <strong id="evCuratedDocs">--</strong>
+                <span>精选证据</span>
+              </div>
+              <div class="metric-tile">
+                <code>Review</code>
+                <strong id="evNeedsReview">--</strong>
+                <span>待审核</span>
+              </div>
+              <div class="metric-tile">
+                <code>Alias</code>
+                <strong id="evAliases">--</strong>
+                <span>术语别名</span>
+              </div>
+            </div>
+            <div class="summary-note">
+              <code>EVIDENCE</code>
+              <strong>证据检索、审核队列和精选包单独管理</strong>
+              <span>检索和审核分开管理，候选资料只在审核页处理，精选证据优先服务医生摘要和患者宣教。</span>
+            </div>
+            <div class="hero-actions">
+              <a class="btn primary" href="/rhinitis-evidence">进入证据检索</a>
+              <a class="btn secondary" href="/rhinitis-review">进入证据审核</a>
+            </div>
+          </div>
+
+          <aside class="evidence-side" aria-label="证据库分层状态">
+            <div class="source-list">
+              <div class="source-row">
+                <code>Raw candidates</code>
+                <strong>大范围候选库</strong>
+                <span>PubMed、PMC、Europe PMC、药品标签、临床试验、医院宣教和环境资料先进入候选层。</span>
+              </div>
+              <div class="source-row">
+                <code>Curated evidence</code>
+                <strong>审核后回答库</strong>
+                <span>只有 approved 内容进入患者宣教、医生摘要和数字人脚本。</span>
+              </div>
+              <div class="source-row">
+                <code>Review boundary</code>
+                <strong>默认只读</strong>
+                <span>审核写入由环境变量控制，公网部署默认关闭。</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
     <section class="section" id="workflow">
       <div class="wrap">
         <div class="section-head">
@@ -1057,6 +1397,37 @@
         observer.observe(el);
       });
     }
+
+    const evidenceStats = {
+      raw: document.getElementById("evRawDocs"),
+      curated: document.getElementById("evCuratedDocs"),
+      review: document.getElementById("evNeedsReview"),
+      aliases: document.getElementById("evAliases"),
+    };
+
+    function setEvidenceText(node, text) {
+      if (node) node.textContent = text;
+    }
+
+    function numberText(value) {
+      return Number(value || 0).toLocaleString("zh-CN");
+    }
+
+    async function loadEvidenceStats() {
+      try {
+        const response = await fetch("/api/rhinitis/evidence/stats", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const stats = await response.json();
+        setEvidenceText(evidenceStats.raw, numberText(stats.raw_documents));
+        setEvidenceText(evidenceStats.curated, numberText(stats.curated_documents));
+        setEvidenceText(evidenceStats.review, numberText(stats.needs_review_documents));
+        setEvidenceText(evidenceStats.aliases, numberText(stats.aliases));
+      } catch (error) {
+        Object.values(evidenceStats).forEach((node) => setEvidenceText(node, "--"));
+      }
+    }
+
+    loadEvidenceStats();
   </script>
 </body>
 </html>

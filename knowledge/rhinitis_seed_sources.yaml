@@ -1,0 +1,406 @@
+aliases:
+  - alias: 鼻喷激素
+    canonical: 鼻用糖皮质激素 intranasal corticosteroid fluticasone mometasone budesonide
+    category: drug
+    language: zh
+    weight: 1.4
+  - alias: 糖皮质激素鼻喷
+    canonical: 鼻用糖皮质激素 intranasal corticosteroid
+    category: drug
+    language: zh
+    weight: 1.3
+  - alias: 氟替卡松
+    canonical: fluticasone 鼻喷激素 鼻用糖皮质激素
+    category: drug
+    language: zh
+    weight: 1.5
+  - alias: 辅舒良
+    canonical: fluticasone 氟替卡松 鼻喷激素
+    category: drug
+    language: zh
+    weight: 1.5
+  - alias: 莫米松
+    canonical: mometasone 鼻喷激素 鼻用糖皮质激素
+    category: drug
+    language: zh
+    weight: 1.4
+  - alias: 布地奈德
+    canonical: budesonide 鼻喷激素 鼻用糖皮质激素
+    category: drug
+    language: zh
+    weight: 1.4
+  - alias: 抗组胺
+    canonical: antihistamine cetirizine loratadine fexofenadine azelastine
+    category: drug
+    language: zh
+    weight: 1.2
+  - alias: 西替利嗪
+    canonical: cetirizine antihistamine 抗组胺
+    category: drug
+    language: zh
+    weight: 1.2
+  - alias: 氯雷他定
+    canonical: loratadine antihistamine 抗组胺
+    category: drug
+    language: zh
+    weight: 1.2
+  - alias: 孟鲁司特
+    canonical: montelukast leukotriene receptor antagonist 白三烯受体拮抗剂
+    category: drug
+    language: zh
+    weight: 1.1
+  - alias: 免疫治疗
+    canonical: allergen immunotherapy AIT SCIT SLIT 脱敏治疗
+    category: treatment
+    language: zh
+    weight: 1.4
+  - alias: 脱敏治疗
+    canonical: allergen immunotherapy AIT 免疫治疗
+    category: treatment
+    language: zh
+    weight: 1.4
+  - alias: 过敏原
+    canonical: allergen allergen-specific IgE skin prick test 皮肤点刺
+    category: exam
+    language: zh
+    weight: 1.3
+  - alias: IgE
+    canonical: immunoglobulin E allergen-specific IgE 过敏原
+    category: exam
+    language: en
+    weight: 1.3
+  - alias: 鼻内镜
+    canonical: nasal endoscopy inferior turbinate mucosa secretion polyp
+    category: exam
+    language: zh
+    weight: 1.4
+  - alias: 花粉
+    canonical: pollen aeroallergen seasonal allergic rhinitis
+    category: environment
+    language: zh
+    weight: 1.2
+
+documents:
+  - source_key: pubmed_cn_ar_guideline_2022
+    source_bucket: guideline_candidates
+    source_type: guideline
+    title: 中国变应性鼻炎诊断和治疗指南（2022年，修订版）
+    url: https://pubmed.ncbi.nlm.nih.gov/35078291/
+    pmid: "35078291"
+    year: 2022
+    journal_or_org: 中华耳鼻咽喉头颈外科杂志
+    language: zh
+    evidence_level: guideline
+    review_status: approved
+    license_status: public_metadata
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [指南, 诊断, 治疗, 鼻喷激素, 抗组胺, 免疫治疗, 过敏原]
+    content_summary: 中国成人变应性鼻炎诊断和治疗核心指南，适合作为医生端摘要、诊断依据提示和治疗路径边界。
+    chunks:
+      - heading: 适用场景
+        scenario: doctor_summary
+        content: 成人变应性鼻炎评估应综合症状特征、发作时间、诱因暴露、伴随眼部或哮喘症状、既往用药反应和过敏原检测等信息。线上系统只能整理病史和检查线索，不能替代面诊诊断。
+        topic_tags: [诊断, 医生摘要, 过敏原]
+      - heading: 治疗路径
+        scenario: doctor_summary
+        content: 指南相关治疗线索包括鼻用糖皮质激素、第二代抗组胺药、白三烯受体拮抗剂、鼻腔冲洗、环境控制和变应原免疫治疗等。系统应只做类别解释和待确认项，不生成处方剂量。
+        topic_tags: [鼻喷激素, 抗组胺, 孟鲁司特, 免疫治疗]
+      - heading: 患者边界
+        scenario: patient_education
+        patient_visible: true
+        content: 如果反复鼻塞、喷嚏、清水样流涕和鼻痒在接触花粉、尘螨、宠物或冷空气后加重，建议准备症状持续时间、诱因、既往用药和检查结果，再到耳鼻喉科或变态反应科评估。
+        topic_tags: [患者宣教, 花粉, 尘螨]
+
+  - source_key: pmc_chinese_ait_guideline_2022
+    source_bucket: guideline_candidates
+    source_type: guideline
+    title: "Chinese Guideline on Allergen Immunotherapy for Allergic Rhinitis: The 2022 Update"
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC9709690/
+    pmid: "36426395"
+    pmcid: PMC9709690
+    doi: 10.4168/aair.2022.14.6.604
+    year: 2022
+    journal_or_org: Allergy Asthma Immunol Res
+    language: en
+    evidence_level: guideline
+    review_status: approved
+    license_status: open_access
+    open_access: true
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [免疫治疗, 脱敏治疗, 尘螨, SCIT, SLIT, 合并哮喘]
+    content_summary: 中国变应原免疫治疗指南英文更新版，适合整理免疫治疗适应证、依从性和安全性提示。
+    chunks:
+      - heading: 免疫治疗候选项
+        scenario: doctor_summary
+        content: 变应原免疫治疗需要结合明确过敏原、症状严重程度、药物治疗效果、患者偏好、依从性、便利性和安全性进行评估，不能由线上系统单独决定。
+        topic_tags: [免疫治疗, 过敏原, 医生摘要]
+      - heading: 患者宣教
+        scenario: patient_education
+        patient_visible: true
+        content: 脱敏治疗通常需要较长周期和规范随访，是否适合要由医生结合过敏原检测、症状控制情况和个人风险判断。患者不要自行购买或更换治疗方案。
+        topic_tags: [患者宣教, 脱敏治疗, 随访]
+
+  - source_key: pubmed_icar_ar_2023
+    source_bucket: guideline_candidates
+    source_type: consensus
+    title: "International Consensus Statement on Allergy and Rhinology: Allergic Rhinitis 2023"
+    url: https://pubmed.ncbi.nlm.nih.gov/36878860/
+    pmid: "36878860"
+    year: 2023
+    journal_or_org: International Forum of Allergy & Rhinology
+    language: en
+    evidence_level: consensus
+    review_status: approved
+    license_status: public_metadata
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [共识, 诊断, 鉴别诊断, 治疗, 合并症]
+    content_summary: 国际过敏与鼻科学共识，覆盖变应性鼻炎定义、诊断、鉴别诊断、治疗和合并症。
+    chunks:
+      - heading: 共识用途
+        scenario: doctor_summary
+        content: 国际共识适合作为医生端背景证据，用于提示鉴别诊断、共病评估和治疗类别，不应用于向患者输出确定诊断或具体处方。
+        topic_tags: [共识, 鉴别诊断, 医生摘要]
+
+  - source_key: pubmed_rhinitis_2020_practice_parameter
+    source_bucket: guideline_candidates
+    source_type: guideline
+    title: "Rhinitis 2020: A practice parameter update"
+    url: https://pubmed.ncbi.nlm.nih.gov/32707227/
+    pmid: "32707227"
+    year: 2020
+    journal_or_org: J Allergy Clin Immunol
+    language: en
+    evidence_level: guideline
+    review_status: approved
+    license_status: public_metadata
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [指南, 鼻炎, 药物治疗, 鉴别诊断]
+    content_summary: 美国过敏/免疫学实践参数更新，适合作为药物类别、检查和鉴别诊断的辅助证据。
+    chunks:
+      - heading: 实践参数
+        scenario: doctor_summary
+        content: Rhinitis 2020 practice parameter 可用于补充药物类别、症状评估、合并疾病和鉴别诊断框架。面向患者时应转成通俗解释，不直接照搬医学术语。
+        topic_tags: [指南, 药物治疗, 医生摘要]
+
+  - source_key: pubmed_bsaci_rhinitis_2017
+    source_bucket: guideline_candidates
+    source_type: guideline
+    title: BSACI guideline for the diagnosis and management of allergic and non-allergic rhinitis
+    url: https://pubmed.ncbi.nlm.nih.gov/30239057/
+    pmid: "30239057"
+    year: 2017
+    journal_or_org: Clin Exp Allergy
+    language: en
+    evidence_level: guideline
+    review_status: needs_review
+    license_status: public_metadata
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [指南, 非变应性鼻炎, 鉴别诊断, 治疗]
+    content_summary: 英国 BSACI 鼻炎指南，适合候选库用于鉴别变应性与非变应性鼻炎，需医生审核后进入精选库。
+    chunks:
+      - heading: 鉴别诊断
+        scenario: research
+        content: 鼻炎评估应区分变应性鼻炎和非变应性鼻炎，症状、诱因、检查和治疗反应均可作为线索。该条目先作为研究端候选证据。
+        topic_tags: [鉴别诊断, 非变应性鼻炎]
+
+  - source_key: pumch_spring_ar_prevention
+    source_bucket: hospital_education_candidates
+    source_type: hospital_education
+    title: 北京协和医院：春季过敏性鼻炎的预防与治疗
+    url: https://www.pumch.cn/detail/45192.html
+    year: 2024
+    journal_or_org: 北京协和医院
+    language: zh
+    evidence_level: hospital_education
+    review_status: approved
+    license_status: public_webpage
+    open_access: true
+    patient_visible: true
+    doctor_visible: false
+    research_visible: true
+    topic_tags: [患者宣教, 春季, 花粉, 预防, 治疗]
+    content_summary: 三甲医院公开宣教，适合患者端解释春季花粉诱发、环境控制和就医准备。
+    chunks:
+      - heading: 春季诱因
+        scenario: patient_education
+        patient_visible: true
+        doctor_visible: false
+        content: 春季过敏性鼻炎常与花粉等季节性过敏原有关。患者可记录症状发作月份、户外活动、接触花草后是否加重，以及是否伴眼痒、流泪或咳嗽。
+        topic_tags: [花粉, 春季, 患者宣教]
+
+  - source_key: pumch_nasal_irrigation
+    source_bucket: hospital_education_candidates
+    source_type: hospital_education
+    title: 北京协和医院：鼻腔冲洗方式
+    url: https://ims.pumch.cn/detail/21766.html
+    year: 2024
+    journal_or_org: 北京协和医院
+    language: zh
+    evidence_level: hospital_education
+    review_status: approved
+    license_status: public_webpage
+    open_access: true
+    patient_visible: true
+    doctor_visible: false
+    research_visible: true
+    topic_tags: [患者宣教, 鼻腔冲洗, 护理]
+    content_summary: 三甲医院鼻腔冲洗宣教，适合患者端解释鼻腔护理边界。
+    chunks:
+      - heading: 鼻腔冲洗
+        scenario: patient_education
+        patient_visible: true
+        doctor_visible: false
+        content: 鼻腔冲洗可作为鼻部护理方式之一，但冲洗液、频率和操作方式应遵医嘱或参考医院宣教。若冲洗后明显疼痛、出血或不适，应停止并咨询医生。
+        topic_tags: [鼻腔冲洗, 患者宣教]
+
+  - source_key: pku_ar_prevention
+    source_bucket: hospital_education_candidates
+    source_type: hospital_education
+    title: 北京大学医院：过敏性鼻炎日常预防
+    url: https://hospital.pku.edu.cn/info/1057/2270.htm
+    year: 2023
+    journal_or_org: 北京大学医院
+    language: zh
+    evidence_level: hospital_education
+    review_status: approved
+    license_status: public_webpage
+    open_access: true
+    patient_visible: true
+    doctor_visible: false
+    research_visible: true
+    topic_tags: [患者宣教, 日常预防, 诱因]
+    content_summary: 医院公开科普，适合患者端环境控制和就医准备解释。
+    chunks:
+      - heading: 日常预防
+        scenario: patient_education
+        patient_visible: true
+        doctor_visible: false
+        content: 日常预防重点是识别和减少诱因暴露，例如尘螨、花粉、宠物毛发、冷空气或粉尘。系统应帮助患者记录诱因，而不是承诺完全避免后即可治愈。
+        topic_tags: [诱因, 尘螨, 花粉, 患者宣教]
+
+  - source_key: nhc_ent_clinical_pathway
+    source_bucket: guideline_candidates
+    source_type: clinical_pathway
+    title: 国家卫健委耳鼻咽喉科临床路径相关材料
+    url: https://www.nhc.gov.cn/
+    year: 2009
+    journal_or_org: 国家卫生健康委
+    language: zh
+    evidence_level: clinical_pathway
+    review_status: needs_review
+    license_status: public_webpage
+    open_access: true
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [临床路径, 鼻窦炎, 鉴别诊断, 检查]
+    content_summary: 国家卫生行政部门发布过耳鼻咽喉科临床路径材料，其中鼻-鼻窦炎相关路径可辅助鉴别诊断和检查流程研究。
+    chunks:
+      - heading: 临床路径候选
+        scenario: research
+        content: 鼻敏智诊需要区分过敏性鼻炎、慢性鼻-鼻窦炎、急性感染和其他鼻部疾病。临床路径类材料可用于研究端梳理线下检查和鉴别诊断流程。
+        topic_tags: [临床路径, 鼻窦炎, 鉴别诊断]
+
+  - source_key: dailymed_fluticasone_candidate
+    source_bucket: drug_candidates
+    source_type: drug_label
+    title: DailyMed fluticasone nasal label candidate
+    url: https://dailymed.nlm.nih.gov/dailymed/search.cfm?query=fluticasone
+    journal_or_org: DailyMed / National Library of Medicine
+    language: en
+    evidence_level: drug_label
+    review_status: needs_review
+    license_status: public_label
+    open_access: true
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [药品说明书, 氟替卡松, fluticasone, 鼻喷激素]
+    content_summary: DailyMed 氟替卡松鼻用制剂候选标签，用于药品说明书数据桶和药名别名测试，需人工确认具体商品和标签版本。
+    chunks:
+      - heading: 药品标签候选
+        scenario: research
+        content: Fluticasone nasal label candidate 用于说明书候选库。进入患者端前必须确认具体标签版本、适应症、禁忌、不良反应和本地可用药品名称。
+        topic_tags: [氟替卡松, fluticasone, 鼻喷激素, 药品说明书]
+
+  - source_key: rhinitis_drug_alias_template
+    source_bucket: doctor_material_candidates
+    source_type: doctor_note
+    title: 过敏性鼻炎常用药名别名模板
+    journal_or_org: MedFlow doctor-reviewed draft
+    language: zh
+    evidence_level: consensus
+    review_status: approved
+    license_status: internal_draft
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [药名别名, 鼻喷激素, 氟替卡松, 莫米松, 布地奈德, 抗组胺]
+    content_summary: 用于把患者口语商品名、通用名和药物类别映射到医生端摘要字段，不替代药品说明书。
+    chunks:
+      - heading: 鼻喷激素别名
+        scenario: doctor_summary
+        content: 患者提到辅舒良时，系统可先映射为氟替卡松 fluticasone 和鼻用糖皮质激素类别；患者提到莫米松、布地奈德时，也归入鼻喷激素/鼻用糖皮质激素用药史。具体商品、剂型、用法和禁忌必须以医生确认和药品说明书为准。
+        topic_tags: [辅舒良, 氟替卡松, fluticasone, 莫米松, 布地奈德, 鼻喷激素]
+      - heading: 抗组胺别名
+        scenario: doctor_summary
+        content: 患者提到氯雷他定、西替利嗪、非索非那定、地氯雷他定或左西替利嗪时，系统可归入第二代抗组胺药用药史，用于医生端摘要和待确认项。
+        topic_tags: [抗组胺, 氯雷他定, 西替利嗪, 非索非那定]
+
+  - source_key: pollen_forecast_candidate
+    source_bucket: environment_candidates
+    source_type: environment
+    title: 中国花粉浓度预报与地方花粉监测候选源
+    url: https://www.cma.gov.cn/
+    journal_or_org: 中国气象局 / 地方花粉监测服务
+    language: zh
+    evidence_level: environment
+    review_status: needs_review
+    license_status: public_webpage
+    open_access: true
+    patient_visible: false
+    doctor_visible: false
+    research_visible: true
+    topic_tags: [花粉, 环境暴露, 季节, 诱因]
+    content_summary: 花粉浓度和季节暴露数据可作为诱因解释和候诊提醒辅助，不作为诊断依据。
+    chunks:
+      - heading: 环境数据边界
+        scenario: research
+        content: 花粉浓度、空气质量和季节信息可帮助解释症状诱因，但不能单独判断是否为过敏性鼻炎。患者端只应提示记录和减少暴露，不应给出诊断结论。
+        topic_tags: [花粉, 环境暴露, 诱因]
+
+  - source_key: nasal_endoscopy_observation_template
+    source_bucket: doctor_material_candidates
+    source_type: doctor_note
+    title: 鼻内镜观察要点模板
+    journal_or_org: MedFlow doctor-reviewed draft
+    language: zh
+    evidence_level: consensus
+    review_status: approved
+    license_status: internal_draft
+    open_access: false
+    patient_visible: false
+    doctor_visible: true
+    research_visible: true
+    topic_tags: [鼻内镜, 图像观察, 下鼻甲, 黏膜水肿, 分泌物]
+    content_summary: 鼻内镜多模态原型的观察字段模板，只描述可见特征，不做自动诊断。
+    chunks:
+      - heading: 图像观察字段
+        scenario: doctor_summary
+        content: 鼻内镜图像观察建议记录图像质量、拍摄部位、鼻黏膜颜色和水肿、下鼻甲状态、分泌物性质、息肉样改变、鼻中隔偏曲线索和需要医生确认的异常。系统不应仅凭图片输出诊断。
+        topic_tags: [鼻内镜, 图像观察, 医生摘要]

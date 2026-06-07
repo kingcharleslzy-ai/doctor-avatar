@@ -7,7 +7,7 @@ from pathlib import Path
 
 import asyncio
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -36,8 +36,18 @@ from .doubao_realtime import (
 )
 from .knowledge import load_doctor_profile
 from .memory_snapshot import get_memory_status
-from .models import PresenceHeartbeatRequest
+from .models import PresenceHeartbeatRequest, RhinitisEvidenceBatchReviewRequest, RhinitisEvidenceReviewRequest
 from .ops import record_presence, record_request
+from .rhinitis_evidence import (
+    evidence_stats,
+    get_evidence_document,
+    init_rhinitis_evidence_db,
+    review_evidence_batch,
+    review_pack,
+    review_queue,
+    review_evidence_document,
+    search_evidence,
+)
 
 
 from contextlib import asynccontextmanager
@@ -45,6 +55,7 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def lifespan(application):
     init_memory_db()
+    init_rhinitis_evidence_db()
     yield
 
 app = FastAPI(title="Doctor Avatar MVP", version="0.1.0", lifespan=lifespan)
@@ -176,6 +187,92 @@ def public_doctor_profile() -> dict[str, object]:
     }
 
 
+@app.get("/api/rhinitis/evidence/stats")
+def rhinitis_evidence_stats() -> dict[str, object]:
+    return evidence_stats()
+
+
+@app.get("/api/rhinitis/evidence/search")
+def rhinitis_evidence_search(
+    q: str = Query(default="", max_length=240),
+    scope: str = Query(default="curated", pattern="^(raw|curated)$"),
+    scenario: str = Query(default="", max_length=80),
+    source_bucket: str = Query(default="", max_length=120),
+    limit: int = Query(default=8, ge=1, le=20),
+) -> dict[str, object]:
+    return search_evidence(q, scope=scope, scenario=scenario, source_bucket=source_bucket, limit=limit)
+
+
+@app.get("/api/rhinitis/evidence/review-queue")
+def rhinitis_evidence_review_queue(
+    status: str = Query(default="needs_review", pattern="^(candidate|needs_review|approved|rejected|deprecated)$"),
+    source_bucket: str = Query(default="", max_length=120),
+    evidence_level: str = Query(default="", max_length=80),
+    topic_tag: str = Query(default="", max_length=80),
+    limit: int = Query(default=12, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, object]:
+    return review_queue(
+        status=status,
+        source_bucket=source_bucket,
+        evidence_level=evidence_level,
+        topic_tag=topic_tag,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@app.get("/api/rhinitis/evidence/review-pack")
+def rhinitis_evidence_review_pack() -> dict[str, object]:
+    return review_pack()
+
+
+@app.get("/api/rhinitis/evidence/documents/{document_id}")
+def rhinitis_evidence_document(
+    document_id: int,
+    scope: str = Query(default="raw", pattern="^(raw|curated)$"),
+) -> dict[str, object]:
+    document = get_evidence_document(document_id, scope=scope)
+    if not document:
+        raise HTTPException(status_code=404, detail="Rhinitis evidence document not found")
+    return document
+
+
+@app.post("/api/rhinitis/evidence/review")
+def rhinitis_evidence_review(payload: RhinitisEvidenceReviewRequest) -> dict[str, object]:
+    if not settings.rhinitis_evidence_review_enabled:
+        raise HTTPException(status_code=403, detail="Rhinitis evidence review writes are disabled.")
+    try:
+        return review_evidence_document(
+            document_scope=payload.document_scope,
+            document_id=payload.document_id,
+            status=payload.status,
+            note=payload.note,
+            reviewer=payload.reviewer,
+            patient_visible=payload.patient_visible,
+            doctor_visible=payload.doctor_visible,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/rhinitis/evidence/review-batch")
+def rhinitis_evidence_review_batch(payload: RhinitisEvidenceBatchReviewRequest) -> dict[str, object]:
+    if not settings.rhinitis_evidence_review_enabled:
+        raise HTTPException(status_code=403, detail="Rhinitis evidence review writes are disabled.")
+    try:
+        return review_evidence_batch(
+            document_ids=payload.document_ids,
+            status=payload.status,
+            note=payload.note,
+            reviewer=payload.reviewer,
+            patient_visible=payload.patient_visible,
+            doctor_visible=payload.doctor_visible,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/api/ops/presence")
 def ops_presence(payload: PresenceHeartbeatRequest, request: Request) -> dict[str, str]:
     record_presence(payload.session_id, request.headers.get("user-agent"))
@@ -205,6 +302,16 @@ def hospital_ai(request: Request) -> HTMLResponse:
 @app.get("/rhinitis-ai", response_class=HTMLResponse)
 def rhinitis_ai(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("rhinitis_ai.html", {"request": request, "v": _CACHE_BUST})
+
+
+@app.get("/rhinitis-evidence", response_class=HTMLResponse)
+def rhinitis_evidence_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("rhinitis_evidence.html", {"request": request, "v": _CACHE_BUST, "mode": "search"})
+
+
+@app.get("/rhinitis-review", response_class=HTMLResponse)
+def rhinitis_review_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("rhinitis_evidence.html", {"request": request, "v": _CACHE_BUST, "mode": "review"})
 
 
 @app.websocket("/ws/doubao/realtime")

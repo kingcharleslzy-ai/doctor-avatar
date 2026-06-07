@@ -13,4 +13,5 @@ output/
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+data/rhinitis_ai_review/
 tmp/pdfs/

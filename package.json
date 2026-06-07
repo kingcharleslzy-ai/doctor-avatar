@@ -9,8 +9,12 @@
   "scripts": {
     "validate:user": "node scripts/validate_user_ui.mjs",
     "validate:consultation-flow": ".venv/bin/python scripts/validate_consultation_flow.py",
+    "validate:rhinitis-evidence": ".venv/bin/python scripts/validate_rhinitis_evidence.py",
     "validate:doubao-realtime": ".venv/bin/python scripts/validate_doubao_realtime.py",
-    "validate:doubao-cloud": ".venv/bin/python scripts/validate_doubao_cloud.py"
+    "validate:doubao-cloud": ".venv/bin/python scripts/validate_doubao_cloud.py",
+    "rhinitis:evidence:export-snapshot": ".venv/bin/python scripts/rhinitis_evidence_snapshot.py export",
+    "rhinitis:evidence:import-snapshot": ".venv/bin/python scripts/rhinitis_evidence_snapshot.py import",
+    "rhinitis:evidence:snapshot-stats": ".venv/bin/python scripts/rhinitis_evidence_snapshot.py stats"
   },
   "repository": {
     "type": "git",

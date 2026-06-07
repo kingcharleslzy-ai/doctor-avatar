@@ -46,7 +46,12 @@ jobs:
           cd /root/doctor-avatar
           docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml exec -T app python scripts/sync_memory_snapshot.py --prune-missing
 
-      - name: Restart app after memory sync
+      - name: Sync rhinitis evidence snapshot
+        run: |
+          cd /root/doctor-avatar
+          docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml exec -T app python scripts/rhinitis_evidence_snapshot.py import
+
+      - name: Restart app after data sync
         run: |
           cd /root/doctor-avatar
           docker compose -f docker-compose.prod.yml -f docker-compose.host-proxy.yml restart app
