@@ -66,6 +66,8 @@ def main() -> None:
     assert "否认发热、吞咽明显疼痛或呼吸不顺" in voice_throat[5].external_rag
     assert "阶段性总结参考" in voice_throat[5].external_rag
     assert "不要只说线下检查" in voice_throat[5].external_rag
+    assert "更符合或更倾向" in voice_throat[5].external_rag
+    assert "不要给确定诊断、处方剂量或保证性结论" not in voice_throat[5].external_rag
 
     voice_nosebleed = _voice_turns(["我鼻子流血。"])
     assert voice_nosebleed[0].next_question == "这次流鼻血现在按压能止住吗？"
