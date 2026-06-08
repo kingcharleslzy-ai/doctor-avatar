@@ -225,6 +225,8 @@ async def validate() -> dict[str, Any]:
         assert all({"title", "content"} <= set(item) for item in rag_items), rag_items
         packed_rag = json.dumps(rag_items, ensure_ascii=False)
         assert "我鼻子流血" in packed_rag, packed_rag
+        assert "按鼻出血进行安全分层" in packed_rag, packed_rag
+        assert "按压后能否止住" in packed_rag, packed_rag
         assert "本轮唯一允许追问的问题" not in packed_rag, packed_rag
         assert "你现在最主要的不舒服是什么" not in packed_rag, packed_rag
 

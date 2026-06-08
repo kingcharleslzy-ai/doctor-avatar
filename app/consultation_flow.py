@@ -19,7 +19,7 @@ STAGE_LABELS = {
     "summary": "阶段性总结",
 }
 
-NOSE_TERMS = ["鼻塞", "流鼻涕", "流涕", "喷嚏", "打喷嚏", "鼻痒", "嗅觉", "鼻涕", "鼻出血"]
+NOSE_TERMS = ["鼻塞", "流鼻涕", "流涕", "喷嚏", "打喷嚏", "鼻痒", "嗅觉", "鼻涕", "鼻出血", "流鼻血", "鼻血", "鼻子流血"]
 THROAT_TERMS = ["嗓子", "喉咙", "咽喉", "咽痛", "咽干", "咽痒", "异物感", "声音嘶哑", "吞咽", "痰"]
 EAR_TERMS = ["耳闷", "耳鸣", "耳痛", "耳朵", "听力"]
 SLEEP_TERMS = ["打鼾", "憋醒", "呼噜", "睡眠呼吸暂停"]
@@ -437,12 +437,14 @@ class ConsultationOrchestrator:
         return _fit_external_rag(items)
 
     def _build_voice_external_rag(self, user_text: str, hits: list[KnowledgeHit]) -> str:
+        strategy = self._voice_consultation_strategy(user_text)
         instructions = (
             f"患者本轮说：{user_text}\n"
             f"已收集病史：{self._facts_summary()}\n"
+            f"本轮问诊策略：{strategy}\n"
             "回答要求：请根据患者本轮表达和下方资料，用医生口吻做简短、口语化回应。"
             "不要重复询问患者已经明确说出的主诉。"
-            "信息不足时，只追问一个当前最关键的问题，说完等待患者回答。"
+            "信息不足时，只追问一个当前医学优先级最高的问题，说完等待患者回答。"
             "不要写成列表，不要报资料来源，不要说正在读取数据库。"
             "如出现持续大量出血、止不住血、明显头痛、视力变化、呼吸困难或意识异常，直接建议尽快线下急诊或耳鼻喉专科处理。"
         )
@@ -450,6 +452,37 @@ class ConsultationOrchestrator:
         for hit in hits:
             items.append({"title": f"医疗资料：{hit.source}", "content": hit.snippet})
         return _fit_external_rag(items)
+
+    def _voice_consultation_strategy(self, user_text: str) -> str:
+        text = _clean_text(user_text)
+        if _has_any(text, ["鼻出血", "流鼻血", "鼻血", "鼻子流血"]):
+            return (
+                "按鼻出血进行安全分层，不要再问患者最主要哪里不舒服。"
+                "首要判断现在是否还在流、按压后能否止住、已经流了多久；"
+                "随后再按顺序了解出血量、是否反复发作、单侧还是双侧、是否挖鼻或外伤、鼻腔干燥或鼻炎、是否用抗凝药或有高血压，"
+                "最后排查明显头痛、视力变化、头晕乏力等危险信号。"
+                "本轮优先问止血情况，可以把持续时间合并在同一句里，但不要追加更多问题。"
+            )
+        if self.facts.get("complaint_area") == "鼻部":
+            return (
+                "按鼻部症状问诊推进。优先确认持续时间和单侧/双侧，再追问鼻塞、流涕性质、喷嚏鼻痒、嗅觉变化、诱因、睡眠影响，"
+                "之后再问用药、鼻内镜/过敏原/鼻窦CT等检查史，并排查发热、明显头痛、鼻出血或视力变化。"
+                "本轮只问当前最缺的一个信息，不要一次问成症状清单。"
+            )
+        if self.facts.get("complaint_area") == "咽喉":
+            return (
+                "按咽喉不适问诊推进。先确认持续时间，再区分疼、干、异物感、声音嘶哑或吞咽痛，随后了解发热、呼吸不顺、熬夜辛辣用嗓和用药情况。"
+                "本轮只问当前最缺的一个信息。"
+            )
+        if self.facts.get("complaint_area") == "耳部":
+            return (
+                "按耳部症状问诊推进。先确认持续时间，再区分耳闷、耳痛、耳鸣、听力下降，随后排查眩晕、发热、流脓或听力突然下降。"
+                "本轮只问当前最缺的一个信息。"
+            )
+        return (
+            "先根据患者话语识别主诉属于鼻部、咽喉、耳部还是睡眠相关；"
+            "若主诉已经明确，不要再笼统追问主诉，直接进入该主诉的持续时间、严重程度和危险信号分层。"
+        )
 
 
 def _fit_external_rag(items: list[dict[str, str]]) -> str:
