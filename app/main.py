@@ -374,6 +374,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             pending_chat_end_payload: dict | None = None
             pending_voice_query = ""
             pending_rag_chat_by_reply: dict[str, str] = {}
+            confirmed_rag_reply_ids: set[str] = set()
             recent_assistant_texts: list[tuple[str, float]] = []
 
             def _remember_assistant_text(content: str) -> None:
@@ -409,13 +410,29 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             def _should_send_direct_response(turn) -> bool:
                 return bool(getattr(turn, "direct_response", ""))
 
+            async def _send_rag_chat(content: str, payload: dict) -> None:
+                if not content:
+                    return
+                _remember_assistant_text(content)
+                await ws.send_json(
+                    {
+                        "type": "chat",
+                        "content": content,
+                        "question_id": payload.get("question_id"),
+                        "reply_id": payload.get("reply_id"),
+                        "payload": payload,
+                    }
+                )
+
             async def _send_direct_response(turn) -> None:
-                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_rag_chat_by_reply, confirmed_rag_reply_ids
                 content = turn.direct_response
                 _remember_assistant_text(content)
                 rag_turn_active = False
                 active_tts_type = None
                 pending_chat_end_payload = {"direct_response": True, "stage": turn.stage}
+                pending_rag_chat_by_reply = {}
+                confirmed_rag_reply_ids = set()
                 await ws.send_json(
                     {
                         "type": "chat",
@@ -457,7 +474,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 allow_direct_response: bool = True,
                 voice_rag: bool = False,
             ):
-                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_rag_chat_by_reply, last_guided_query, last_guided_at
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_rag_chat_by_reply, confirmed_rag_reply_ids, last_guided_query, last_guided_at
                 normalized = " ".join((user_text or "").split()).strip()
                 if not normalized:
                     return None
@@ -489,6 +506,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         active_tts_type = None
                         pending_chat_end_payload = None
                         pending_rag_chat_by_reply = {}
+                        confirmed_rag_reply_ids = set()
                         await _send_json_event(ClientEvent.CHAT_RAG_TEXT, {"external_rag": turn.external_rag})
                     return turn
                 except Exception as exc:
@@ -507,7 +525,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             )
 
             async def _upstream_to_browser() -> None:
-                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_voice_query, pending_rag_chat_by_reply
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_voice_query, pending_rag_chat_by_reply, confirmed_rag_reply_ids
                 async for upstream_message in upstream:
                     if isinstance(upstream_message, str):
                         upstream_bytes = upstream_message.encode("utf-8")
@@ -589,7 +607,10 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                             reply_id = str(payload.get("reply_id") or "")
                             content = str(payload.get("content") or "")
                             if reply_id and content:
-                                pending_rag_chat_by_reply[reply_id] = pending_rag_chat_by_reply.get(reply_id, "") + content
+                                if reply_id in confirmed_rag_reply_ids:
+                                    await _send_rag_chat(content, payload)
+                                else:
+                                    pending_rag_chat_by_reply[reply_id] = pending_rag_chat_by_reply.get(reply_id, "") + content
                             continue
                         _remember_assistant_text(payload.get("content", ""))
                         await ws.send_json(
@@ -603,6 +624,10 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         )
                     elif event == ServerEvent.CHAT_ENDED:
                         if rag_turn_active:
+                            reply_id = str(payload.get("reply_id") or "")
+                            if reply_id in confirmed_rag_reply_ids:
+                                display_text = pending_rag_chat_by_reply.pop(reply_id, "")
+                                await _send_rag_chat(display_text, payload)
                             continue
                         pending_chat_end_payload = payload
                     elif event == ServerEvent.TTS_SENTENCE_START:
@@ -613,26 +638,27 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         display_text = sentence_text
                         if rag_turn_active:
                             reply_id = str(payload.get("reply_id") or "")
+                            if reply_id:
+                                confirmed_rag_reply_ids.add(reply_id)
                             display_text = pending_rag_chat_by_reply.pop(reply_id, "") or sentence_text
-                        _remember_assistant_text(display_text)
                         if rag_turn_active and display_text:
-                            await ws.send_json(
-                                {
-                                    "type": "chat",
-                                    "content": display_text,
-                                    "question_id": payload.get("question_id"),
-                                    "reply_id": payload.get("reply_id"),
-                                    "payload": payload,
-                                }
-                            )
-                        await ws.send_json({"type": "tts_start", "text": payload.get("text", ""), "payload": payload})
+                            await _send_rag_chat(display_text, payload)
+                        else:
+                            _remember_assistant_text(display_text)
+                        tts_start_text = "" if rag_turn_active else payload.get("text", "")
+                        await ws.send_json({"type": "tts_start", "text": tts_start_text, "payload": payload})
                     elif event == ServerEvent.TTS_SENTENCE_END:
                         await ws.send_json({"type": "tts_sentence_end", "payload": payload})
                     elif event == ServerEvent.TTS_ENDED:
                         if payload.get("status_code") == "20000002":
                             await ws.send_json({"type": "status", "status": "user_exit_intent", "payload": payload})
                         if rag_turn_active and active_tts_type in ("external_rag", "chat_tts_text"):
+                            for reply_id in list(confirmed_rag_reply_ids):
+                                display_text = pending_rag_chat_by_reply.pop(reply_id, "")
+                                await _send_rag_chat(display_text, payload)
                             rag_turn_active = False
+                            pending_rag_chat_by_reply = {}
+                            confirmed_rag_reply_ids = set()
                             await ws.send_json({"type": "chat_end", "payload": payload})
                             active_tts_type = None
                         elif pending_chat_end_payload is not None:

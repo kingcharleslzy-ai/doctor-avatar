@@ -136,11 +136,10 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
         )
         await ws.send(encode_server_json_event(ServerEvent.CHAT_ENDED, {"question_id": "q-default", "reply_id": "r-default"}, session_id))
 
-        model_response = "这次流鼻血大概有多久了，按压后能不能止住？"
         await ws.send(
             encode_server_json_event(
                 ServerEvent.CHAT_RESPONSE,
-                {"content": model_response, "question_id": "q1", "reply_id": "r1"},
+                {"content": "这次流鼻血大概有多久了，", "question_id": "q1", "reply_id": "r1"},
                 session_id,
             )
         )
@@ -156,6 +155,14 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
                 session_id,
             )
         )
+        await ws.send(
+            encode_server_json_event(
+                ServerEvent.CHAT_RESPONSE,
+                {"content": "按压后能不能止住？", "question_id": "q1", "reply_id": "r1"},
+                session_id,
+            )
+        )
+        await ws.send(encode_server_json_event(ServerEvent.CHAT_ENDED, {"question_id": "q1", "reply_id": "r1"}, session_id))
         await ws.send(encode_server_audio_event(b"\x01\x00\x02\x00\x03\x00\x04\x00", session_id))
         await ws.send(encode_server_json_event(ServerEvent.TTS_ENDED, {"question_id": "q1", "reply_id": "r1"}, session_id))
         stop_event.set()
@@ -248,7 +255,8 @@ async def validate() -> dict[str, Any]:
         assert observed["say_hello_payload"]["content"] not in asr_texts
         assert "我鼻子流血。" in asr_texts
         chat_texts = [message.get("content", "") for message in messages if message.get("type") == "chat"]
-        assert any("按压后能不能止住" in text for text in chat_texts), chat_texts
+        joined_chat_text = "".join(chat_texts)
+        assert "这次流鼻血大概有多久了，按压后能不能止住？" in joined_chat_text, chat_texts
         assert all("你现在最主要的不舒服是什么" not in text for text in chat_texts), chat_texts
 
         audio_message = next(message for message in messages if message.get("type") == "audio")
