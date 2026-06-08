@@ -372,6 +372,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             rag_turn_active = False
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
+            pending_voice_query = ""
             recent_assistant_texts: list[tuple[str, float]] = []
 
             def _remember_assistant_text(content: str) -> None:
@@ -447,8 +448,15 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 async with upstream_send_lock:
                     await upstream.send(encode_audio_event(ClientEvent.TASK_REQUEST, audio_bytes, session_id=session_id))
 
-            async def _guide_user_query(user_text: str, *, send_rag: bool = True):
-                nonlocal rag_turn_active, active_tts_type, last_guided_query, last_guided_at
+            async def _guide_user_query(
+                user_text: str,
+                *,
+                send_rag: bool = True,
+                update_config_enabled: bool = True,
+                allow_direct_response: bool = True,
+                voice_rag: bool = False,
+            ):
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, last_guided_query, last_guided_at
                 normalized = " ".join((user_text or "").split()).strip()
                 if not normalized:
                     return None
@@ -458,7 +466,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 last_guided_query = normalized
                 last_guided_at = now
                 try:
-                    turn = await asyncio.to_thread(orchestrator.prepare_turn, normalized)
+                    prepare = orchestrator.prepare_voice_rag_turn if voice_rag else orchestrator.prepare_turn
+                    turn = await asyncio.to_thread(prepare, normalized)
                     update_config = dict(turn.update_config)
                     if isinstance(update_config.get("dialog"), dict):
                         update_config["dialog"] = adapt_dialog_persona(update_config["dialog"])
@@ -470,12 +479,14 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                             "sources": turn.hit_sources,
                         }
                     )
-                    await _send_json_event(ClientEvent.UPDATE_CONFIG, update_config)
-                    if send_rag and _should_send_direct_response(turn):
+                    if update_config_enabled and update_config:
+                        await _send_json_event(ClientEvent.UPDATE_CONFIG, update_config)
+                    if send_rag and allow_direct_response and _should_send_direct_response(turn):
                         await _send_direct_response(turn)
                     elif send_rag:
                         rag_turn_active = True
                         active_tts_type = None
+                        pending_chat_end_payload = None
                         await _send_json_event(ClientEvent.CHAT_RAG_TEXT, {"external_rag": turn.external_rag})
                     return turn
                 except Exception as exc:
@@ -494,7 +505,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             )
 
             async def _upstream_to_browser() -> None:
-                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
+                nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload, pending_voice_query
                 async for upstream_message in upstream:
                     if isinstance(upstream_message, str):
                         upstream_bytes = upstream_message.encode("utf-8")
@@ -556,10 +567,21 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                                 "payload": payload,
                             }
                         )
-                        if best_text and not is_interim and mode != "voice":
+                        if best_text and not is_interim and mode == "voice":
+                            pending_voice_query = best_text
+                        elif best_text and not is_interim:
                             await _guide_user_query(best_text)
                     elif event == ServerEvent.ASR_ENDED:
                         await ws.send_json({"type": "asr_end", "payload": payload})
+                        if mode == "voice" and pending_voice_query:
+                            user_query = pending_voice_query
+                            pending_voice_query = ""
+                            await _guide_user_query(
+                                user_query,
+                                update_config_enabled=False,
+                                allow_direct_response=False,
+                                voice_rag=True,
+                            )
                     elif event == ServerEvent.CHAT_RESPONSE:
                         if rag_turn_active:
                             continue

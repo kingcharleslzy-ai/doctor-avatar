@@ -124,6 +124,26 @@ class ConsultationOrchestrator:
             hit_sources=[hit.source for hit in hits],
         )
 
+    def prepare_voice_rag_turn(self, user_text: str) -> ConsultationTurn:
+        normalized = _clean_text(user_text)
+        self.turn_count += 1
+        self.user_history.append(normalized)
+        self.user_history = self.user_history[-8:]
+        self._extract_facts(normalized)
+
+        hits = search_knowledge(normalized, top_k=5)
+        external_rag = self._build_voice_external_rag(normalized, hits)
+        return ConsultationTurn(
+            user_text=normalized,
+            stage="voice_rag",
+            stage_label="语音问诊",
+            next_question="",
+            direct_response="",
+            external_rag=external_rag,
+            update_config={},
+            hit_sources=[hit.source for hit in hits],
+        )
+
     def _doctor_display_name(self) -> str:
         name = self.profile.get("name") or "医生"
         title = self.profile.get("title") or "医生"
@@ -412,6 +432,21 @@ class ConsultationOrchestrator:
             "若信息已经足够，再做阶段性分析，但仍保持简短。不要写成列表，不要报资料来源，不要说正在读取数据库。"
         )
         items = [{"title": "问诊流程与本轮回答要求", "content": instructions}]
+        for hit in hits:
+            items.append({"title": f"医疗资料：{hit.source}", "content": hit.snippet})
+        return _fit_external_rag(items)
+
+    def _build_voice_external_rag(self, user_text: str, hits: list[KnowledgeHit]) -> str:
+        instructions = (
+            f"患者本轮说：{user_text}\n"
+            f"已收集病史：{self._facts_summary()}\n"
+            "回答要求：请根据患者本轮表达和下方资料，用医生口吻做简短、口语化回应。"
+            "不要重复询问患者已经明确说出的主诉。"
+            "信息不足时，只追问一个当前最关键的问题，说完等待患者回答。"
+            "不要写成列表，不要报资料来源，不要说正在读取数据库。"
+            "如出现持续大量出血、止不住血、明显头痛、视力变化、呼吸困难或意识异常，直接建议尽快线下急诊或耳鼻喉专科处理。"
+        )
+        items = [{"title": "语音问诊参考与回答边界", "content": instructions}]
         for hit in hits:
             items.append({"title": f"医疗资料：{hit.source}", "content": hit.snippet})
         return _fit_external_rag(items)
