@@ -46,6 +46,17 @@
 5. DailyMed：导入目标药物 SPL 标签候选，按鼻喷、抗组胺、白三烯相关标题筛选。
 6. OpenAlex：按 DOI 补引用量、OA 状态和 OpenAlex ID，只做元数据 enrichment。
 
+## Markdown 证据包
+
+候选资料入库后，不直接交给模型读 SQLite。当前流程是先导出为大模型容易阅读的 Markdown 证据包，再由 GPT-5.5 按 rubric 预审。
+
+本地已生成两个批次：
+
+- `data/rhinitis_ai_review/batches/20260608-135904-needs_review/`：827 条 `needs_review` 候选，每条一个 Markdown 文件。
+- `data/rhinitis_ai_review/batches/20260608-135904-candidate/`：349 条 `candidate` 候选，每条一个 Markdown 文件。
+
+批次目录不提交到 Git；它是本地运行态材料，供 AI reviewer 读取、产出 `review.json` 和 `review.md`。
+
 ## 已知限制
 
 - 国家卫健委主页对脚本请求返回 HTTP 412，本轮不硬绕；后续应补具体临床路径页面或 PDF 入口。
@@ -56,7 +67,7 @@
 
 ## 下一步
 
-1. 用 AI 证据预审处理新增的 `needs_review` 队列，先从指南、药品标签、医院宣教和免疫治疗研究开始。
+1. 用 GPT-5.5 读取 Markdown 证据包做 AI 预审，先处理 `needs_review` 批次，再处理低优先级 `candidate` 批次。
 2. 为国内资料补更具体的三甲医院、卫健委、花粉监测页面 URL。
 3. 对 DailyMed 增加完整 SPL 文本提取，但仍只进入候选库。
 4. 做一次 curated evidence 晋级，把新增多源候选中最稳的 30-60 条补进精选库。

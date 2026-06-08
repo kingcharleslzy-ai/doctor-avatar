@@ -27,6 +27,15 @@ AI 预审 agent 不是医生终审。
 3. `apply`：默认只 dry-run 汇总，不回写数据库。
 4. `--promote-doctor-only --write`：只把 AI 推荐且置信度达标的资料晋级到 curated，且 `patient_visible=false`、`doctor_visible=true`。
 
+当前本地全量候选导出命令：
+
+```bash
+.venv/bin/python scripts/rhinitis_ai_review.py export --status needs_review --limit 900 --max-chars-per-doc 12000
+.venv/bin/python scripts/rhinitis_ai_review.py export --status candidate --limit 400 --max-chars-per-doc 10000
+```
+
+`needs_review` 是第一优先级；`candidate` 只作为低优先级补充，不应直接进入患者端或医生端生成链路。
+
 ## 证据包格式
 
 每个批次放在：

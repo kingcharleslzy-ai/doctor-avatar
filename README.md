@@ -128,13 +128,14 @@ PubMed 导入默认是“筛选后入库”：先用分桶 query 在源头缩小
 鼻敏智诊 AI 证据预审：
 
 ```bash
-.venv/bin/python scripts/rhinitis_ai_review.py export --limit 20
+.venv/bin/python scripts/rhinitis_ai_review.py export --status needs_review --limit 900 --max-chars-per-doc 12000
+.venv/bin/python scripts/rhinitis_ai_review.py export --status candidate --limit 400 --max-chars-per-doc 10000
 .venv/bin/python scripts/rhinitis_ai_review.py review --batch latest --model gpt-5.5
 .venv/bin/python scripts/rhinitis_ai_review.py apply --batch latest
 .venv/bin/python scripts/rhinitis_ai_review.py apply --batch latest --promote-doctor-only --write
 ```
 
-`apply` 默认只是 dry-run；只有带 `--write` 才会回写数据库。AI 推荐晋级时第一版只开放医生端演示，默认 `patient_visible=false`。
+`export` 会把 SQLite 中的候选资料整理成 Markdown 证据包，放在 `data/rhinitis_ai_review/batches/`。`apply` 默认只是 dry-run；只有带 `--write` 才会回写数据库。AI 推荐晋级时第一版只开放医生端演示，默认 `patient_visible=false`。
 
 鼻敏智诊精选证据快照：
 
