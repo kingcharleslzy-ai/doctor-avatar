@@ -23,7 +23,9 @@ NOSE_TERMS = ["鼻塞", "流鼻涕", "流涕", "喷嚏", "打喷嚏", "鼻痒", 
 THROAT_TERMS = ["嗓子", "喉咙", "咽喉", "咽痛", "咽干", "咽痒", "异物感", "声音嘶哑", "吞咽", "痰"]
 EAR_TERMS = ["耳闷", "耳鸣", "耳痛", "耳朵", "听力"]
 SLEEP_TERMS = ["打鼾", "憋醒", "呼噜", "睡眠呼吸暂停"]
-DURATION_RE = re.compile(r"(\d+\s*[天周月年]|[一二两三四五六七八九十半]+[天周月年]|几天|几年|长期|反复|从小)")
+DURATION_RE = re.compile(
+    r"(\d+\s*(?:天|周|个?星期|个?礼拜|月|年)|[一二两三四五六七八九十半]+(?:天|周|个?星期|个?礼拜|月|年)|几天|几年|长期|反复|从小)"
+)
 
 SLOT_STAGE = {
     "chief": "chief",
@@ -35,6 +37,7 @@ SLOT_STAGE = {
     "throat_quality": "symptoms",
     "throat_red_flags": "red_flag",
     "throat_lifestyle": "duration_trigger",
+    "nosebleed_control": "red_flag",
     "ear_duration": "duration_trigger",
     "ear_detail": "symptoms",
     "ear_red_flags": "red_flag",
@@ -54,6 +57,7 @@ SLOT_QUESTIONS = {
     "throat_quality": "主要是疼、干，还是有异物感？",
     "throat_red_flags": "有没有发热、吞咽明显疼痛或呼吸不顺？",
     "throat_lifestyle": "最近有熬夜、吃辣，或者用嗓比较多吗？",
+    "nosebleed_control": "这次流鼻血现在按压能止住吗？",
     "ear_duration": "耳朵不舒服持续几天了？",
     "ear_detail": "主要是耳闷、耳痛，还是听力下降？",
     "ear_red_flags": "有没有明显头晕、发热、耳朵流脓或听力突然下降？",
@@ -131,13 +135,17 @@ class ConsultationOrchestrator:
         self.user_history = self.user_history[-8:]
         self._extract_facts(normalized)
 
+        next_slot = self._next_slot(normalized)
+        stage = SLOT_STAGE.get(next_slot or "summary", "summary")
+        next_question = self._question_for_slot(next_slot)
+        self._set_pending_slot(next_slot, next_question)
         hits = search_knowledge(normalized, top_k=5)
-        external_rag = self._build_voice_external_rag(normalized, hits)
+        external_rag = self._build_voice_external_rag(normalized, stage, next_question, hits)
         return ConsultationTurn(
             user_text=normalized,
-            stage="voice_rag",
-            stage_label="语音问诊",
-            next_question="",
+            stage=stage,
+            stage_label=STAGE_LABELS.get(stage, stage),
+            next_question=next_question,
             direct_response="",
             external_rag=external_rag,
             update_config={},
@@ -190,10 +198,12 @@ class ConsultationOrchestrator:
         return f"{traits}。语速平稳，回答简短；问诊追问每轮只问一个问题。"
 
     def _next_slot(self, text: str) -> str | None:
-        if _has_any(text, ["呼吸困难", "喘不上", "意识", "昏迷", "大量出血", "止不住血", "视力下降", "复视", "剧烈头痛"]):
+        if _has_any(text, ["呼吸困难", "喘不上", "意识", "昏迷", "大量出血", "止不住血", "止不住", "视力下降", "复视", "剧烈头痛"]):
             return "urgent"
 
         area = self.facts.get("complaint_area")
+        if area == "鼻部" and _has_any(text, ["鼻出血", "流鼻血", "鼻血", "鼻子流血"]) and "nosebleed_control" not in self.asked_slots:
+            return "nosebleed_control"
         if not area:
             return "chief"
         if area == "咽喉":
@@ -294,8 +304,8 @@ class ConsultationOrchestrator:
             advice += " 如果已经用药但没有缓解，别自行叠加用药。"
         return (
             f"我先归纳一下：你主要是嗓子不舒服，{duration}，表现为{quality}。"
-            f"{reassurance}更偏向轻度咽喉炎或刺激相关不适。{advice}"
-            "如果出现发热、吞咽明显疼痛、呼吸不顺，或者三到五天仍不缓解，建议到耳鼻喉科面诊检查。"
+            f"{reassurance}更偏向急性咽喉炎、干燥刺激或上呼吸道感染后咽喉不适这一类问题。{advice}"
+            "先不要自行上抗生素；如果疼痛加重、发热、吞咽困难、呼吸不顺、痰里带血，或者已经一周仍不缓解，建议近期耳鼻喉科看一下咽喉情况。"
         )
 
     def _nose_summary(self) -> str:
@@ -382,6 +392,8 @@ class ConsultationOrchestrator:
             self.facts["red_flags"] = _merge_fact(self.facts.get("red_flags"), _answer_value(text, negative="否认发热、吞咽明显疼痛或呼吸不顺"))
         elif slot == "throat_lifestyle":
             self.facts["throat_lifestyle"] = _merge_fact(self.facts.get("throat_lifestyle"), _answer_value(text, negative="否认熬夜、辛辣饮食或用嗓过多诱因"))
+        elif slot == "nosebleed_control":
+            self.facts["red_flags"] = _merge_fact(self.facts.get("red_flags"), f"鼻出血止血情况：{text[:120]}")
         elif slot == "ear_detail":
             self.facts["ear_detail"] = _merge_fact(self.facts.get("ear_detail"), _answer_value(text, negative="未描述明显耳闷、耳痛或听力下降"))
         elif slot == "ear_red_flags":
@@ -436,15 +448,22 @@ class ConsultationOrchestrator:
             items.append({"title": f"医疗资料：{hit.source}", "content": hit.snippet})
         return _fit_external_rag(items)
 
-    def _build_voice_external_rag(self, user_text: str, hits: list[KnowledgeHit]) -> str:
+    def _build_voice_external_rag(self, user_text: str, stage: str, next_question: str, hits: list[KnowledgeHit]) -> str:
         strategy = self._voice_consultation_strategy(user_text)
+        stage_label = STAGE_LABELS.get(stage, stage)
+        summary_guidance = self._voice_summary_guidance() if stage == "summary" else ""
         instructions = (
             f"患者本轮说：{user_text}\n"
+            f"当前问诊阶段：{stage_label}\n"
             f"已收集病史：{self._facts_summary()}\n"
+            f"本轮优先补充信息：{next_question}\n"
             f"本轮问诊策略：{strategy}\n"
+            f"{summary_guidance}"
             "回答要求：请根据患者本轮表达和下方资料，用医生口吻做简短、口语化回应。"
             "不要重复询问患者已经明确说出的主诉。"
             "信息不足时，只追问一个当前医学优先级最高的问题，说完等待患者回答。"
+            "如果当前阶段是阶段性总结，不要继续补问常规问题，要给出可能方向、依据、日常处理和就医边界。"
+            "总结时不要只说线下检查，除非已经出现危险信号；但也不要给确定诊断、处方剂量或保证性结论。"
             "不要写成列表，不要报资料来源，不要说正在读取数据库。"
             "如出现持续大量出血、止不住血、明显头痛、视力变化、呼吸困难或意识异常，直接建议尽快线下急诊或耳鼻喉专科处理。"
         )
@@ -483,6 +502,30 @@ class ConsultationOrchestrator:
             "先根据患者话语识别主诉属于鼻部、咽喉、耳部还是睡眠相关；"
             "若主诉已经明确，不要再笼统追问主诉，直接进入该主诉的持续时间、严重程度和危险信号分层。"
         )
+
+    def _voice_summary_guidance(self) -> str:
+        area = self.facts.get("complaint_area")
+        if area == "咽喉":
+            return (
+                "阶段性总结参考：先复述已知病史；再说明可能方向可偏向急性咽喉炎、干燥刺激或上呼吸道感染后咽喉不适，"
+                "依据是咽痛咽干、病程、是否发热和是否呼吸不顺等已收集信息；"
+                "再给出多饮水、减少辛辣烟酒和过度用嗓、保持空气湿润、不要自行使用抗生素等日常处理；"
+                "最后说明如果疼痛加重、发热、吞咽困难、呼吸不顺、痰血，或一周左右仍无改善，应近期耳鼻喉科面诊。"
+            )
+        if area == "鼻部":
+            return (
+                "阶段性总结参考：先复述鼻部主诉、病程、鼻涕性质、诱因、危险信号和用药情况；"
+                "再区分可能方向，比如清水涕喷嚏鼻痒偏过敏性鼻炎，黄脓涕伴头面部痛或超过十天不缓解偏鼻窦炎方向，"
+                "反复鼻出血要看出血量、止血情况和诱因；再给出避免诱因、鼻腔保湿或冲洗、不要抠鼻和不要自行叠加用药等建议；"
+                "最后说明哪些情况需要尽快面诊或急诊。"
+            )
+        if area == "耳部":
+            return (
+                "阶段性总结参考：先复述耳部不适、病程和耳闷耳痛耳鸣听力变化；"
+                "再说明可能方向包括外耳道、鼓膜或咽鼓管相关问题，需要结合耳镜判断；"
+                "轻症先避免掏耳和进水，若听力突然下降、明显眩晕、发热或流脓，应尽快耳鼻喉科处理。"
+            )
+        return "阶段性总结参考：用已收集病史说明可能方向、目前没有或存在的危险信号、日常处理和就医边界。"
 
 
 def _fit_external_rag(items: list[dict[str, str]]) -> str:

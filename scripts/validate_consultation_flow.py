@@ -15,6 +15,11 @@ def _turns(inputs: list[str]) -> list[str]:
     return [orchestrator.prepare_turn(text).direct_response for text in inputs]
 
 
+def _voice_turns(inputs: list[str]):
+    orchestrator = ConsultationOrchestrator({"name": "李勇", "title": "医生", "specialty": "耳鼻咽喉科"})
+    return [orchestrator.prepare_voice_rag_turn(text) for text in inputs]
+
+
 def main() -> None:
     throat = _turns([
         "我嗓子不舒服。",
@@ -42,6 +47,30 @@ def main() -> None:
     assert nose[1] == "鼻涕是清水样，还是黄脓鼻涕？"
     assert nose[2] == "接触灰尘、花粉或冷空气后，会明显加重吗？"
     assert nose[3] == "有没有发热、明显头痛、鼻出血或视力变化？"
+
+    voice_throat = _voice_turns([
+        "我的嗓子不舒服。",
+        "一直持续一星期了。",
+        "又疼又干。",
+        "没有。",
+        "都没有。",
+        "没有吃。",
+    ])
+    assert voice_throat[0].next_question == "嗓子不舒服持续几天了？"
+    assert voice_throat[1].next_question == "主要是疼、干，还是有异物感？"
+    assert voice_throat[2].next_question == "有没有发热、吞咽明显疼痛或呼吸不顺？"
+    assert voice_throat[3].next_question == "最近有熬夜、吃辣，或者用嗓比较多吗？"
+    assert voice_throat[4].next_question == "这次自己用过什么药或含片吗？"
+    assert voice_throat[5].stage == "summary"
+    assert "一星期" in voice_throat[5].external_rag
+    assert "否认发热、吞咽明显疼痛或呼吸不顺" in voice_throat[5].external_rag
+    assert "阶段性总结参考" in voice_throat[5].external_rag
+    assert "不要只说线下检查" in voice_throat[5].external_rag
+
+    voice_nosebleed = _voice_turns(["我鼻子流血。"])
+    assert voice_nosebleed[0].next_question == "这次流鼻血现在按压能止住吗？"
+    assert "本轮优先补充信息：这次流鼻血现在按压能止住吗？" in voice_nosebleed[0].external_rag
+    assert "本轮优先补充信息：鼻子不舒服持续几天了？" not in voice_nosebleed[0].external_rag
 
     print("consultation_flow ok")
 
