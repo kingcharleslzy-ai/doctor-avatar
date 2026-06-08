@@ -42,14 +42,26 @@ async function validateDesktop(browser) {
   await page.locator("#startConsultBtn").waitFor();
   const startLabel = await page.locator("#startConsultBtn").innerText();
   const hasVoiceBtn = await page.locator("#voiceInputBtn").isVisible();
+  const missingButtonLabels = await page.evaluate(() => {
+    const ids = ["askBtn", "vcMuteBtn", "vcEndBtn", "vcTranscriptBtn", "vcTranscriptClose"];
+    return ids.filter((id) => {
+      const button = document.getElementById(id);
+      return !button || !button.getAttribute("aria-label");
+    });
+  });
+  if (missingButtonLabels.length) {
+    throw new Error(`缺少按钮 aria-label: ${missingButtonLabels.join(", ")}`);
+  }
   await page.locator("#message").fill("慢性鼻窦炎反复发作，一般要先做什么检查？");
   await page.locator("#askBtn").click();
-  await page.waitForFunction(() => {
-    const rows = [...document.querySelectorAll("#chatHistory .msg-row.ai .bubble")];
-    const last = rows.at(-1);
-    return rows.length >= 2 && last && !last.querySelector(".typing-dots") && last.textContent.trim().length > 6;
-  }, { timeout: 90000 });
+  await waitForSettledAssistantAnswer(page);
   const answer = await page.locator("#chatHistory .msg-row.ai .bubble").last().innerText();
+  if (answer.includes("你现在最主要的不舒服是什么")) {
+    throw new Error(`慢性鼻窦炎检查问题被错误引导回主诉确认：${answer}`);
+  }
+  if (answer.includes("？") || answer.includes("?") || answer.includes("请问")) {
+    throw new Error(`慢性鼻窦炎检查问题不应追加追问：${answer}`);
+  }
   await page.screenshot({ path: desktopShot, fullPage: true });
   await context.close();
   return {
@@ -58,6 +70,33 @@ async function validateDesktop(browser) {
     answer,
     screenshot: desktopShot,
   };
+}
+
+async function waitForSettledAssistantAnswer(page) {
+  await page.waitForFunction(() => {
+    const rows = [...document.querySelectorAll("#chatHistory .msg-row.ai .bubble")];
+    const last = rows.at(-1);
+    return rows.length >= 2 && last && !last.querySelector(".typing-dots") && last.textContent.trim().length > 8;
+  }, { timeout: 90000 });
+
+  let lastText = "";
+  let stableCount = 0;
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const state = await page.evaluate(() => {
+      const rows = [...document.querySelectorAll("#chatHistory .msg-row.ai .bubble")];
+      return {
+        text: rows.at(-1)?.textContent.trim() || "",
+        status: document.getElementById("voiceStatus")?.textContent || "",
+      };
+    });
+    if (state.text === lastText) stableCount += 1;
+    else stableCount = 0;
+    lastText = state.text;
+    if (stableCount >= 2 && !["正在回答", "正在生成回答", "正在生成回答..."].includes(state.status)) {
+      return;
+    }
+    await page.waitForTimeout(1000);
+  }
 }
 
 async function validateMobile(browser) {

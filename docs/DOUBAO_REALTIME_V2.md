@@ -30,18 +30,21 @@ StartSession
 SayHello
 
 用户语音:
-  TaskRequest PCM 16k -> ASRResponse -> 后端问诊状态机
-  UpdateConfig -> 单问题/阶段总结走 SayHello
-  复杂说明才走 ChatRAGText external_rag
+  TaskRequest PCM 16k -> ASRResponse(final) -> ASREnded
+  后端问诊状态机生成本轮 external_rag
+  ChatRAGText external_rag -> ChatResponse/TTSSentenceStart/TTSResponse/TTSEnded
   TTSResponse PCM 24k -> 浏览器播放
 
 用户文字:
-  UpdateConfig -> 单问题/阶段总结走 SayHello
-  复杂说明才走 ChatTextQuery/ChatRAGText
+  后端问诊状态机生成 UpdateConfig
+  单问题/阶段总结可走 SayHello
+  明确检查、处理、用药类别或就医准备问题由后端短答后走 SayHello
   TTSResponse PCM 24k -> 浏览器播放
 ```
 
-语音和文字路径都优先由后端状态机决定本轮唯一问题或阶段总结，再用 `SayHello` 输出语音；只有需要结合外部资料做复杂说明时才使用 `ChatRAGText`。这样能减少实时语音中模型追加多个问题、重复追问或偏离主诉。
+语音路径在 `ASREnded` 后统一通过官方 `ChatRAGText(502)` 发送 JSON 数组形式的 `external_rag`，由 `TTSSentenceStart.tts_type=external_rag` 放行对应音频和文字显示；不再对每个语音轮次发送 `UpdateConfig` 或用 `SayHello` 直接替代模型回复。这样能减少端到端模型里默认回复和外部资料回复互相抢答导致的重复首句问题。
+
+文字路径仍保留 `UpdateConfig`，用于让单轮文字咨询获得当前医生人设和问诊状态。若用户明确询问检查、处理、用药类别或就医准备，后端不再强行追问主诉，而是生成一段可控短答并通过官方 `SayHello(300)` 播报；其他文字问题继续走 `ChatTextQuery(501)`。
 
 麦克风常开使用 `input_mod=keep_alive`。前端按官方建议把上行音频切成 16kHz PCM、20ms 左右的小包；当服务端返回 `ASRInfo(450)` 表示识别到用户首字时，前端停止本地播报并等待新的 ASR 结果。`ClientInterrupt(515)` 主要保留给 `push_to_talk` 场景，当前页面不把普通环境声或音量阈值直接当成上游打断事件。
 

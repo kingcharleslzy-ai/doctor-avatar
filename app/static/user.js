@@ -25,6 +25,7 @@ const state = {
   expectingAssistantResponse: false,
   micHoldUntil: 0,
   micPcmRemainder: new Int16Array(0),
+  closeStatusMessage: "",
 };
 
 const OUTPUT_SUPPRESS_MS = 1600;
@@ -248,7 +249,13 @@ function showOverlay(show) {
 
 async function startRealtimeSession({ withMic = false } = {}) {
   if (state.sessionActive && state.ws?.readyState === WebSocket.OPEN) {
-    if (withMic) await startMic();
+    if (withMic) {
+      try {
+        await startMic();
+      } catch (error) {
+        handleMicStartFailure(error);
+      }
+    }
     return;
   }
   if (!canStartRealtime()) {
@@ -283,7 +290,13 @@ async function startRealtimeSession({ withMic = false } = {}) {
     setMode("MedFlow 实时语音");
     setVoiceStatus(withMic ? "正在打开麦克风..." : "会话已连接");
     setStage(withMic ? "listening" : "idle");
-    if (withMic) await startMic();
+    if (withMic) {
+      try {
+        await startMic();
+      } catch (error) {
+        handleMicStartFailure(error);
+      }
+    }
   });
 
   ws.addEventListener("message", (event) => {
@@ -295,11 +308,13 @@ async function startRealtimeSession({ withMic = false } = {}) {
   });
 
   ws.addEventListener("close", () => {
+    const closeStatusMessage = state.closeStatusMessage;
+    state.closeStatusMessage = "";
     state.sessionActive = false;
     setVisible("startConsultBtn", true);
     setVisible("endConsultBtn", false);
     setMode("语音待命");
-    setVoiceStatus("语音待命");
+    setVoiceStatus(closeStatusMessage || "语音待命");
     setStage("idle");
     showOverlay(false);
     stopMic();
@@ -464,6 +479,35 @@ async function startMic() {
   state.micProcessor.connect(context.destination);
   setVoiceStatus("请直接说话");
   setStage("listening");
+}
+
+function micErrorMessage(error) {
+  if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+    return "麦克风权限未开启，请允许浏览器使用麦克风后重试。";
+  }
+  if (error?.name === "NotFoundError" || error?.name === "DevicesNotFoundError") {
+    return "没有检测到可用麦克风，请检查输入设备后重试。";
+  }
+  return "麦克风启动失败，请检查浏览器权限和输入设备。";
+}
+
+function handleMicStartFailure(error) {
+  const message = micErrorMessage(error);
+  console.warn("Microphone start failed:", error);
+  state.closeStatusMessage = message;
+  stopMic();
+  showOverlay(false);
+  setVisible("startConsultBtn", true);
+  setVisible("endConsultBtn", false);
+  setMode("语音待命");
+  setVoiceStatus(message);
+  setStage("idle");
+  if (state.ws?.readyState === WebSocket.OPEN) {
+    try {
+      state.ws.send(JSON.stringify({ type: "finish" }));
+    } catch (_) {}
+    state.ws.close();
+  }
 }
 
 function stopMic() {

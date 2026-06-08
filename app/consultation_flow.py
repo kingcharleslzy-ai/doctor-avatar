@@ -19,7 +19,25 @@ STAGE_LABELS = {
     "summary": "阶段性总结",
 }
 
-NOSE_TERMS = ["鼻塞", "流鼻涕", "流涕", "喷嚏", "打喷嚏", "鼻痒", "嗅觉", "鼻涕", "鼻出血", "流鼻血", "鼻血", "鼻子流血"]
+NOSE_TERMS = [
+    "鼻塞",
+    "流鼻涕",
+    "流涕",
+    "喷嚏",
+    "打喷嚏",
+    "鼻痒",
+    "嗅觉",
+    "鼻涕",
+    "鼻出血",
+    "流鼻血",
+    "鼻血",
+    "鼻子流血",
+    "鼻炎",
+    "过敏性鼻炎",
+    "鼻窦炎",
+    "慢性鼻窦炎",
+    "鼻息肉",
+]
 THROAT_TERMS = ["嗓子", "喉咙", "咽喉", "咽痛", "咽干", "咽痒", "异物感", "声音嘶哑", "吞咽", "痰"]
 EAR_TERMS = ["耳闷", "耳鸣", "耳痛", "耳朵", "听力"]
 SLEEP_TERMS = ["打鼾", "憋醒", "呼噜", "睡眠呼吸暂停"]
@@ -103,12 +121,20 @@ class ConsultationOrchestrator:
         self.user_history = self.user_history[-8:]
         self._extract_facts(normalized)
 
-        next_slot = self._next_slot(normalized)
-        stage = SLOT_STAGE.get(next_slot or "summary", "summary")
-        next_question = self._question_for_slot(next_slot)
-        self._set_pending_slot(next_slot, next_question)
-        direct_response = self._direct_response(stage, next_question)
+        direct_answer = _looks_like_medical_info_question(normalized)
+        if direct_answer:
+            next_slot = None
+            stage = "summary"
+            next_question = "不要追问，直接回答患者本轮关于检查、处理、用药类别或就医准备的问题。"
+        else:
+            next_slot = self._next_slot(normalized)
+            stage = SLOT_STAGE.get(next_slot or "summary", "summary")
+            next_question = self._question_for_slot(next_slot)
         hits = search_knowledge(normalized, top_k=5)
+        self._set_pending_slot(next_slot, next_question)
+        direct_response = (
+            self._medical_info_direct_response(normalized, hits) if direct_answer else self._direct_response(stage, next_question)
+        )
         external_rag = self._build_external_rag(normalized, stage, next_question, hits)
         dynamic_role = self._dynamic_system_role(stage, next_question, hits)
         return ConsultationTurn(
@@ -176,6 +202,16 @@ class ConsultationOrchestrator:
         )
 
     def _dynamic_system_role(self, stage: str, next_question: str, hits: list[KnowledgeHit]) -> str:
+        if next_question and not next_question.endswith("？"):
+            facts = self._facts_summary()
+            return (
+                f"{self._base_system_role()} 已收集信息：{facts} "
+                f"当前任务：{next_question} "
+                "回答要有临床倾向、判断依据和下一步处理重点；可以提常见检查或用药类别。"
+                "不要编造患者没有提供的检查结果，不要给处方药具体剂量或疗效保证。"
+                "本轮不要反问患者，不要在结尾追加追问，回答中不要出现问号。"
+                "保持口语化，长度控制在三到五句话。"
+            )
         stage_rule = {
             "chief": "当前任务是确认主诉，只问患者最主要的不舒服。",
             "symptoms": "当前任务是细化一个症状点，不展开成症状清单。",
@@ -289,6 +325,69 @@ class ConsultationOrchestrator:
         if area == "耳部":
             return self._ear_summary()
         return "我先帮你归纳一下：目前信息还不算完整，建议把最主要的不舒服、持续时间和有没有发热或明显加重先说清楚。"
+
+    def _medical_info_direct_response(self, text: str, hits: list[KnowledgeHit]) -> str:
+        area = self.facts.get("complaint_area")
+        if _has_any(text, ["检查", "化验", "鼻内镜", "CT", "磁共振"]):
+            return self._exam_info_response(text, area)
+        if _has_any(text, ["治疗", "用药", "药", "处理", "怎么办"]):
+            return self._treatment_info_response(text, area)
+        if _has_any(text, ["就医", "复诊", "准备", "注意"]):
+            return self._visit_info_response(area)
+        source_hint = " ".join(hit.snippet for hit in hits[:2])
+        if area == "鼻部" or _has_any(source_hint, ["鼻炎", "鼻窦炎", "鼻息肉"]):
+            return self._exam_info_response(text, "鼻部")
+        return "这类问题要先把主诉、持续时间和危险信号说清楚，再决定检查和处理方向。线上可以先做健康科普和就医准备，真正的诊断还要结合耳鼻喉科查体和必要检查。"
+
+    def _exam_info_response(self, text: str, area: str | None) -> str:
+        if area == "鼻部":
+            if _has_any(text, ["鼻窦炎", "慢性鼻窦炎", "鼻息肉"]):
+                return (
+                    "慢性鼻窦炎反复发作，首先建议做鼻内镜检查，直接看鼻腔和鼻窦开口有没有黏膜水肿、脓性分泌物或鼻息肉。"
+                    "如果症状反复、病程长，或者需要评估手术可能性，鼻窦 CT 也很关键，它能看清窦腔炎症范围和解剖结构。"
+                    "如果同时有喷嚏、清水涕、鼻痒或季节诱发，再考虑过敏原相关检查。"
+                    "带着既往用药、发作频率和检查结果去耳鼻喉科面诊，更容易判断是炎症控制不足还是结构问题。"
+                )
+            return (
+                "鼻部症状常见的第一步检查是鼻内镜，可以看清鼻腔黏膜、鼻甲、分泌物、鼻中隔和鼻息肉等情况。"
+                "如果怀疑鼻窦炎、鼻息肉或反复发作，通常还需要鼻窦 CT 来判断炎症范围和解剖结构。"
+                "如果表现为反复喷嚏、清水涕、鼻痒，过敏原检查也有参考价值。"
+            )
+        if area == "咽喉":
+            return (
+                "咽喉不适反复或持续不缓解，常见第一步是耳鼻喉科查体和喉镜检查，看咽喉黏膜、扁桃体和声带情况。"
+                "如果伴发热、明显吞咽痛、声音嘶哑久不恢复或痰血，要更早线下面诊。"
+                "检查前把持续时间、疼痛还是干痒、有没有反酸和用嗓情况整理清楚，会更利于判断。"
+            )
+        if area == "耳部":
+            return (
+                "耳部不适常见第一步是耳镜检查，看外耳道和鼓膜情况。"
+                "如果有耳闷、听力下降或耳鸣，还可能需要听力学检查和声导抗检查。"
+                "听力突然下降、明显眩晕、发热或流脓时，要尽快耳鼻喉科处理。"
+            )
+        return "耳鼻喉科问题一般先根据部位做查体，鼻部看鼻内镜，咽喉部看喉镜，耳部看耳镜；是否需要 CT、过敏原或听力检查，要结合症状持续时间和危险信号判断。"
+
+    def _treatment_info_response(self, text: str, area: str | None) -> str:
+        if area == "鼻部":
+            return (
+                "鼻部反复不适的处理要先区分过敏性鼻炎、鼻窦炎、鼻息肉或鼻腔结构问题。"
+                "常见处理方向包括避免诱因、鼻腔冲洗、鼻喷抗炎药物和抗过敏药物类别，但具体用药和疗程需要结合鼻内镜或鼻窦 CT 判断。"
+                "如果有黄脓涕、头面部胀痛、嗅觉下降或反复发作，建议尽快耳鼻喉科评估，不要只靠临时吃药压症状。"
+            )
+        if area == "咽喉":
+            return (
+                "咽喉不适的处理先看是感染、干燥刺激、用嗓过度、反流还是过敏相关。"
+                "一般先减少辛辣烟酒和过度用嗓，保持饮水和空气湿润；是否需要抗感染、抗过敏或反流相关用药，要结合查体判断。"
+                "如果发热、吞咽困难、呼吸不顺、痰血或持续一周左右仍不缓解，建议线下耳鼻喉科检查。"
+            )
+        return "处理方向要先按症状部位和危险信号分层。可以先做基础护理和就医准备，但具体药物、疗程和是否需要进一步检查，建议由耳鼻喉科医生结合查体决定。"
+
+    def _visit_info_response(self, area: str | None) -> str:
+        if area == "鼻部":
+            return "去耳鼻喉科前，建议准备好症状持续时间、鼻塞流涕性质、喷嚏鼻痒诱因、嗅觉变化、既往用药和既往鼻内镜或鼻窦 CT 结果。若有大量鼻出血、明显头痛、视力变化或持续高热，要提前就医或急诊处理。"
+        if area == "咽喉":
+            return "去耳鼻喉科前，建议整理咽喉不适持续时间、疼痛或干痒程度、有没有发热吞咽困难、声音嘶哑、反酸、熬夜辛辣和用嗓情况。若呼吸不顺、吞咽困难明显或痰血，要尽快线下处理。"
+        return "就医前先整理最主要的不舒服、持续时间、诱因、用药经过和有没有危险信号。耳鼻喉科医生会根据部位决定鼻内镜、喉镜、耳镜、影像或听力检查。"
 
     def _throat_summary(self) -> str:
         duration = _plain_fact(self.facts.get("duration"), "时间不长")
@@ -562,6 +661,13 @@ def _count_any(text: str, needles: list[str]) -> int:
 
 def _looks_like_correction(text: str) -> bool:
     return _has_any(text, ["我说的是", "不是", "不对", "搞错", "听错"])
+
+
+def _looks_like_medical_info_question(text: str) -> bool:
+    return _has_any(text, ["？", "?", "什么", "怎么", "如何", "一般", "需要", "要不要", "能不能"]) and _has_any(
+        text,
+        ["检查", "治疗", "用药", "药", "手术", "处理", "怎么办", "就医", "复诊", "注意", "准备"],
+    )
 
 
 def _is_negative(text: str) -> bool:

@@ -48,6 +48,17 @@ def main() -> None:
     assert nose[2] == "接触灰尘、花粉或冷空气后，会明显加重吗？"
     assert nose[3] == "有没有发热、明显头痛、鼻出血或视力变化？"
 
+    info_question = ConsultationOrchestrator({"name": "李勇", "title": "医生", "specialty": "耳鼻咽喉科"}).prepare_turn(
+        "慢性鼻窦炎反复发作，一般要先做什么检查？"
+    )
+    assert info_question.stage == "summary"
+    assert "鼻内镜检查" in info_question.direct_response
+    assert "鼻窦 CT" in info_question.direct_response
+    assert "？" not in info_question.direct_response
+    assert "主诉部位：鼻部" in info_question.external_rag
+    assert "不要追问，直接回答患者本轮关于检查" in info_question.update_config["dialog"]["system_role"]
+    assert "你现在最主要的不舒服是什么" not in info_question.update_config["dialog"]["system_role"]
+
     voice_throat = _voice_turns([
         "我的嗓子不舒服。",
         "一直持续一星期了。",
