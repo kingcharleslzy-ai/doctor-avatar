@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import time
 import base64
+import re
 from pathlib import Path
 
 import asyncio
@@ -23,6 +24,7 @@ from .doubao_realtime import (
     AUDIO_SERVER_RESPONSE,
     ClientEvent,
     ServerEvent,
+    adapt_dialog_persona,
     build_headers,
     build_start_session_payload,
     create_connect_id,
@@ -64,6 +66,13 @@ app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")
 doctor_profile = load_doctor_profile()
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"
 _CACHE_BUST = str(int(time.time()))
+_REALTIME_ECHO_WINDOW_SECONDS = 20.0
+_REALTIME_ECHO_MIN_CHARS = 4
+_REALTIME_ECHO_PUNCT_RE = re.compile(r"[\s，。！？；：、,.!?;:]+")
+
+
+def _normalize_realtime_echo_text(text: str) -> str:
+    return _REALTIME_ECHO_PUNCT_RE.sub("", str(text or "")).strip().lower()
 
 
 
@@ -363,6 +372,37 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             rag_turn_active = False
             active_tts_type: str | None = None
             pending_chat_end_payload: dict | None = None
+            recent_assistant_texts: list[tuple[str, float]] = []
+
+            def _remember_assistant_text(content: str) -> None:
+                normalized = _normalize_realtime_echo_text(content)
+                if len(normalized) < _REALTIME_ECHO_MIN_CHARS:
+                    return
+                now = time.monotonic()
+                recent_assistant_texts[:] = [
+                    (text, ts)
+                    for text, ts in recent_assistant_texts
+                    if now - ts <= _REALTIME_ECHO_WINDOW_SECONDS
+                ]
+                recent_assistant_texts.append((normalized, now))
+                del recent_assistant_texts[:-8]
+
+            def _is_recent_assistant_echo(content: str) -> bool:
+                normalized = _normalize_realtime_echo_text(content)
+                if len(normalized) < _REALTIME_ECHO_MIN_CHARS:
+                    return False
+                now = time.monotonic()
+                recent_assistant_texts[:] = [
+                    (text, ts)
+                    for text, ts in recent_assistant_texts
+                    if now - ts <= _REALTIME_ECHO_WINDOW_SECONDS
+                ]
+                for assistant_text, _ in recent_assistant_texts:
+                    if normalized == assistant_text:
+                        return True
+                    if len(normalized) >= 8 and (normalized in assistant_text or assistant_text in normalized):
+                        return True
+                return False
 
             def _should_send_direct_response(turn) -> bool:
                 return bool(getattr(turn, "direct_response", ""))
@@ -370,6 +410,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
             async def _send_direct_response(turn) -> None:
                 nonlocal rag_turn_active, active_tts_type, pending_chat_end_payload
                 content = turn.direct_response
+                _remember_assistant_text(content)
                 rag_turn_active = False
                 active_tts_type = None
                 pending_chat_end_payload = {"direct_response": True, "stage": turn.stage}
@@ -418,6 +459,9 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                 last_guided_at = now
                 try:
                     turn = await asyncio.to_thread(orchestrator.prepare_turn, normalized)
+                    update_config = dict(turn.update_config)
+                    if isinstance(update_config.get("dialog"), dict):
+                        update_config["dialog"] = adapt_dialog_persona(update_config["dialog"])
                     await ws.send_json(
                         {
                             "type": "rag_context",
@@ -426,7 +470,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                             "sources": turn.hit_sources,
                         }
                     )
-                    await _send_json_event(ClientEvent.UPDATE_CONFIG, turn.update_config)
+                    await _send_json_event(ClientEvent.UPDATE_CONFIG, update_config)
                     if send_rag and _should_send_direct_response(turn):
                         await _send_direct_response(turn)
                     elif send_rag:
@@ -440,7 +484,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
 
             await upstream.send(encode_json_event(ClientEvent.START_CONNECTION, {}))
             start_payload = build_start_session_payload()
-            start_payload["dialog"].update(orchestrator.start_dialog_config())
+            start_payload["dialog"].update(adapt_dialog_persona(orchestrator.start_dialog_config()))
             await upstream.send(
                 encode_json_event(
                     ClientEvent.START_SESSION,
@@ -491,6 +535,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         await ws.send_json({"type": "status", "status": "session_started", "payload": payload})
                         greeting = settings.doubao_realtime_opening_remark.strip()
                         if greeting and should_send_opening:
+                            _remember_assistant_text(greeting)
                             await _send_json_event(ClientEvent.SAY_HELLO, {"content": greeting})
                     elif event in (ServerEvent.CONNECTION_FAILED, ServerEvent.SESSION_FAILED):
                         await ws.send_json({"type": "error", "message": payload.get("error") or "MedFlow 实时语音连接失败。"})
@@ -501,6 +546,8 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         best = results[-1] if results else {}
                         best_text = best.get("text", "")
                         is_interim = bool(best.get("is_interim"))
+                        if best_text and _is_recent_assistant_echo(best_text):
+                            continue
                         await ws.send_json(
                             {
                                 "type": "asr",
@@ -516,6 +563,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     elif event == ServerEvent.CHAT_RESPONSE:
                         if rag_turn_active:
                             continue
+                        _remember_assistant_text(payload.get("content", ""))
                         await ws.send_json(
                             {
                                 "type": "chat",
@@ -533,6 +581,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                         active_tts_type = str(payload.get("tts_type") or "")
                         if rag_turn_active and active_tts_type not in ("external_rag", "chat_tts_text"):
                             continue
+                        _remember_assistant_text(payload.get("text", ""))
                         if rag_turn_active and payload.get("text"):
                             await ws.send_json(
                                 {
@@ -605,6 +654,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                     elif msg_type == "say_hello":
                         content = str(payload.get("content") or "").strip()
                         if content:
+                            _remember_assistant_text(content)
                             await _send_json_event(ClientEvent.SAY_HELLO, {"content": content})
                     elif msg_type == "finish":
                         await _send_json_event(ClientEvent.FINISH_SESSION, {})

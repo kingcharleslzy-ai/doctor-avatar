@@ -30,8 +30,8 @@ def configure_environment(fake_upstream_url: str) -> None:
     os.environ["DOUBAO_REALTIME_ENABLED"] = "true"
     os.environ["DOUBAO_REALTIME_API_KEY"] = "test-api-key"
     os.environ["DOUBAO_REALTIME_WS_URL"] = fake_upstream_url
-    os.environ["DOUBAO_REALTIME_MODEL"] = "1.2.1.1"
-    os.environ["DOUBAO_REALTIME_SPEAKER"] = "zh_male_yunzhou_jupiter_bigtts"
+    os.environ["DOUBAO_REALTIME_MODEL"] = "2.2.0.0"
+    os.environ["DOUBAO_REALTIME_SPEAKER"] = "S_rlFycKm22"
 
 
 async def wait_for_http(url: str, timeout: float = 8.0) -> None:
@@ -87,6 +87,21 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
                 observed["audio_payload_len"] = len(frame.payload)
             else:
                 observed.setdefault("unexpected_client_events", []).append(frame.event)
+
+        await ws.send(
+            encode_server_json_event(
+                ServerEvent.ASR_RESPONSE,
+                {"results": [{"text": observed["say_hello_payload"]["content"], "is_interim": False}]},
+                session_id,
+            )
+        )
+        await ws.send(encode_server_json_event(ServerEvent.ASR_ENDED, {}, session_id))
+        try:
+            frame = decode_frame(await asyncio.wait_for(ws.recv(), timeout=1.5))
+            observed["echo_unexpected_event"] = frame.event
+            observed["echo_unexpected_payload"] = frame.json_payload() if frame.payload else {}
+        except asyncio.TimeoutError:
+            observed["echo_ignored"] = True
 
         await ws.send(
             encode_server_json_event(
@@ -175,8 +190,15 @@ async def validate() -> dict[str, Any]:
         assert observed["headers"]["resource_id"] == "volc.speech.dialog"
         assert observed["start_connection_event"] == 1
         assert observed["start_session_event"] == 100
-        assert observed["start_session_payload"]["dialog"]["extra"]["model"] == "1.2.1.1"
+        assert observed["start_session_payload"]["dialog"]["extra"]["model"] == "2.2.0.0"
+        assert observed["start_session_payload"]["tts"]["speaker"] == "S_rlFycKm22"
+        assert "character_manifest" in observed["start_session_payload"]["dialog"]
+        assert "bot_name" not in observed["start_session_payload"]["dialog"]
+        assert "system_role" not in observed["start_session_payload"]["dialog"]
+        assert "speaking_style" not in observed["start_session_payload"]["dialog"]
         assert observed["say_hello_event"] == 300
+        assert observed.get("echo_ignored") is True, observed
+        assert "echo_unexpected_event" not in observed, observed
         assert observed["audio_event"] == 200
         assert observed["audio_payload_len"] == 640
         assert observed["update_config_event"] == 201
@@ -193,6 +215,9 @@ async def validate() -> dict[str, Any]:
         assert "chat" in types
         assert "audio" in types, {"types": types, "messages": messages, "observed": observed}
         assert "chat_end" in types
+        asr_texts = [message.get("text") for message in messages if message.get("type") == "asr"]
+        assert observed["say_hello_payload"]["content"] not in asr_texts
+        assert "我有点鼻塞" in asr_texts
 
         audio_message = next(message for message in messages if message.get("type") == "audio")
         assert base64.b64decode(audio_message["audio"]) == b"\x01\x00\x02\x00\x03\x00\x04\x00"

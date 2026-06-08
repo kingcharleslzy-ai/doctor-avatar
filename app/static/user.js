@@ -23,10 +23,12 @@ const state = {
   lastInterruptAt: 0,
   bargeInActive: false,
   expectingAssistantResponse: false,
+  micHoldUntil: 0,
   micPcmRemainder: new Int16Array(0),
 };
 
 const OUTPUT_SUPPRESS_MS = 1600;
+const MIC_PLAYBACK_TAIL_MS = 350;
 const MIC_FRAME_SAMPLES = 320; // 20ms at 16kHz, matching Doubao realtime guidance.
 
 const $ = (id) => document.getElementById(id);
@@ -102,6 +104,25 @@ function resetInterruptState() {
   state.suppressOutputUntil = 0;
   state.bargeInActive = false;
   state.expectingAssistantResponse = false;
+}
+
+function hasQueuedAssistantAudio() {
+  const context = state.audioContext;
+  return state.audioSources.size > 0 || Boolean(context && state.playbackAt > context.currentTime + 0.05);
+}
+
+function shouldSendMicAudio() {
+  if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return false;
+  if (hasQueuedAssistantAudio()) {
+    state.micHoldUntil = Date.now() + MIC_PLAYBACK_TAIL_MS;
+    state.micPcmRemainder = new Int16Array(0);
+    return false;
+  }
+  if (Date.now() < state.micHoldUntil) {
+    state.micPcmRemainder = new Int16Array(0);
+    return false;
+  }
+  return true;
 }
 
 function appendAiText(text) {
@@ -242,6 +263,7 @@ async function startRealtimeSession({ withMic = false } = {}) {
   resetCurrentAiBubble();
   resetInterruptState();
   state.assistantSpeaking = false;
+  state.micHoldUntil = 0;
   stopPlayback();
   setMode("正在连接 MedFlow");
   setVoiceStatus("正在连接...");
@@ -433,7 +455,7 @@ async function startMic() {
   state.micProcessor = context.createScriptProcessor(1024, 1, 1);
   state.micProcessor.onaudioprocess = (event) => {
     event.outputBuffer.getChannelData(0).fill(0);
-    if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return;
+    if (!shouldSendMicAudio()) return;
     const input = event.inputBuffer.getChannelData(0);
     const pcm = downsampleToPcm16Samples(input, context.sampleRate, 16000);
     sendMicPcmFrames(pcm);
@@ -459,6 +481,7 @@ function stopMic() {
     state.micStream = null;
   }
   state.micPcmRemainder = new Int16Array(0);
+  state.micHoldUntil = 0;
 }
 
 function downsampleToPcm16Samples(input, inputRate, outputRate) {
@@ -521,7 +544,10 @@ async function playPcm16(base64Audio, sampleRate) {
   source.start(startAt);
   state.playbackAt = startAt + buffer.duration;
   state.audioSources.add(source);
-  source.onended = () => state.audioSources.delete(source);
+  source.onended = () => {
+    state.audioSources.delete(source);
+    if (state.audioSources.size === 0) state.micHoldUntil = Date.now() + MIC_PLAYBACK_TAIL_MS;
+  };
 }
 
 function stopPlayback() {
@@ -572,6 +598,7 @@ function endRealtimeSession({ closeSocket = true } = {}) {
   state.sessionActive = false;
   state.muted = false;
   state.assistantSpeaking = false;
+  state.micHoldUntil = 0;
   resetInterruptState();
   setVisible("startConsultBtn", true);
   setVisible("endConsultBtn", false);

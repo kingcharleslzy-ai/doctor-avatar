@@ -146,7 +146,32 @@ def build_headers(connect_id: str) -> dict[str, str]:
     }
 
 
+def uses_sc_clone_persona() -> bool:
+    return (
+        settings.doubao_realtime_model.strip() == "2.2.0.0"
+        and settings.doubao_realtime_speaker.strip().startswith("S_")
+    )
+
+
+def adapt_dialog_persona(dialog_config: dict[str, Any]) -> dict[str, Any]:
+    if not uses_sc_clone_persona():
+        return dialog_config
+
+    bot_name = str(dialog_config.get("bot_name") or settings.doubao_realtime_bot_name).strip()
+    system_role = str(dialog_config.get("system_role") or settings.doubao_realtime_system_role).strip()
+    speaking_style = str(dialog_config.get("speaking_style") or settings.doubao_realtime_speaking_style).strip()
+    manifest_parts = [part for part in (bot_name, system_role, speaking_style) if part]
+    return {"character_manifest": " ".join(manifest_parts)}
+
+
 def build_start_session_payload() -> dict[str, Any]:
+    dialog_persona = adapt_dialog_persona(
+        {
+            "bot_name": settings.doubao_realtime_bot_name,
+            "system_role": settings.doubao_realtime_system_role,
+            "speaking_style": settings.doubao_realtime_speaking_style,
+        }
+    )
     payload: dict[str, Any] = {
         "tts": {
             "speaker": settings.doubao_realtime_speaker,
@@ -165,10 +190,8 @@ def build_start_session_payload() -> dict[str, Any]:
             },
         },
         "dialog": {
-            "bot_name": settings.doubao_realtime_bot_name,
-            "system_role": settings.doubao_realtime_system_role,
-            "speaking_style": settings.doubao_realtime_speaking_style,
             "dialog_id": settings.doubao_realtime_dialog_id,
+            **dialog_persona,
             "extra": {
                 "strict_audit": settings.doubao_realtime_strict_audit,
                 "audit_response": settings.doubao_realtime_audit_response,
