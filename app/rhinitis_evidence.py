@@ -514,6 +514,74 @@ def search_evidence(
     }
 
 
+def record_answer_citations(
+    *,
+    output_type: str,
+    output_id: str,
+    citations: Iterable[dict[str, Any]],
+    chunk_scope: str = "curated",
+) -> list[dict[str, Any]]:
+    normalized_type = " ".join((output_type or "").split()).strip()
+    normalized_output_id = " ".join((output_id or "").split()).strip()
+    normalized_scope = chunk_scope if chunk_scope in VALID_SCOPES else "curated"
+    if not normalized_type or not normalized_output_id:
+        raise ValueError("output_type and output_id are required")
+
+    now = _utc_now()
+    rows: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    with closing(_connect()) as conn:
+        for citation in citations:
+            chunk_id = int(citation.get("chunk_id") or 0)
+            if chunk_id <= 0 or chunk_id in seen:
+                continue
+            seen.add(chunk_id)
+            label = str(citation.get("citation_label") or citation.get("label") or "").strip()
+            cursor = conn.execute(
+                """
+                INSERT INTO answer_citations (output_type, output_id, chunk_scope, chunk_id, citation_label, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (normalized_type, normalized_output_id, normalized_scope, chunk_id, label[:200], now),
+            )
+            rows.append(
+                {
+                    "id": int(cursor.lastrowid),
+                    "output_type": normalized_type,
+                    "output_id": normalized_output_id,
+                    "chunk_scope": normalized_scope,
+                    "chunk_id": chunk_id,
+                    "citation_label": label[:200],
+                    "created_at": now,
+                }
+            )
+        conn.commit()
+    return rows
+
+
+def list_answer_citations(output_id: str, *, output_type: str = "") -> list[dict[str, Any]]:
+    normalized_output_id = " ".join((output_id or "").split()).strip()
+    normalized_type = " ".join((output_type or "").split()).strip()
+    if not normalized_output_id:
+        return []
+    clauses = ["output_id = ?"]
+    params: list[Any] = [normalized_output_id]
+    if normalized_type:
+        clauses.append("output_type = ?")
+        params.append(normalized_type)
+    with closing(_connect()) as conn:
+        rows = conn.execute(
+            f"""
+            SELECT id, output_type, output_id, chunk_scope, chunk_id, citation_label, created_at
+            FROM answer_citations
+            WHERE {' AND '.join(clauses)}
+            ORDER BY id ASC
+            """,
+            params,
+        ).fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
 def get_evidence_document(document_id: int, *, scope: str = "raw") -> dict[str, Any] | None:
     normalized_scope = scope if scope in VALID_SCOPES else "raw"
     doc_table = "curated_documents" if normalized_scope == "curated" else "raw_documents"

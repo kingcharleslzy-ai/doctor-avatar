@@ -63,6 +63,7 @@ def main() -> None:
             evidence_stats,
             get_evidence_document,
             init_rhinitis_evidence_db,
+            list_answer_citations,
             review_evidence_batch,
             review_pack,
             review_queue,
@@ -220,6 +221,45 @@ def main() -> None:
             assert 'id="evidenceSearchForm"' not in review_page.text, review_page.text
             assert "来源桶" not in review_page.text, review_page.text
             assert "导入批次" not in review_page.text, review_page.text
+
+            demo_page = client.get("/rhinitis-demo")
+            assert demo_page.status_code == 200, demo_page.text
+            assert "鼻敏智诊病例摘要 Demo" in demo_page.text, demo_page.text
+            assert 'id="demoForm"' in demo_page.text, demo_page.text
+            assert 'role="tablist"' in demo_page.text, demo_page.text
+            assert "function evidenceHtml" not in demo_page.text, demo_page.text
+
+            sample_case = client.get("/api/rhinitis/demo/sample-case")
+            assert sample_case.status_code == 200, sample_case.text
+            assert sample_case.json()["case"]["main_symptoms"], sample_case.json()
+
+            demo_summary = client.post("/api/rhinitis/demo/summary", json={"case": sample_case.json()["case"]})
+            assert demo_summary.status_code == 200, demo_summary.text
+            demo_payload = demo_summary.json()
+            assert demo_payload["doctor_summary"]["sections"], demo_payload
+            assert demo_payload["patient_education"]["paragraphs"], demo_payload
+            assert demo_payload["digital_human_script"]["script"], demo_payload
+            assert demo_payload["retrieval"]["scope"] == "curated", demo_payload
+            assert demo_payload["citation_record_count"] >= 1, demo_payload
+            ref_to_key = {}
+            key_to_ref = {}
+            for evidence_items in demo_payload["evidence"].values():
+                for item in evidence_items:
+                    ref = item["ref"]
+                    key = (item["document_id"], item["chunk_id"])
+                    assert ref.startswith("R"), item
+                    if ref in ref_to_key:
+                        assert ref_to_key[ref] == key, (ref, ref_to_key[ref], key)
+                    if key in key_to_ref:
+                        assert key_to_ref[key] == ref, (key, key_to_ref[key], ref)
+                    ref_to_key[ref] = key
+                    key_to_ref[key] = ref
+            assert demo_payload["retrieval"]["unique_evidence_count"] == len(key_to_ref), demo_payload["retrieval"]
+            stored_citations = list_answer_citations(demo_payload["output_id"])
+            assert len(stored_citations) == demo_payload["citation_record_count"], stored_citations
+            assert {"doctor_summary", "patient_education", "digital_human_script"} <= {
+                item["output_type"] for item in stored_citations
+            }, stored_citations
 
         ai_batch = export_batch(limit=2, status="needs_review", output_dir=Path(tmpdir) / "rhinitis_ai_review")
         batch_dir = Path(ai_batch["batch_dir"])

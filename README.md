@@ -23,6 +23,7 @@ MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项�
 - `/`：MedFlow 工作室官网
 - `/hospital-ai`：医疗数字人实时语音问诊页
 - `/rhinitis-ai`：耳鼻喉专病 AI 分支页面
+- `/rhinitis-demo`：鼻敏智诊病例摘要 Demo
 - `/rhinitis-evidence`：鼻敏智诊证据检索页
 - `/rhinitis-review`：鼻敏智诊候选证据审核页
 
@@ -32,6 +33,7 @@ MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项�
 - `app/doubao_realtime.py`：豆包 RealtimeAPI v3 帧协议、鉴权头、StartSession 配置
 - `app/consultation_flow.py`：耳鼻喉问诊状态机、每轮人设更新、外部 RAG 组织
 - `app/rhinitis_evidence.py`：鼻敏智诊候选库 / 精选证据库、FTS5 检索、审核晋级
+- `app/rhinitis_demo.py`：鼻敏智诊固定病例输入、精选证据检索、医生摘要/宣教/数字人口播 Demo
 - `app/knowledge.py`：本地 Markdown + SQLite 医生资料检索
 - `app/static/user.js`：数字人页面豆包实时语音前端
 - `knowledge/`：医生资料、FAQ、问诊流程和表达风格资料
@@ -75,6 +77,7 @@ uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 http://127.0.0.1:8001/
 http://127.0.0.1:8001/hospital-ai
 http://127.0.0.1:8001/rhinitis-ai
+http://127.0.0.1:8001/rhinitis-demo
 http://127.0.0.1:8001/rhinitis-evidence
 http://127.0.0.1:8001/rhinitis-review
 ```
@@ -126,6 +129,17 @@ PubMed 导入默认是“筛选后入库”：先用分桶 query 在源头缩小
 ```
 
 `data/rhinitis_evidence.db` 不提交到 Git；`knowledge/rhinitis_curated_evidence.json` 用来把本地已审核的精选证据带到线上。部署流程会显式导入一次，应用启动时也会自动补种一次，导入按 `source_key` 幂等更新。
+
+鼻敏智诊病例 Demo：
+
+```bash
+curl -s http://127.0.0.1:8001/api/rhinitis/demo/sample-case
+curl -s http://127.0.0.1:8001/api/rhinitis/demo/summary \
+  -H 'Content-Type: application/json' \
+  -d '{"case":{"age_group":"成人","main_symptoms":["鼻塞","喷嚏","流涕","鼻痒"],"duration":"反复3年，本次2周","seasonality":"春秋季加重","triggers":["花粉","冷空气"],"medication_history":"间断口服抗组胺药","allergen_tests":"尘螨和蒿草花粉 IgE 阳性","nasal_endoscopy":"鼻黏膜苍白水肿，下鼻甲肿胀","comorbidities":["偶有咳嗽"],"patient_goal":"希望明确评估和治疗方向"}}'
+```
+
+Demo 只检索 `approved` 精选证据；医生摘要、患者宣教和数字人口播都会写入 `answer_citations`，用于追溯引用过的证据片段。
 
 ## 豆包官方配置口径
 

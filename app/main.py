@@ -38,8 +38,14 @@ from .doubao_realtime import (
 )
 from .knowledge import load_doctor_profile
 from .memory_snapshot import get_memory_status
-from .models import PresenceHeartbeatRequest, RhinitisEvidenceBatchReviewRequest, RhinitisEvidenceReviewRequest
+from .models import (
+    PresenceHeartbeatRequest,
+    RhinitisDemoSummaryRequest,
+    RhinitisEvidenceBatchReviewRequest,
+    RhinitisEvidenceReviewRequest,
+)
 from .ops import record_presence, record_request
+from .rhinitis_demo import build_rhinitis_demo_summary, default_rhinitis_demo_case
 from .rhinitis_evidence import (
     evidence_stats,
     get_evidence_document,
@@ -282,6 +288,16 @@ def rhinitis_evidence_review_batch(payload: RhinitisEvidenceBatchReviewRequest) 
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.get("/api/rhinitis/demo/sample-case")
+def rhinitis_demo_sample_case() -> dict[str, object]:
+    return {"case": default_rhinitis_demo_case().model_dump()}
+
+
+@app.post("/api/rhinitis/demo/summary")
+def rhinitis_demo_summary(payload: RhinitisDemoSummaryRequest) -> dict[str, object]:
+    return build_rhinitis_demo_summary(payload.case)
+
+
 @app.post("/api/ops/presence")
 def ops_presence(payload: PresenceHeartbeatRequest, request: Request) -> dict[str, str]:
     record_presence(payload.session_id, request.headers.get("user-agent"))
@@ -321,6 +337,11 @@ def rhinitis_evidence_page(request: Request) -> HTMLResponse:
 @app.get("/rhinitis-review", response_class=HTMLResponse)
 def rhinitis_review_page(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("rhinitis_evidence.html", {"request": request, "v": _CACHE_BUST, "mode": "review"})
+
+
+@app.get("/rhinitis-demo", response_class=HTMLResponse)
+def rhinitis_demo_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("rhinitis_demo.html", {"request": request, "v": _CACHE_BUST})
 
 
 @app.websocket("/ws/doubao/realtime")

@@ -131,6 +131,24 @@ PubMed 不做“全量先落本地”。导入默认使用筛选流程：
 
 应用启动时会自动导入 `knowledge/rhinitis_curated_evidence.json`，GitHub Actions 部署流程也会显式执行一次导入作为双保险。可以用 `RHINITIS_EVIDENCE_SEED_SNAPSHOT_ENABLED=false` 关闭启动时自动 seed。
 
+## 8. 病例 Demo 生成链路
+
+第一版产品原型使用固定病例输入结构，不接新模型：
+
+- 页面：`/rhinitis-demo`
+- 示例病例：`GET /api/rhinitis/demo/sample-case`
+- 生成摘要：`POST /api/rhinitis/demo/summary`
+
+输入字段包括人群、主要症状、病程、季节性、诱因、用药史、过敏原/IgE、鼻内镜、合并情况和患者目标。后端根据病例生成检索词，只检索 `curated` 范围的 `approved` 证据。
+
+输出分三类：
+
+- `doctor_summary`：给医生看的病史整理、检查线索和待补充问题。
+- `patient_education`：低风险通俗宣教，优先使用 `patient_visible=true` 的精选证据。
+- `digital_human_script`：适合李勇医生数字人口播的短脚本。
+
+每次生成会使用同一个 `output_id`，并把三类输出引用过的 curated chunk 写入 `answer_citations`。这一步用于证明精选证据库不仅能搜索，还能支撑医生摘要、患者宣教和数字人脚本的可追溯生成。
+
 患者端和医生端只读 curated evidence。
 
 `/rhinitis-review` 审核页需要填写审核人和审核备注，并选择 `doctor_visible`、`patient_visible` 可用范围。单条审核和批量审核都会写入 `review_notes`，详情抽屉可追溯查看。
