@@ -136,12 +136,19 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
         )
         await ws.send(encode_server_json_event(ServerEvent.CHAT_ENDED, {"question_id": "q-default", "reply_id": "r-default"}, session_id))
 
-        model_response = "这次流鼻血大概有多久了？"
+        model_response = "这次流鼻血大概有多久了，按压后能不能止住？"
+        await ws.send(
+            encode_server_json_event(
+                ServerEvent.CHAT_RESPONSE,
+                {"content": model_response, "question_id": "q1", "reply_id": "r1"},
+                session_id,
+            )
+        )
         await ws.send(
             encode_server_json_event(
                 ServerEvent.TTS_SENTENCE_START,
                 {
-                    "text": model_response,
+                    "text": "",
                     "tts_type": "external_rag",
                     "question_id": "q1",
                     "reply_id": "r1",
@@ -241,7 +248,7 @@ async def validate() -> dict[str, Any]:
         assert observed["say_hello_payload"]["content"] not in asr_texts
         assert "我鼻子流血。" in asr_texts
         chat_texts = [message.get("content", "") for message in messages if message.get("type") == "chat"]
-        assert any("这次流鼻血大概有多久了" in text for text in chat_texts), chat_texts
+        assert any("按压后能不能止住" in text for text in chat_texts), chat_texts
         assert all("你现在最主要的不舒服是什么" not in text for text in chat_texts), chat_texts
 
         audio_message = next(message for message in messages if message.get("type") == "audio")
