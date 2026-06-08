@@ -106,33 +106,34 @@ async def run_fake_upstream(stop_event: asyncio.Event, observed: dict[str, Any])
         await ws.send(
             encode_server_json_event(
                 ServerEvent.ASR_RESPONSE,
-                {"results": [{"text": "我有点鼻塞", "is_interim": False}]},
+                {"results": [{"text": "我鼻子流血。", "is_interim": False}]},
                 session_id,
             )
         )
         await ws.send(encode_server_json_event(ServerEvent.ASR_ENDED, {}, session_id))
+        try:
+            frame = decode_frame(await asyncio.wait_for(ws.recv(), timeout=1.0))
+            observed["unexpected_voice_guidance_event"] = frame.event
+            observed["unexpected_voice_guidance_payload"] = frame.json_payload() if frame.payload else {}
+        except asyncio.TimeoutError:
+            observed["voice_state_machine_bypassed"] = True
 
-        while "direct_question_event" not in observed and "rag_event" not in observed:
-            frame = decode_frame(await ws.recv())
-            if frame.event == ClientEvent.UPDATE_CONFIG:
-                observed["update_config_event"] = frame.event
-                observed["update_config_payload"] = frame.json_payload()
-                await ws.send(encode_server_json_event(ServerEvent.CONFIG_UPDATED, {}, session_id))
-            elif frame.event == ClientEvent.CHAT_RAG_TEXT:
-                observed["rag_event"] = frame.event
-                observed["rag_payload"] = frame.json_payload()
-            elif frame.event == ClientEvent.SAY_HELLO:
-                observed["direct_question_event"] = frame.event
-                observed["direct_question_payload"] = frame.json_payload()
-            else:
-                observed.setdefault("post_asr_client_events", []).append(frame.event)
+        model_response = "今天第一次流鼻血吗？"
+        await ws.send(
+            encode_server_json_event(
+                ServerEvent.CHAT_RESPONSE,
+                {"content": model_response, "question_id": "q1", "reply_id": "r1"},
+                session_id,
+            )
+        )
+        await ws.send(encode_server_json_event(ServerEvent.CHAT_ENDED, {"question_id": "q1", "reply_id": "r1"}, session_id))
 
         await ws.send(
             encode_server_json_event(
                 ServerEvent.TTS_SENTENCE_START,
                 {
-                    "text": "这个情况先看鼻塞持续多久，有没有喷嚏流涕和过敏诱因。",
-                    "tts_type": "external_rag",
+                    "text": model_response,
+                    "tts_type": "chat",
                     "question_id": "q1",
                     "reply_id": "r1",
                 },
@@ -201,23 +202,22 @@ async def validate() -> dict[str, Any]:
         assert "echo_unexpected_event" not in observed, observed
         assert observed["audio_event"] == 200
         assert observed["audio_payload_len"] == 640
-        assert observed["update_config_event"] == 201
-        assert observed.get("direct_question_event") == 300 or observed.get("rag_event") == 502
-        if "direct_question_payload" in observed:
-            assert observed["direct_question_payload"]["content"].count("？") <= 1
-        if "rag_payload" in observed:
-            assert "external_rag" in observed["rag_payload"]
+        assert observed.get("voice_state_machine_bypassed") is True, observed
+        assert "unexpected_voice_guidance_event" not in observed, observed
 
         types = [message.get("type") for message in messages]
         assert "status" in types
         assert "asr" in types
-        assert "rag_context" in types
+        assert "rag_context" not in types
         assert "chat" in types
         assert "audio" in types, {"types": types, "messages": messages, "observed": observed}
         assert "chat_end" in types
         asr_texts = [message.get("text") for message in messages if message.get("type") == "asr"]
         assert observed["say_hello_payload"]["content"] not in asr_texts
-        assert "我有点鼻塞" in asr_texts
+        assert "我鼻子流血。" in asr_texts
+        chat_texts = [message.get("content", "") for message in messages if message.get("type") == "chat"]
+        assert any("今天第一次流鼻血吗" in text for text in chat_texts), chat_texts
+        assert all("你现在最主要的不舒服是什么" not in text for text in chat_texts), chat_texts
 
         audio_message = next(message for message in messages if message.get("type") == "audio")
         assert base64.b64decode(audio_message["audio"]) == b"\x01\x00\x02\x00\x03\x00\x04\x00"

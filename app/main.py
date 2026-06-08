@@ -556,7 +556,7 @@ async def doubao_realtime_ws(ws: WebSocket) -> None:
                                 "payload": payload,
                             }
                         )
-                        if best_text and not is_interim:
+                        if best_text and not is_interim and mode != "voice":
                             await _guide_user_query(best_text)
                     elif event == ServerEvent.ASR_ENDED:
                         await ws.send_json({"type": "asr_end", "payload": payload})
