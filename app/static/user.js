@@ -23,12 +23,10 @@ const state = {
   lastInterruptAt: 0,
   bargeInActive: false,
   expectingAssistantResponse: false,
-  micHoldUntil: 0,
   micPcmRemainder: new Int16Array(0),
 };
 
 const OUTPUT_SUPPRESS_MS = 1600;
-const MIC_PLAYBACK_TAIL_MS = 350;
 const MIC_FRAME_SAMPLES = 320; // 20ms at 16kHz, matching Doubao realtime guidance.
 
 const $ = (id) => document.getElementById(id);
@@ -104,22 +102,6 @@ function resetInterruptState() {
   state.suppressOutputUntil = 0;
   state.bargeInActive = false;
   state.expectingAssistantResponse = false;
-}
-
-function hasPendingAssistantPlayback() {
-  const context = state.audioContext;
-  return state.assistantSpeaking
-    || state.audioSources.size > 0
-    || Boolean(context && state.playbackAt > context.currentTime + 0.05);
-}
-
-function shouldSendMicAudio() {
-  if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return false;
-  if (hasPendingAssistantPlayback()) {
-    state.micHoldUntil = Date.now() + MIC_PLAYBACK_TAIL_MS;
-    return false;
-  }
-  return Date.now() >= state.micHoldUntil;
 }
 
 function appendAiText(text) {
@@ -451,7 +433,7 @@ async function startMic() {
   state.micProcessor = context.createScriptProcessor(1024, 1, 1);
   state.micProcessor.onaudioprocess = (event) => {
     event.outputBuffer.getChannelData(0).fill(0);
-    if (!shouldSendMicAudio()) return;
+    if (!state.ws || state.ws.readyState !== WebSocket.OPEN || state.muted) return;
     const input = event.inputBuffer.getChannelData(0);
     const pcm = downsampleToPcm16Samples(input, context.sampleRate, 16000);
     sendMicPcmFrames(pcm);
@@ -539,10 +521,7 @@ async function playPcm16(base64Audio, sampleRate) {
   source.start(startAt);
   state.playbackAt = startAt + buffer.duration;
   state.audioSources.add(source);
-  source.onended = () => {
-    state.audioSources.delete(source);
-    if (state.audioSources.size === 0) state.micHoldUntil = Date.now() + MIC_PLAYBACK_TAIL_MS;
-  };
+  source.onended = () => state.audioSources.delete(source);
 }
 
 function stopPlayback() {
