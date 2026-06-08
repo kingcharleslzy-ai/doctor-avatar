@@ -68,14 +68,20 @@ FTS 只用于检索排序，不替代审核状态判断。
 - 初始化数据库和种子源。
 - 通过公开 API 抓取候选量级统计并写入 `import_runs`。
 - 批量导入 PubMed 题录、摘要、PMID、DOI、PMCID、期刊、年份、Publication Type、MeSH 和作者信息。
+- 抓取 `knowledge/rhinitis_seed_sources.yaml` 中公开 URL 的标题、描述和正文样本，写入独立 `seedfetch:*` 候选。
+- 批量导入 Europe PMC 题录、摘要、开放获取标记和 PMID/PMCID/DOI。
+- 批量导入 ClinicalTrials.gov 研究登记，作为 `trial_registry` 候选。
+- 批量导入 DailyMed SPL 药品标签候选，按鼻喷、抗组胺、白三烯相关标题筛选。
+- 使用 OpenAlex 按 DOI 补全引用量和开放获取状态，只写入 `raw_payload.openalex`，不直接生成 RAG 证据。
 
-当前优先自动统计：
+当前自动统计 / 导入：
 
 - PubMed / PMC：题录、摘要、PMID、MeSH、年份、期刊。
-- Europe PMC：开放获取和全文候选。
+- Europe PMC：题录、摘要、开放获取和全文候选标记。
 - ClinicalTrials.gov：研究登记、状态、干预、适应症。
-- DailyMed / openFDA：目标药物标签。
-- OpenAlex：DOI、引用量、开放获取状态补全。
+- DailyMed：目标药物标签候选。
+- openFDA：当前只做数量统计，不直接导入，原因是噪音和重复较高。
+- OpenAlex：DOI、引用量、开放获取状态补全，不直接进 RAG。
 
 国内资料第一版半自动：
 
@@ -89,6 +95,11 @@ FTS 只用于检索排序，不替代审核状态判断。
 .venv/bin/python scripts/rhinitis_evidence_import.py --fetch-counts
 .venv/bin/python scripts/rhinitis_evidence_import.py --import-pubmed-plan priority
 .venv/bin/python scripts/rhinitis_evidence_import.py --import-pubmed --pubmed-query pubmed_guideline_consensus
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-seed-sources
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-europe-pmc
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-clinical-trials
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-dailymed
+.venv/bin/python scripts/rhinitis_evidence_import.py --enrich-openalex
 .venv/bin/python scripts/rhinitis_evidence_import.py --report-imports
 .venv/bin/python scripts/rhinitis_evidence_import.py --rescreen-pubmed
 .venv/bin/python scripts/rhinitis_evidence_import.py --rescreen-pubmed --apply-rescreen
@@ -103,6 +114,20 @@ PubMed 不做“全量先落本地”。导入默认使用筛选流程：
 5. 筛选规则变更后，`--rescreen-pubmed` 会按当前规则重扫已入库 PubMed 候选；默认 dry-run，带 `--apply-rescreen` 才会更新旧候选的来源桶、证据等级、标签和审核状态。
 
 因此 `raw_candidates` 是“已筛候选库”，不是把 PubMed 总量全量复制到本地。高证据等级或关键主题自动进入 `needs_review`，普通低优先级文献默认不入库。
+
+本轮多源导入后的本地运行态统计：
+
+- `raw_documents=1266`
+- `curated_documents=86`
+- 来源前缀：`pubmed=761`、`europepmc=184`、`clinicaltrials=184`、`dailymed=114`、`seed=13`、`seedfetch=10`
+- 来源桶：`literature_candidates=752`、`trial_candidates=184`、`drug_candidates=116`、`guideline_candidates=115`、`environment_candidates=91`、`hospital_education_candidates=6`、`doctor_material_candidates=2`
+
+已知限制：
+
+- `seed_sources.yaml` 中国家卫健委主页当前对脚本请求返回 `HTTP 412`，不硬绕；保留人工种子，后续应补具体临床路径 URL。
+- DailyMed 当前导入 SPL 列表元数据和候选摘要，未抓完整标签正文；进入患者端前仍需审核具体商品、剂型和标签版本。
+- Europe PMC 当前导入题录和摘要，不抓全文。
+- ClinicalTrials.gov 只作为研究登记候选，不作为患者宣教或治疗推荐依据。
 
 ## 6. 晋级流程
 

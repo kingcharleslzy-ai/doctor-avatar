@@ -132,6 +132,11 @@ def clean_document_for_snapshot(document: dict[str, Any], *, exported_scope: str
     cleaned = {field: document.get(field) for field in DOCUMENT_FIELDS if field in document}
     cleaned["review_status"] = "approved"
     raw_payload = cleaned.get("raw_payload") if isinstance(cleaned.get("raw_payload"), dict) else {}
+    raw_payload = {
+        key: value
+        for key, value in raw_payload.items()
+        if key not in {"snapshot_export", "curated_snapshot"}
+    }
     cleaned["raw_payload"] = {
         **raw_payload,
         "snapshot_export": {

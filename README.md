@@ -40,6 +40,7 @@ MedFlow 是杭州 MedFlow 智能科技工作室的医疗 AI 信息化展示项�
 - `knowledge/rhinitis_seed_sources.yaml`：鼻敏智诊第一批种子证据和术语别名
 - `docs/DOUBAO_REALTIME_V2.md`：豆包实时语音接入说明
 - `docs/RHINITIS_EVIDENCE_LIBRARY.md`：鼻敏智诊证据库设计
+- `docs/RHINITIS_DATABASE_PROGRESS.md`：鼻敏智诊多源候选库当前进度
 
 ## 环境变量
 
@@ -102,12 +103,27 @@ npm run validate:user
 .venv/bin/python scripts/rhinitis_evidence_import.py --fetch-counts
 .venv/bin/python scripts/rhinitis_evidence_import.py --import-pubmed-plan priority
 .venv/bin/python scripts/rhinitis_evidence_import.py --import-pubmed --pubmed-query pubmed_guideline_consensus
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-seed-sources
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-europe-pmc
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-clinical-trials
+.venv/bin/python scripts/rhinitis_evidence_import.py --import-dailymed
+.venv/bin/python scripts/rhinitis_evidence_import.py --enrich-openalex
 .venv/bin/python scripts/rhinitis_evidence_import.py --report-imports
 .venv/bin/python scripts/rhinitis_evidence_import.py --rescreen-pubmed
 .venv/bin/python scripts/rhinitis_evidence_import.py --rescreen-pubmed --apply-rescreen
 ```
 
 PubMed 导入默认是“筛选后入库”：先用分桶 query 在源头缩小范围，再在导入时跳过明显无关、动物/基础实验为主、低价值 publication type、缺摘要的主题桶结果。`--max-results` 是每个 query 的拉取上限，`0` 表示使用该桶默认上限；`--no-screen` 只用于调试，不建议生产导入使用。筛选规则变化后，先用 `--rescreen-pubmed` 预览，再用 `--apply-rescreen` 更新旧候选的桶、证据等级和审核状态。
+
+多源导入当前策略：
+
+- `--import-seed-sources`：抓取 `knowledge/rhinitis_seed_sources.yaml` 中公开 URL 的标题、meta description 和正文样本，写入独立 `seedfetch:*` 候选，避免覆盖人工种子。
+- `--import-europe-pmc`：导入 Europe PMC 题录、摘要、PMID/PMCID/DOI、开放获取标记；按 PMID/DOI 去重，不抓全文。
+- `--import-clinical-trials`：导入 ClinicalTrials.gov 研究登记，统一作为 `trial_registry` 候选证据。
+- `--import-dailymed`：导入 DailyMed SPL 药品标签候选；按鼻喷/抗组胺/白三烯相关标题筛选，默认不进入患者端。
+- `--enrich-openalex`：只补全已有 DOI 文档的 OpenAlex 引用量和开放获取状态，不直接把 OpenAlex 搜索结果导入 RAG。
+
+本地当前候选库进度：`raw_documents=1266`，`curated_documents=86`；来源前缀约为 `pubmed=761`、`europepmc=184`、`clinicaltrials=184`、`dailymed=114`、`seed=13`、`seedfetch=10`。`data/rhinitis_evidence.db` 是运行态文件，不提交到 Git。
 
 鼻敏智诊 AI 证据预审：
 

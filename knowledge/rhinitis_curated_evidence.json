@@ -1,6 +1,6 @@
 {
   "snapshot_version": 1,
-  "exported_at": "2026-06-07T14:36:08+00:00",
+  "exported_at": "2026-06-08T13:52:21+00:00",
   "source": "local curated_documents",
   "document_count": 86,
   "by_source_bucket": {
@@ -99,6 +99,25 @@
           "profile": "pubmed_guideline_consensus",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4416854653",
+          "doi": "10.1111/all.70131",
+          "display_name": "Allergic Rhinitis and Its Impact on Asthma ( <scp>ARIA</scp> )‐ <scp>EAACI</scp> Guidelines—2024–2025 Revision: Part I—Guidelines on Intranasal Treatments",
+          "publication_year": 2025,
+          "cited_by_count": 8,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "hybrid",
+            "oa_url": "https://doi.org/10.1111/all.70131",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S68090385",
+            "display_name": "Allergy",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:26+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -706,6 +725,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4310329689",
+          "doi": "10.4168/aair.2022.14.6.604",
+          "display_name": "Chinese Guideline on Allergen Immunotherapy for Allergic Rhinitis: The 2022 Update",
+          "publication_year": 2022,
+          "cited_by_count": 74,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "diamond",
+            "oa_url": "https://doi.org/10.4168/aair.2022.14.6.604",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S8319085",
+            "display_name": "Allergy Asthma and Immunology Research",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:37+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 46
@@ -938,6 +976,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W2980595867",
+          "doi": "10.1016/j.jaci.2019.06.049",
+          "display_name": "Next-generation Allergic Rhinitis and Its Impact on Asthma (ARIA) guidelines for allergic rhinitis based on Grading of Recommendations Assessment, Development and Evaluation (GRADE) and real-world evidence",
+          "publication_year": 2019,
+          "cited_by_count": 565,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "http://www.jacionline.org/article/S009167491931187X/pdf",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S108525051",
+            "display_name": "Journal of Allergy and Clinical Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:27+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 38
@@ -1035,6 +1092,25 @@
           "profile": "pubmed_guideline_consensus",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2756993541",
+          "doi": "10.1111/all.13317",
+          "display_name": "EAACI Guidelines on Allergen Immunotherapy: Allergic rhinoconjunctivitis",
+          "publication_year": 2017,
+          "cited_by_count": 768,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "hybrid",
+            "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/all.13317",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S68090385",
+            "display_name": "Allergy",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:31+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -1142,6 +1218,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W2916610774",
+          "doi": "10.1016/j.jaci.2017.03.050",
+          "display_name": "Allergic Rhinitis and its Impact on Asthma (ARIA) guidelines—2016 revision",
+          "publication_year": 2017,
+          "cited_by_count": 1987,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "http://www.jacionline.org/article/S0091674917309193/pdf",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S108525051",
+            "display_name": "Journal of Allergy and Clinical Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:23+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 35
@@ -1246,6 +1341,25 @@
           "profile": "pubmed_guideline_consensus",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2729931428",
+          "doi": "10.1111/cea.12953",
+          "display_name": "<scp>BSACI</scp> guideline for the diagnosis and management of allergic and non‐allergic rhinitis (Revised Edition 2017; First edition 2007)",
+          "publication_year": 2017,
+          "cited_by_count": 310,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "green",
+            "oa_url": "https://research.manchester.ac.uk/en/publications/02d91f55-aa3c-4809-bd63-2c79ee3694d7",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S17239246",
+            "display_name": "Clinical & Experimental Allergy",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:44+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -1393,6 +1507,25 @@
           "profile": "pubmed_guideline_consensus",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2099583662",
+          "doi": "10.1177/0194599814561600",
+          "display_name": "Clinical Practice Guideline",
+          "publication_year": 2015,
+          "cited_by_count": 653,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S200877091",
+            "display_name": "Otolaryngology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:24+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -1724,6 +1857,25 @@
           "screened": true,
           "decision": "imported"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4323304861",
+          "doi": "10.1002/alr.23090",
+          "display_name": "International consensus statement on allergy and rhinology: Allergic rhinitis – 2023",
+          "publication_year": 2023,
+          "cited_by_count": 438,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "green",
+            "oa_url": "https://www.zora.uzh.ch/id/eprint/232274/1/ZORA_232274.pdf",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2506670899",
+            "display_name": "International Forum of Allergy & Rhinology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:22+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 34
@@ -1853,6 +2005,25 @@
           "profile": "pubmed_guideline_consensus",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2793898214",
+          "doi": "10.1002/alr.22073",
+          "display_name": "International Consensus Statement on Allergy and Rhinology: Allergic Rhinitis",
+          "publication_year": 2018,
+          "cited_by_count": 548,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "green",
+            "oa_url": "https://scholarworks.utrgv.edu/som_pub/187",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2506670899",
+            "display_name": "International Forum of Allergy & Rhinology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:32+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -2090,6 +2261,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4411655029",
+          "doi": "10.1183/16000617.0266-2024",
+          "display_name": "Association between air pollution and allergic upper respiratory diseases: a meta-analysis",
+          "publication_year": 2025,
+          "cited_by_count": 11,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "diamond",
+            "oa_url": "https://doi.org/10.1183/16000617.0266-2024",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S168221024",
+            "display_name": "European Respiratory Review",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:07+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 73
@@ -2196,6 +2386,25 @@
           "profile": "pubmed_pediatric_ar",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4412459762",
+          "doi": "10.1016/j.jaip.2025.07.004",
+          "display_name": "Intranasal Treatments for Allergic Rhinitis in Preschool- and School-Age Children: Network Meta-Analysis",
+          "publication_year": 2025,
+          "cited_by_count": 5,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2754868259",
+            "display_name": "The Journal of Allergy and Clinical Immunology In Practice",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:47:52+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -2310,6 +2519,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4395702019",
+          "doi": "10.1016/j.jaci.2024.04.016",
+          "display_name": "Intranasal antihistamines and corticosteroids in allergic rhinitis: A systematic review and meta-analysis",
+          "publication_year": 2024,
+          "cited_by_count": 28,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S108525051",
+            "display_name": "Journal of Allergy and Clinical Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:54+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 61
@@ -2423,6 +2651,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4402327605",
+          "doi": "10.1016/j.jaip.2024.09.001",
+          "display_name": "Intranasal Versus Oral Treatments for Allergic Rhinitis: A Systematic Review With Meta-Analysis",
+          "publication_year": 2024,
+          "cited_by_count": 19,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "green",
+            "oa_url": "https://publica.fraunhofer.de/handle/publica/497125",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2754868259",
+            "display_name": "The Journal of Allergy and Clinical Immunology In Practice",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:56+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 63
@@ -2523,6 +2770,25 @@
           "profile": "pubmed_systematic_meta",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4377990902",
+          "doi": "10.1016/j.jaip.2023.05.016",
+          "display_name": "Epidemiology of Allergic Rhinitis in Children: A Systematic Review and Meta-Analysis",
+          "publication_year": 2023,
+          "cited_by_count": 134,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2754868259",
+            "display_name": "The Journal of Allergy and Clinical Immunology In Practice",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:55+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -2906,6 +3172,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W3157837612",
+          "doi": "10.1002/lary.29586",
+          "display_name": "Subcutaneous Versus Sublingual Immunotherapy for Adults with Allergic Rhinitis: A Systematic Review with Meta‐Analyses",
+          "publication_year": 2021,
+          "cited_by_count": 25,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S86387881",
+            "display_name": "The Laryngoscope",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:35+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 101
@@ -3001,6 +3286,25 @@
           "profile": "pubmed_intranasal_steroid_ar",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4225459856",
+          "doi": "10.4193/rhin21.355",
+          "display_name": "As-needed intranasal corticosteroid spray for allergic rhinitis: a systematic review and meta-analysis",
+          "publication_year": 2022,
+          "cited_by_count": 13,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "https://www.rhinologyjournal.com/download.php?id=2992",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S94555171",
+            "display_name": "Rhinology Journal",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:47+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -3397,6 +3701,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W2937711748",
+          "doi": "10.1177/0194599819841883",
+          "display_name": "Intranasal Azelastine and Fluticasone as Combination Therapy for Allergic Rhinitis: Systematic Review and Meta‐analysis",
+          "publication_year": 2019,
+          "cited_by_count": 25,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S200877091",
+            "display_name": "Otolaryngology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:45+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 111
@@ -3688,6 +4011,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W2809288658",
+          "doi": "10.1002/alr.22166",
+          "display_name": "Effects of H1 antihistamine addition to intranasal corticosteroid for allergic rhinitis: a systematic review and meta‐analysis",
+          "publication_year": 2018,
+          "cited_by_count": 27,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2506670899",
+            "display_name": "International Forum of Allergy & Rhinology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:58+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 124
@@ -3891,6 +4233,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W1968234331",
+          "doi": "10.1016/j.jaci.2013.02.013",
+          "display_name": "Subcutaneous and sublingual immunotherapy for seasonal allergic rhinitis: A systematic review and indirect comparison",
+          "publication_year": 2013,
+          "cited_by_count": 182,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "http://www.jacionline.org/article/S0091674913003230/pdf",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S108525051",
+            "display_name": "Journal of Allergy and Clinical Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:39+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 105
@@ -4078,6 +4439,25 @@
           "profile": "pubmed_pediatric_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4214855261",
+          "doi": "10.15586/aei.v50i2.560",
+          "display_name": "Local allergic rhinitis in children: A systematic review",
+          "publication_year": 2022,
+          "cited_by_count": 13,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "diamond",
+            "oa_url": "https://all-imm.com/index.php/aei/article/download/560/768",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S4210205432",
+            "display_name": "Allergologia et Immunopathologia",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:47:45+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -4703,6 +5083,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4392702384",
+          "doi": "10.1001/jama.2024.0530",
+          "display_name": "Allergic Rhinitis",
+          "publication_year": 2024,
+          "cited_by_count": 252,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S172573765",
+            "display_name": "JAMA",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:40+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 106
@@ -4810,6 +5209,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4323361211",
+          "doi": "10.1016/j.jaip.2023.01.007",
+          "display_name": "A Synopsis of Guidance for Allergic Rhinitis Diagnosis and Management From ICAR 2023",
+          "publication_year": 2023,
+          "cited_by_count": 60,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2754868259",
+            "display_name": "The Journal of Allergy and Clinical Immunology In Practice",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:45:41+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 49
@@ -4899,6 +5317,25 @@
           "profile": "pubmed_immunotherapy_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4210407994",
+          "doi": "10.1016/j.jaci.2022.01.016",
+          "display_name": "Diverse immune mechanisms of allergen immunotherapy for allergic rhinitis with and without asthma",
+          "publication_year": 2022,
+          "cited_by_count": 159,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "http://www.jacionline.org/article/S0091674922000860/pdf",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S108525051",
+            "display_name": "Journal of Allergy and Clinical Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:19+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -5082,6 +5519,25 @@
           "profile": "pubmed_pediatric_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2966489293",
+          "doi": "10.1016/j.pcl.2019.06.004",
+          "display_name": "Allergic Rhinitis in Children and Adolescents",
+          "publication_year": 2019,
+          "cited_by_count": 177,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S68151621",
+            "display_name": "Pediatric Clinics of North America",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:47:40+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -5273,6 +5729,25 @@
           "profile": "pubmed_antihistamine_ar",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2766837967",
+          "doi": "10.1016/j.clinthera.2017.10.006",
+          "display_name": "Management of Allergic Rhinitis: A Review for the Community Pharmacist",
+          "publication_year": 2017,
+          "cited_by_count": 140,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "hybrid",
+            "oa_url": "https://doi.org/10.1016/j.clinthera.2017.10.006",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S185879095",
+            "display_name": "Clinical Therapeutics",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:47:02+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -5651,6 +6126,25 @@
           "profile": "pubmed_immunotherapy_ar",
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W1964962872",
+          "doi": "10.1186/1741-7015-11-255",
+          "display_name": "Allergen immunotherapy and allergic rhinitis: false beliefs",
+          "publication_year": 2013,
+          "cited_by_count": 23,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "gold",
+            "oa_url": "https://bmcmedicine.biomedcentral.com/counter/pdf/10.1186/1741-7015-11-255",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S135560524",
+            "display_name": "BMC Medicine",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:46:38+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -6716,6 +7210,25 @@
           "applied": true,
           "at": "2026-06-06T12:28:32+00:00"
         },
+        "openalex": {
+          "id": "https://openalex.org/W4409450947",
+          "doi": "10.1007/s12016-025-09053-2",
+          "display_name": "Inhalant Mediated Allergy: Immunobiology, Clinical Manifestations and Diagnosis",
+          "publication_year": 2025,
+          "cited_by_count": 13,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "hybrid",
+            "oa_url": "https://link.springer.com/content/pdf/10.1007/s12016-025-09053-2.pdf",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S120080025",
+            "display_name": "Clinical Reviews in Allergy & Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:38+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 224
@@ -6801,6 +7314,25 @@
           "profile": "pubmed_pollen_environment_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4392723799",
+          "doi": "10.1016/j.scitotenv.2024.171593",
+          "display_name": "Pollen and sub-pollen particles: External interactions shaping the allergic potential of pollen",
+          "publication_year": 2024,
+          "cited_by_count": 20,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "green",
+            "oa_url": "https://figshare.com/articles/journal_contribution/Pollen_and_sub-pollen_particles_External_interactions_shaping_the_allergic_potential_of_pollen/25494094",
+            "any_repository_has_fulltext": true
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S86852077",
+            "display_name": "The Science of The Total Environment",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:22+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -6983,6 +7515,25 @@
           "screened": true,
           "decision": "imported"
         },
+        "openalex": {
+          "id": "https://openalex.org/W30043255",
+          "doi": "10.1007/s12016-018-8698-8",
+          "display_name": "「華洛一覧図」の考察を中心にみた文化年間における京都周辺山地の植生景観(平成2年度日本造園学会研究発表論文集(8))",
+          "publication_year": 1990,
+          "cited_by_count": 0,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S4306558921",
+            "display_name": "造園雑誌",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:25+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 214
@@ -7074,6 +7625,25 @@
           "profile": "pubmed_pollen_environment_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W2617358423",
+          "doi": "10.1111/all.13210",
+          "display_name": "Poaceae pollen as the leading aeroallergen worldwide: A review",
+          "publication_year": 2017,
+          "cited_by_count": 191,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "bronze",
+            "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/all.13210",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S68090385",
+            "display_name": "Allergy",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:29+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -7286,6 +7856,25 @@
           "profile": "pubmed_pollen_environment_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W4395456348",
+          "doi": "10.1111/all.16130",
+          "display_name": "Ambient pollen exposure and pollen allergy symptom severity in the EPOCHAL study",
+          "publication_year": 2024,
+          "cited_by_count": 21,
+          "open_access": {
+            "is_oa": true,
+            "oa_status": "hybrid",
+            "oa_url": "https://doi.org/10.1111/all.16130",
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S68090385",
+            "display_name": "Allergy",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:27+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",
@@ -7672,6 +8261,25 @@
           "screened": true,
           "decision": "imported"
         },
+        "openalex": {
+          "id": "https://openalex.org/W2989790633",
+          "doi": "10.1016/j.jaip.2019.11.022",
+          "display_name": "Interactions Between Air Pollution and Pollen Season for Rhinitis Using Mobile Technology: A MASK-POLLAR Study",
+          "publication_year": 2019,
+          "cited_by_count": 70,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S2754868259",
+            "display_name": "The Journal of Allergy and Clinical Immunology In Practice",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:35+00:00"
+        },
         "snapshot_export": {
           "exported_scope": "raw",
           "source_document_id": 221
@@ -7993,6 +8601,25 @@
           "profile": "pubmed_pollen_environment_ar",
           "screened": true,
           "decision": "imported"
+        },
+        "openalex": {
+          "id": "https://openalex.org/W1972132542",
+          "doi": "10.1159/000332964",
+          "display_name": "Grass Pollen Counts, Air Pollution Levels and Allergic Rhinitis Severity",
+          "publication_year": 2012,
+          "cited_by_count": 60,
+          "open_access": {
+            "is_oa": false,
+            "oa_status": "closed",
+            "oa_url": null,
+            "any_repository_has_fulltext": false
+          },
+          "primary_source": {
+            "id": "https://openalex.org/S205866209",
+            "display_name": "International Archives of Allergy and Immunology",
+            "type": "journal"
+          },
+          "updated_at": "2026-06-08T13:48:23+00:00"
         },
         "snapshot_export": {
           "exported_scope": "raw",

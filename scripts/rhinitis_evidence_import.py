@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 from datetime import UTC, datetime
+from html.parser import HTMLParser
 import json
 import re
 import sqlite3
@@ -13,6 +14,8 @@ from pathlib import Path
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -22,6 +25,7 @@ if str(ROOT) not in sys.path:
 USER_AGENT = "MedFlowRhinitisEvidence/0.1"
 PUBMED_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+SEED_SOURCE_PATH = ROOT / "knowledge" / "rhinitis_seed_sources.yaml"
 
 
 PUBMED_QUERY_SPECS = {
@@ -236,6 +240,74 @@ def _get_text(url: str) -> str:
         return response.read().decode("utf-8", errors="replace")
 
 
+class _HTMLSummaryParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.title_parts: list[str] = []
+        self.description = ""
+        self.text_parts: list[str] = []
+        self._in_title = False
+        self._skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        normalized = tag.lower()
+        if normalized in {"script", "style", "noscript", "svg"}:
+            self._skip_depth += 1
+        if normalized == "title":
+            self._in_title = True
+        if normalized == "meta":
+            values = {str(key).lower(): str(value or "") for key, value in attrs}
+            name = values.get("name", "").lower()
+            prop = values.get("property", "").lower()
+            if not self.description and (name == "description" or prop == "og:description"):
+                self.description = _clean_text(values.get("content", ""))
+
+    def handle_endtag(self, tag: str) -> None:
+        normalized = tag.lower()
+        if normalized in {"script", "style", "noscript", "svg"} and self._skip_depth:
+            self._skip_depth -= 1
+        if normalized == "title":
+            self._in_title = False
+
+    def handle_data(self, data: str) -> None:
+        cleaned = _clean_text(data)
+        if not cleaned:
+            return
+        if self._in_title:
+            self.title_parts.append(cleaned)
+            return
+        if self._skip_depth:
+            return
+        if len(cleaned) >= 2:
+            self.text_parts.append(cleaned)
+
+
+def _fetch_public_page_metadata(url: str) -> dict:
+    request = Request(url, headers={"User-Agent": USER_AGENT})
+    with urlopen(request, timeout=30) as response:
+        raw = response.read(1_500_000)
+        status = getattr(response, "status", 200)
+        final_url = response.geturl()
+        headers = response.headers
+        content_type = headers.get("Content-Type", "")
+        charset = headers.get_content_charset() or "utf-8"
+    text = raw.decode(charset, errors="replace")
+    parser = _HTMLSummaryParser()
+    parser.feed(text)
+    title = _clean_text(" ".join(parser.title_parts))
+    body_text = _clean_text(" ".join(parser.text_parts))
+    return {
+        "http_status": status,
+        "final_url": final_url,
+        "content_type": content_type,
+        "charset": charset,
+        "fetched_title": title,
+        "description": parser.description,
+        "extracted_text_sample": _trim(body_text, 3600),
+        "retrieved_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
+    }
+
+
 def _record_success(source_name: str, source_bucket: str, query: str, count: int, metadata: dict | None = None) -> None:
     from app.rhinitis_evidence import record_import_run
 
@@ -262,6 +334,145 @@ def _record_failure(source_name: str, source_bucket: str, query: str, error: Exc
         error=str(error),
     )
     print(f"{source_name}: failed: {error}", file=sys.stderr)
+
+
+def import_seed_source_pages(*, limit: int = 0) -> dict:
+    from app.rhinitis_evidence import record_import_run, upsert_raw_document
+
+    payload = yaml.safe_load(SEED_SOURCE_PATH.read_text(encoding="utf-8")) or {}
+    documents = list(payload.get("documents") or [])
+    if limit > 0:
+        documents = documents[:limit]
+
+    imported = 0
+    updated = 0
+    skipped = 0
+    failed = 0
+    failures: list[dict[str, str]] = []
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    for document in documents:
+        source_key = str(document.get("source_key") or "").strip()
+        url = str(document.get("url") or "").strip()
+        if not source_key or not url:
+            skipped += 1
+            continue
+        try:
+            metadata = _fetch_public_page_metadata(url)
+            candidate = _seed_fetch_document(document, metadata)
+            _, created = upsert_raw_document(candidate)
+            imported += 1 if created else 0
+            updated += 0 if created else 1
+            print(
+                f"seed_source_fetch: {'new' if created else 'updated'} {candidate['source_key']} "
+                f"status={metadata.get('http_status')} title={candidate['title'][:70]}"
+            )
+        except Exception as exc:
+            failed += 1
+            failures.append({"source_key": source_key, "url": url, "error": str(exc)[:500]})
+            print(f"seed_source_fetch: failed {source_key}: {exc}", file=sys.stderr)
+        time.sleep(0.35)
+
+    run = record_import_run(
+        source_name="seed_source_fetch",
+        source_bucket="mixed_candidates",
+        query=str(SEED_SOURCE_PATH.relative_to(ROOT)),
+        status="imported_with_errors" if failed else "imported",
+        fetched_count=len(documents),
+        imported_count=imported,
+        metadata={
+            "updated_count": updated,
+            "skipped_count": skipped,
+            "failed_count": failed,
+            "failures": failures[:20],
+        },
+        started_at=started_at,
+    )
+    print(
+        f"seed_source_fetch: fetched={len(documents)} new={imported} "
+        f"updated={updated} skipped={skipped} failed={failed}"
+    )
+    return run
+
+
+def _seed_fetch_document(document: dict, metadata: dict) -> dict:
+    blocked = _looks_like_challenge_page(metadata)
+    if blocked:
+        metadata = dict(metadata)
+        metadata["warning"] = "challenge_or_non_content_page"
+    fetched_text = "" if blocked else metadata.get("extracted_text_sample") or ""
+    fetched_text = fetched_text or document.get("content_summary") or ""
+    title = "" if blocked else metadata.get("fetched_title") or ""
+    title = title or document.get("title") or "Seed source webpage"
+    source_key = str(document.get("source_key") or "").strip()
+    topic_tags = list(document.get("topic_tags") or [])
+    chunks = []
+    if fetched_text:
+        chunks.append(
+            {
+                "heading": "公开网页抓取摘要",
+                "scenario": "research",
+                "content": _trim(fetched_text, 2600),
+                "topic_tags": topic_tags,
+                "patient_visible": False,
+                "doctor_visible": bool(document.get("doctor_visible", True)),
+                "research_visible": True,
+            }
+        )
+    for chunk in document.get("chunks") or []:
+        content = str(chunk.get("content") or "").strip()
+        if not content:
+            continue
+        copied = dict(chunk)
+        copied["scenario"] = copied.get("scenario") or "research"
+        copied["patient_visible"] = False
+        copied["research_visible"] = True
+        chunks.append(copied)
+    return {
+        "source_key": f"seedfetch:{source_key}",
+        "source_bucket": document.get("source_bucket") or "hospital_education_candidates",
+        "source_type": document.get("source_type") or "webpage",
+        "title": title,
+        "url": metadata.get("final_url") or document.get("url") or "",
+        "pmid": document.get("pmid") or "",
+        "pmcid": document.get("pmcid") or "",
+        "doi": document.get("doi") or "",
+        "year": document.get("year"),
+        "journal_or_org": document.get("journal_or_org") or "",
+        "language": document.get("language") or "zh",
+        "evidence_level": document.get("evidence_level") or "webpage",
+        "review_status": "needs_review",
+        "license_status": document.get("license_status") or "public_webpage",
+        "open_access": bool(document.get("open_access", True)),
+        "patient_visible": False,
+        "doctor_visible": bool(document.get("doctor_visible", True)),
+        "research_visible": True,
+        "topic_tags": _dedupe([*topic_tags, "seed_source_fetch"]),
+        "content_summary": _trim(metadata.get("description") or fetched_text or document.get("content_summary") or title, 900),
+        "raw_payload": {
+            "seed_source_key": source_key,
+            "seed_title": document.get("title") or "",
+            "seed_review_status": document.get("review_status") or "",
+            "fetch": metadata,
+            "extractor": "seed_source_fetch_v1",
+        },
+        "chunks": chunks,
+    }
+
+
+def _looks_like_challenge_page(metadata: dict) -> bool:
+    title = str(metadata.get("fetched_title") or "").lower()
+    sample = str(metadata.get("extracted_text_sample") or "").lower()
+    return any(
+        signal in title or signal in sample[:500]
+        for signal in [
+            "checking your browser",
+            "recaptcha",
+            "captcha",
+            "access denied",
+            "verify you are human",
+            "请完成安全验证",
+        ]
+    )
 
 
 def fetch_pubmed_counts() -> None:
@@ -678,6 +889,46 @@ def _dedupe(values) -> list[str]:
     return result
 
 
+def _safe_int(value) -> int | None:
+    if value is None or value == "":
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        match = re.search(r"\b(19|20)\d{2}\b", str(value))
+        return int(match.group(0)) if match else None
+
+
+def _normalize_doi(value: str) -> str:
+    doi = str(value or "").strip()
+    doi = re.sub(r"^https?://(dx\.)?doi\.org/", "", doi, flags=re.IGNORECASE)
+    return doi.strip()
+
+
+def _existing_raw_identity(document: dict) -> bool:
+    from app.rhinitis_evidence import rhinitis_evidence_db_path
+
+    clauses = ["source_key = ?"]
+    params: list[str] = [str(document.get("source_key") or "")]
+    pmid = str(document.get("pmid") or "").strip()
+    doi = _normalize_doi(str(document.get("doi") or ""))
+    if pmid:
+        clauses.append("pmid = ?")
+        params.append(pmid)
+    if doi:
+        clauses.append("lower(doi) = lower(?)")
+        params.append(doi)
+    conn = sqlite3.connect(rhinitis_evidence_db_path())
+    try:
+        row = conn.execute(
+            f"SELECT id FROM raw_documents WHERE {' OR '.join(clauses)} LIMIT 1",
+            params,
+        ).fetchone()
+    finally:
+        conn.close()
+    return row is not None
+
+
 def _chunks(values: list[str], size: int):
     for index in range(0, len(values), size):
         yield values[index : index + size]
@@ -800,6 +1051,178 @@ def fetch_europe_pmc_counts() -> None:
         time.sleep(0.35)
 
 
+def import_europe_pmc_candidates(*, max_results: int, page_size: int) -> None:
+    for name, bucket, query in EUROPE_PMC_QUERIES:
+        import_europe_pmc_query(name, bucket, query, max_results=max_results, page_size=page_size)
+        time.sleep(0.35)
+
+
+def import_europe_pmc_query(name: str, source_bucket: str, query: str, *, max_results: int, page_size: int) -> dict:
+    from app.rhinitis_evidence import record_import_run, upsert_raw_document
+
+    base = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+    effective_limit = max(1, min(max_results or 80, 1000))
+    effective_page_size = max(1, min(page_size or 50, 100))
+    cursor_mark = "*"
+    fetched = 0
+    imported = 0
+    updated = 0
+    skipped_reasons: Counter[str] = Counter()
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    try:
+        while fetched < effective_limit:
+            params = {
+                "query": query,
+                "format": "json",
+                "resultType": "core",
+                "pageSize": str(min(effective_page_size, effective_limit - fetched)),
+                "cursorMark": cursor_mark,
+            }
+            payload = _get_json(base + "?" + urlencode(params))
+            results = (payload.get("resultList") or {}).get("result") or []
+            if not results:
+                break
+            for item in results:
+                fetched += 1
+                document = _europe_pmc_document(item, source_bucket=source_bucket, query_name=name)
+                if not document.get("title"):
+                    skipped_reasons["missing_title"] += 1
+                    continue
+                if _existing_raw_identity(document):
+                    skipped_reasons["duplicate_identity"] += 1
+                    continue
+                _, created = upsert_raw_document(document)
+                if created:
+                    imported += 1
+                else:
+                    updated += 1
+                if fetched >= effective_limit:
+                    break
+            next_cursor = payload.get("nextCursorMark")
+            if not next_cursor or next_cursor == cursor_mark:
+                break
+            cursor_mark = next_cursor
+            time.sleep(0.35)
+        run = record_import_run(
+            source_name=f"europepmc_import_{name}",
+            source_bucket=source_bucket,
+            query=query,
+            status="imported",
+            fetched_count=fetched,
+            imported_count=imported,
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results": effective_limit,
+                "page_size": effective_page_size,
+            },
+            started_at=started_at,
+        )
+        print(
+            f"europepmc_import_{name}: fetched={fetched} new={imported} "
+            f"updated={updated} skipped={sum(skipped_reasons.values())}"
+        )
+        return run
+    except Exception as exc:
+        record_import_run(
+            source_name=f"europepmc_import_{name}",
+            source_bucket=source_bucket,
+            query=query,
+            status="failed",
+            fetched_count=fetched,
+            imported_count=imported,
+            error=str(exc),
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results": effective_limit,
+                "page_size": effective_page_size,
+            },
+            started_at=started_at,
+        )
+        raise
+
+
+def _europe_pmc_document(item: dict, *, source_bucket: str, query_name: str) -> dict:
+    title = _clean_text(item.get("title") or "")
+    abstract = _clean_text(item.get("abstractText") or "")
+    pub_types = _europe_pmc_pub_types(item)
+    evidence_level = _pubmed_evidence_level(pub_types, title, abstract)
+    topic_tags = _pubmed_topic_tags(title, abstract, [], pub_types, evidence_level)
+    review_status = _pubmed_review_status(evidence_level, title, abstract)
+    if source_bucket == "guideline_candidates" and evidence_level not in {"guideline", "consensus"}:
+        review_status = "candidate"
+    journal_info = item.get("journalInfo") or {}
+    journal = item.get("journalTitle") or (journal_info.get("journal") or {}).get("title") or ""
+    pmid = str(item.get("pmid") or "")
+    pmcid = str(item.get("pmcid") or "")
+    doi = _normalize_doi(item.get("doi") or "")
+    source_id = pmid or pmcid or doi or str(item.get("id") or "")
+    open_access = str(item.get("isOpenAccess") or "").upper() == "Y" or bool(item.get("fullTextUrlList"))
+    url = ""
+    if pmcid:
+        url = f"https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/"
+    elif pmid:
+        url = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+    elif doi:
+        url = f"https://doi.org/{doi}"
+    summary = abstract or title
+    return {
+        "source_key": f"europepmc:{source_id}",
+        "source_bucket": source_bucket,
+        "source_type": _source_type_for_evidence(evidence_level),
+        "title": title or f"Europe PMC {source_id}",
+        "url": url,
+        "pmid": pmid,
+        "pmcid": pmcid,
+        "doi": doi,
+        "year": _safe_int(item.get("pubYear")),
+        "journal_or_org": journal,
+        "language": str(item.get("language") or "en"),
+        "evidence_level": evidence_level,
+        "review_status": review_status,
+        "license_status": "open_access" if open_access else "public_metadata",
+        "open_access": open_access,
+        "patient_visible": False,
+        "doctor_visible": True,
+        "research_visible": True,
+        "topic_tags": _dedupe([*topic_tags, "Europe PMC", query_name]),
+        "content_summary": _trim(summary, 900),
+        "raw_payload": {
+            "source": "Europe PMC",
+            "query_name": query_name,
+            "pub_types": pub_types,
+            "cited_by_count": _safe_int(item.get("citedByCount")),
+            "has_pdf": str(item.get("hasPDF") or "").upper() == "Y",
+            "has_full_text": bool(item.get("fullTextUrlList")),
+            "raw": item,
+        },
+        "chunks": [
+            {
+                "heading": "Europe PMC 摘要",
+                "scenario": "research",
+                "content": _trim(summary, 2400),
+                "topic_tags": _dedupe([*topic_tags, "Europe PMC"]),
+                "patient_visible": False,
+                "doctor_visible": True,
+                "research_visible": True,
+            }
+        ],
+    }
+
+
+def _europe_pmc_pub_types(item: dict) -> list[str]:
+    pub_type_list = item.get("pubTypeList") or {}
+    values = pub_type_list.get("pubType") if isinstance(pub_type_list, dict) else pub_type_list
+    if isinstance(values, str):
+        return [values]
+    if isinstance(values, list):
+        return _dedupe(values)
+    return []
+
+
 def fetch_clinical_trials_counts() -> None:
     base = "https://clinicaltrials.gov/api/v2/studies"
     for name, bucket, params in CLINICAL_TRIALS_QUERIES:
@@ -812,6 +1235,208 @@ def fetch_clinical_trials_counts() -> None:
         time.sleep(0.35)
 
 
+def import_clinical_trials_candidates(*, max_results: int, page_size: int) -> None:
+    for name, bucket, params in CLINICAL_TRIALS_QUERIES:
+        import_clinical_trials_query(name, bucket, params, max_results=max_results, page_size=page_size)
+        time.sleep(0.35)
+
+
+def import_clinical_trials_query(name: str, source_bucket: str, params: dict, *, max_results: int, page_size: int) -> dict:
+    from app.rhinitis_evidence import record_import_run, upsert_raw_document
+
+    base = "https://clinicaltrials.gov/api/v2/studies"
+    effective_limit = max(1, min(max_results or 80, 1000))
+    effective_page_size = max(1, min(page_size or 50, 100))
+    page_token = ""
+    fetched = 0
+    imported = 0
+    updated = 0
+    skipped_reasons: Counter[str] = Counter()
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    try:
+        while fetched < effective_limit:
+            request_params = {
+                **params,
+                "pageSize": str(min(effective_page_size, effective_limit - fetched)),
+                "format": "json",
+                "countTotal": "true",
+            }
+            if page_token:
+                request_params["pageToken"] = page_token
+            payload = _get_json(base + "?" + urlencode(request_params))
+            studies = payload.get("studies") or []
+            if not studies:
+                break
+            for study in studies:
+                fetched += 1
+                document = _clinical_trial_document(study, query_name=name)
+                if not document.get("source_key"):
+                    skipped_reasons["missing_nct_id"] += 1
+                    continue
+                _, created = upsert_raw_document(document)
+                if created:
+                    imported += 1
+                else:
+                    updated += 1
+                if fetched >= effective_limit:
+                    break
+            page_token = payload.get("nextPageToken") or ""
+            if not page_token:
+                break
+            time.sleep(0.35)
+        run = record_import_run(
+            source_name=f"clinicaltrials_import_{name}",
+            source_bucket=source_bucket,
+            query=json.dumps(params, ensure_ascii=False),
+            status="imported",
+            fetched_count=fetched,
+            imported_count=imported,
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results": effective_limit,
+                "page_size": effective_page_size,
+            },
+            started_at=started_at,
+        )
+        print(
+            f"clinicaltrials_import_{name}: fetched={fetched} new={imported} "
+            f"updated={updated} skipped={sum(skipped_reasons.values())}"
+        )
+        return run
+    except Exception as exc:
+        record_import_run(
+            source_name=f"clinicaltrials_import_{name}",
+            source_bucket=source_bucket,
+            query=json.dumps(params, ensure_ascii=False),
+            status="failed",
+            fetched_count=fetched,
+            imported_count=imported,
+            error=str(exc),
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results": effective_limit,
+                "page_size": effective_page_size,
+            },
+            started_at=started_at,
+        )
+        raise
+
+
+def _clinical_trial_document(study: dict, *, query_name: str) -> dict:
+    protocol = study.get("protocolSection") or {}
+    identification = protocol.get("identificationModule") or {}
+    status = protocol.get("statusModule") or {}
+    conditions = protocol.get("conditionsModule") or {}
+    design = protocol.get("designModule") or {}
+    arms = protocol.get("armsInterventionsModule") or {}
+    description = protocol.get("descriptionModule") or {}
+    sponsor = protocol.get("sponsorCollaboratorsModule") or {}
+    nct_id = str(identification.get("nctId") or "").strip()
+    title = _clean_text(
+        identification.get("briefTitle")
+        or identification.get("officialTitle")
+        or f"ClinicalTrials.gov {nct_id}"
+    )
+    condition_values = _dedupe(conditions.get("conditions") or [])
+    intervention_values = _trial_interventions(arms)
+    phase_values = _dedupe(design.get("phases") or [])
+    overall_status = str(status.get("overallStatus") or "")
+    summary = _clean_text(
+        " ".join(
+            part
+            for part in [
+                f"Status: {overall_status}." if overall_status else "",
+                f"Conditions: {', '.join(condition_values)}." if condition_values else "",
+                f"Interventions: {', '.join(intervention_values)}." if intervention_values else "",
+                f"Phases: {', '.join(phase_values)}." if phase_values else "",
+                description.get("briefSummary") or "",
+            ]
+            if part
+        )
+    )
+    text = f"{title} {summary}".lower()
+    tags = ["ClinicalTrials.gov", "临床试验", "过敏性鼻炎"]
+    if "immunotherapy" in text or "sublingual" in text or "subcutaneous" in text:
+        tags.append("免疫治疗")
+    if "pediatric" in text or "children" in text or "child" in text:
+        tags.append("儿童")
+    if "asthma" in text:
+        tags.append("合并哮喘")
+    review_status = "needs_review" if "免疫治疗" in tags or overall_status in {"RECRUITING", "ACTIVE_NOT_RECRUITING", "COMPLETED"} else "candidate"
+    return {
+        "source_key": f"clinicaltrials:{nct_id}",
+        "source_bucket": "trial_candidates",
+        "source_type": "trial_registry",
+        "title": title,
+        "url": f"https://clinicaltrials.gov/study/{nct_id}" if nct_id else "",
+        "year": _trial_year(status),
+        "journal_or_org": _lead_sponsor_name(sponsor) or "ClinicalTrials.gov",
+        "language": "en",
+        "evidence_level": "trial_registry",
+        "review_status": review_status,
+        "license_status": "public_registry",
+        "open_access": True,
+        "patient_visible": False,
+        "doctor_visible": True,
+        "research_visible": True,
+        "topic_tags": _dedupe([*tags, query_name]),
+        "content_summary": _trim(summary or title, 900),
+        "raw_payload": {
+            "source": "ClinicalTrials.gov",
+            "query_name": query_name,
+            "nct_id": nct_id,
+            "overall_status": overall_status,
+            "conditions": condition_values,
+            "interventions": intervention_values,
+            "phases": phase_values,
+            "has_results": bool(study.get("hasResults")),
+            "raw": study,
+        },
+        "chunks": [
+            {
+                "heading": "临床试验登记摘要",
+                "scenario": "research",
+                "content": _trim(summary or title, 2400),
+                "topic_tags": _dedupe(tags),
+                "patient_visible": False,
+                "doctor_visible": True,
+                "research_visible": True,
+            }
+        ],
+    }
+
+
+def _trial_interventions(arms: dict) -> list[str]:
+    values = []
+    for item in arms.get("interventions") or []:
+        if item.get("name"):
+            values.append(item["name"])
+        if item.get("type"):
+            values.append(item["type"])
+    return _dedupe(values)
+
+
+def _trial_year(status: dict) -> int | None:
+    for key in ["startDateStruct", "studyFirstSubmitDate", "lastUpdateSubmitDate"]:
+        value = status.get(key)
+        if isinstance(value, dict):
+            year = _safe_int(value.get("date", "")[:4])
+        else:
+            year = _safe_int(str(value or "")[:4])
+        if year:
+            return year
+    return None
+
+
+def _lead_sponsor_name(sponsor: dict) -> str:
+    lead = sponsor.get("leadSponsor") or {}
+    return str(lead.get("name") or "")
+
+
 def fetch_openalex_counts() -> None:
     base = "https://api.openalex.org/works"
     for name, bucket, query in OPENALEX_QUERIES:
@@ -822,6 +1447,98 @@ def fetch_openalex_counts() -> None:
         except Exception as exc:
             _record_failure(name, bucket, query, exc)
         time.sleep(0.35)
+
+
+def enrich_openalex_metadata(*, limit: int, force: bool = False) -> dict:
+    from app.rhinitis_evidence import record_import_run, rhinitis_evidence_db_path
+
+    effective_limit = max(1, min(limit or 200, 2000))
+    conn = sqlite3.connect(rhinitis_evidence_db_path())
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT id, source_key, doi, raw_payload_json
+        FROM raw_documents
+        WHERE doi != ''
+        ORDER BY id ASC
+        LIMIT ?
+        """,
+        (effective_limit,),
+    ).fetchall()
+    scanned = 0
+    enriched = 0
+    skipped = 0
+    failed = 0
+    failures: list[dict[str, str]] = []
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    try:
+        for row in rows:
+            scanned += 1
+            raw_payload = json.loads(row["raw_payload_json"] or "{}")
+            if raw_payload.get("openalex") and not force:
+                skipped += 1
+                continue
+            doi = _normalize_doi(row["doi"])
+            try:
+                work = _get_json(f"https://api.openalex.org/works/{quote('https://doi.org/' + doi, safe='')}")
+                raw_payload["openalex"] = _openalex_summary(work)
+                conn.execute(
+                    """
+                    UPDATE raw_documents
+                    SET raw_payload_json = ?, updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        json.dumps(raw_payload, ensure_ascii=False),
+                        datetime.now(UTC).replace(microsecond=0).isoformat(),
+                        row["id"],
+                    ),
+                )
+                enriched += 1
+            except Exception as exc:
+                failed += 1
+                failures.append({"source_key": row["source_key"], "doi": doi, "error": str(exc)[:500]})
+            time.sleep(0.15)
+        conn.commit()
+    finally:
+        conn.close()
+    run = record_import_run(
+        source_name="openalex_enrich_doi",
+        source_bucket="literature_candidates",
+        query="raw_documents.doi",
+        status="enriched_with_errors" if failed else "enriched",
+        fetched_count=scanned,
+        imported_count=enriched,
+        metadata={
+            "skipped_count": skipped,
+            "failed_count": failed,
+            "failures": failures[:20],
+            "force": force,
+            "limit": effective_limit,
+        },
+        started_at=started_at,
+    )
+    print(f"openalex_enrich_doi: scanned={scanned} enriched={enriched} skipped={skipped} failed={failed}")
+    return run
+
+
+def _openalex_summary(work: dict) -> dict:
+    primary_location = work.get("primary_location") or {}
+    source = primary_location.get("source") or {}
+    return {
+        "id": work.get("id") or "",
+        "doi": _normalize_doi(work.get("doi") or ""),
+        "display_name": work.get("display_name") or work.get("title") or "",
+        "publication_year": work.get("publication_year"),
+        "cited_by_count": work.get("cited_by_count"),
+        "open_access": work.get("open_access") or {},
+        "primary_source": {
+            "id": source.get("id") or "",
+            "display_name": source.get("display_name") or "",
+            "type": source.get("type") or "",
+        },
+        "updated_at": datetime.now(UTC).replace(microsecond=0).isoformat(),
+    }
 
 
 def fetch_drug_label_counts() -> None:
@@ -845,6 +1562,168 @@ def fetch_drug_label_counts() -> None:
         except Exception as exc:
             _record_failure(dailymed_name, "drug_candidates", term, exc)
         time.sleep(0.35)
+
+
+def import_dailymed_candidates(*, max_results_per_term: int, page_size: int) -> None:
+    for term in DRUG_TERMS:
+        import_dailymed_term(term, max_results=max_results_per_term, page_size=page_size)
+        time.sleep(0.35)
+
+
+def import_dailymed_term(term: str, *, max_results: int, page_size: int) -> dict:
+    from app.rhinitis_evidence import record_import_run, upsert_raw_document
+
+    effective_limit = max(1, min(max_results or 12, 100))
+    effective_page_size = max(1, min(page_size or 20, 100))
+    max_scan = max(effective_limit * 4, effective_limit)
+    fetched = 0
+    imported = 0
+    updated = 0
+    skipped_reasons: Counter[str] = Counter()
+    page = 1
+    started_at = datetime.now(UTC).replace(microsecond=0).isoformat()
+    try:
+        while fetched < max_scan and imported + updated < effective_limit:
+            url = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?" + urlencode(
+                {"drug_name": term, "pagesize": str(effective_page_size), "page": str(page)}
+            )
+            payload = _get_json(url)
+            rows = payload.get("data") or []
+            if not rows:
+                break
+            for item in rows:
+                fetched += 1
+                if not _dailymed_title_relevant(term, item.get("title") or ""):
+                    skipped_reasons["title_not_rhinitis_relevant"] += 1
+                    continue
+                document = _dailymed_document(term, item)
+                _, created = upsert_raw_document(document)
+                if created:
+                    imported += 1
+                else:
+                    updated += 1
+                if imported + updated >= effective_limit or fetched >= max_scan:
+                    break
+            metadata = payload.get("metadata") or {}
+            next_page = metadata.get("next_page")
+            if not next_page or str(next_page).lower() == "null":
+                break
+            page = int(next_page)
+            time.sleep(0.35)
+        run = record_import_run(
+            source_name=f"dailymed_import_{term.replace(' ', '_')}",
+            source_bucket="drug_candidates",
+            query=term,
+            status="imported",
+            fetched_count=fetched,
+            imported_count=imported,
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results_per_term": effective_limit,
+                "page_size": effective_page_size,
+                "max_scan": max_scan,
+            },
+            started_at=started_at,
+        )
+        print(
+            f"dailymed_import_{term}: fetched={fetched} new={imported} "
+            f"updated={updated} skipped={sum(skipped_reasons.values())}"
+        )
+        return run
+    except Exception as exc:
+        record_import_run(
+            source_name=f"dailymed_import_{term.replace(' ', '_')}",
+            source_bucket="drug_candidates",
+            query=term,
+            status="failed",
+            fetched_count=fetched,
+            imported_count=imported,
+            error=str(exc),
+            metadata={
+                "updated_count": updated,
+                "skipped_count": sum(skipped_reasons.values()),
+                "skip_reasons": dict(skipped_reasons),
+                "max_results_per_term": effective_limit,
+                "page_size": effective_page_size,
+                "max_scan": max_scan,
+            },
+            started_at=started_at,
+        )
+        raise
+
+
+def _dailymed_document(term: str, item: dict) -> dict:
+    setid = str(item.get("setid") or "").strip()
+    title = _clean_text(item.get("title") or f"DailyMed {term} label")
+    year = _safe_int(str(item.get("published_date") or ""))
+    tags = _dailymed_tags(term, title)
+    summary = (
+        f"DailyMed SPL label candidate for {term}. Title: {title}. "
+        f"Published date: {item.get('published_date') or 'unknown'}. "
+        "This drug-label candidate must be reviewed before any patient-facing use."
+    )
+    return {
+        "source_key": f"dailymed:{setid}",
+        "source_bucket": "drug_candidates",
+        "source_type": "drug_label",
+        "title": title,
+        "url": f"https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid={setid}" if setid else "",
+        "year": year,
+        "journal_or_org": "DailyMed / National Library of Medicine",
+        "language": "en",
+        "evidence_level": "drug_label",
+        "review_status": "needs_review",
+        "license_status": "public_label",
+        "open_access": True,
+        "patient_visible": False,
+        "doctor_visible": True,
+        "research_visible": True,
+        "topic_tags": tags,
+        "content_summary": _trim(summary, 900),
+        "raw_payload": {
+            "source": "DailyMed",
+            "drug_term": term,
+            "setid": setid,
+            "spl_version": item.get("spl_version"),
+            "published_date": item.get("published_date"),
+            "raw": item,
+        },
+        "chunks": [
+            {
+                "heading": "DailyMed 药品标签候选",
+                "scenario": "research",
+                "content": _trim(summary, 1600),
+                "topic_tags": tags,
+                "patient_visible": False,
+                "doctor_visible": True,
+                "research_visible": True,
+            }
+        ],
+    }
+
+
+def _dailymed_title_relevant(term: str, title: str) -> bool:
+    text = f"{term} {title}".lower()
+    nasal_terms = {"fluticasone", "mometasone", "budesonide", "azelastine"}
+    if term in nasal_terms:
+        return any(token in text for token in ["nasal", "spray", "allergy"])
+    if term == "montelukast":
+        return "montelukast" in text
+    return any(token in text for token in [term, "allergy", "tablet", "capsule", "solution", "syrup", "antihistamine"])
+
+
+def _dailymed_tags(term: str, title: str) -> list[str]:
+    text = f"{term} {title}".lower()
+    tags = ["DailyMed", "药品说明书", term]
+    if any(token in text for token in ["fluticasone", "mometasone", "budesonide", "nasal", "spray"]):
+        tags.append("鼻喷激素")
+    if any(token in text for token in ["azelastine", "cetirizine", "loratadine", "fexofenadine", "levocetirizine", "desloratadine"]):
+        tags.append("抗组胺")
+    if "montelukast" in text:
+        tags.append("白三烯")
+    return _dedupe(tags)
 
 
 def print_import_report(*, limit: int = 12) -> None:
@@ -1056,6 +1935,31 @@ def main() -> None:
         help="Import one screened PubMed query into raw candidate documents.",
     )
     parser.add_argument(
+        "--import-seed-sources",
+        action="store_true",
+        help="Fetch public URLs listed in knowledge/rhinitis_seed_sources.yaml into separate raw candidate documents.",
+    )
+    parser.add_argument(
+        "--import-europe-pmc",
+        action="store_true",
+        help="Import screened Europe PMC metadata and abstracts into raw candidate documents.",
+    )
+    parser.add_argument(
+        "--import-clinical-trials",
+        action="store_true",
+        help="Import ClinicalTrials.gov allergic rhinitis study registrations into raw candidate documents.",
+    )
+    parser.add_argument(
+        "--import-dailymed",
+        action="store_true",
+        help="Import DailyMed SPL drug label candidates for configured rhinitis medication terms.",
+    )
+    parser.add_argument(
+        "--enrich-openalex",
+        action="store_true",
+        help="Enrich existing DOI-bearing raw documents with OpenAlex citation and open-access metadata.",
+    )
+    parser.add_argument(
         "--import-pubmed-plan",
         choices=sorted(PUBMED_IMPORT_PLANS),
         help="Import a screened PubMed priority plan across multiple source buckets.",
@@ -1083,6 +1987,59 @@ def main() -> None:
         type=int,
         default=0,
         help="PubMed esearch retstart offset for paged imports.",
+    )
+    parser.add_argument(
+        "--seed-limit",
+        type=int,
+        default=0,
+        help="Optional number of seed source documents to process. Use 0 for all seed documents.",
+    )
+    parser.add_argument(
+        "--europe-pmc-max-results",
+        type=int,
+        default=80,
+        help="Maximum Europe PMC records fetched per query.",
+    )
+    parser.add_argument(
+        "--europe-pmc-page-size",
+        type=int,
+        default=50,
+        help="Europe PMC page size per request, capped at 100.",
+    )
+    parser.add_argument(
+        "--clinical-trials-max-results",
+        type=int,
+        default=80,
+        help="Maximum ClinicalTrials.gov records fetched per query.",
+    )
+    parser.add_argument(
+        "--clinical-trials-page-size",
+        type=int,
+        default=50,
+        help="ClinicalTrials.gov page size per request, capped at 100.",
+    )
+    parser.add_argument(
+        "--dailymed-max-results",
+        type=int,
+        default=12,
+        help="Maximum DailyMed SPL candidates imported per drug term.",
+    )
+    parser.add_argument(
+        "--dailymed-page-size",
+        type=int,
+        default=20,
+        help="DailyMed page size per request, capped at 100.",
+    )
+    parser.add_argument(
+        "--openalex-limit",
+        type=int,
+        default=200,
+        help="Maximum DOI-bearing raw documents to enrich from OpenAlex.",
+    )
+    parser.add_argument(
+        "--openalex-force",
+        action="store_true",
+        help="Refresh OpenAlex metadata even when a document already has openalex payload.",
     )
     parser.add_argument(
         "--no-screen",
@@ -1127,6 +2084,25 @@ def main() -> None:
         fetch_clinical_trials_counts()
         fetch_drug_label_counts()
         fetch_openalex_counts()
+    if args.import_seed_sources:
+        import_seed_source_pages(limit=args.seed_limit)
+    if args.import_europe_pmc:
+        import_europe_pmc_candidates(
+            max_results=args.europe_pmc_max_results,
+            page_size=args.europe_pmc_page_size,
+        )
+    if args.import_clinical_trials:
+        import_clinical_trials_candidates(
+            max_results=args.clinical_trials_max_results,
+            page_size=args.clinical_trials_page_size,
+        )
+    if args.import_dailymed:
+        import_dailymed_candidates(
+            max_results_per_term=args.dailymed_max_results,
+            page_size=args.dailymed_page_size,
+        )
+    if args.enrich_openalex:
+        enrich_openalex_metadata(limit=args.openalex_limit, force=args.openalex_force)
     if args.import_pubmed_plan:
         import_pubmed_plan(
             args.import_pubmed_plan,

@@ -73,7 +73,16 @@ def main() -> None:
         )
         from app.config import settings
         from scripts.rhinitis_ai_review import apply_batch, export_batch, review_batch
-        from scripts.rhinitis_evidence_import import _parse_pubmed_xml, _pubmed_evidence_level, _screen_pubmed_document
+        from scripts.rhinitis_evidence_import import (
+            _clinical_trial_document,
+            _dailymed_document,
+            _dailymed_title_relevant,
+            _europe_pmc_document,
+            _openalex_summary,
+            _parse_pubmed_xml,
+            _pubmed_evidence_level,
+            _screen_pubmed_document,
+        )
         from scripts.rhinitis_evidence_snapshot import (
             export_curated_snapshot,
             import_curated_snapshot,
@@ -200,6 +209,83 @@ def main() -> None:
         }
         accepted, reason = _screen_pubmed_document(unrelated_doc, "pubmed_intranasal_steroid_ar")
         assert not accepted and reason in {"not_allergic_rhinitis", "animal_only", "basic_science_only"}, (accepted, reason)
+
+        europe_doc = _europe_pmc_document(
+            {
+                "id": "999",
+                "pmid": "",
+                "pmcid": "PMC999",
+                "doi": "https://doi.org/10.1000/example",
+                "title": "Consensus guideline for allergic rhinitis immunotherapy",
+                "abstractText": "Allergic rhinitis immunotherapy guideline evidence.",
+                "pubYear": "2026",
+                "journalInfo": {"journal": {"title": "Example Journal"}},
+                "isOpenAccess": "Y",
+                "pubTypeList": {"pubType": ["Review"]},
+            },
+            source_bucket="guideline_candidates",
+            query_name="europepmc_guideline_consensus",
+        )
+        assert europe_doc["source_key"] == "europepmc:PMC999", europe_doc
+        assert europe_doc["pmcid"] == "PMC999", europe_doc
+        assert europe_doc["open_access"], europe_doc
+        assert europe_doc["review_status"] in {"needs_review", "candidate"}, europe_doc
+
+        trial_doc = _clinical_trial_document(
+            {
+                "protocolSection": {
+                    "identificationModule": {
+                        "nctId": "NCT00000001",
+                        "briefTitle": "Sublingual immunotherapy in allergic rhinitis",
+                    },
+                    "statusModule": {"overallStatus": "COMPLETED", "startDateStruct": {"date": "2024-01"}},
+                    "conditionsModule": {"conditions": ["Allergic Rhinitis"]},
+                    "designModule": {"phases": ["PHASE3"]},
+                    "armsInterventionsModule": {
+                        "interventions": [{"type": "BIOLOGICAL", "name": "Sublingual immunotherapy"}]
+                    },
+                    "descriptionModule": {"briefSummary": "A registry entry for allergic rhinitis immunotherapy."},
+                    "sponsorCollaboratorsModule": {"leadSponsor": {"name": "Example Sponsor"}},
+                },
+                "hasResults": True,
+            },
+            query_name="clinicaltrials_immunotherapy_ar",
+        )
+        assert trial_doc["source_key"] == "clinicaltrials:NCT00000001", trial_doc
+        assert trial_doc["source_bucket"] == "trial_candidates", trial_doc
+        assert trial_doc["evidence_level"] == "trial_registry", trial_doc
+        assert "免疫治疗" in trial_doc["topic_tags"], trial_doc["topic_tags"]
+
+        assert _dailymed_title_relevant("fluticasone", "FLUTICASONE PROPIONATE NASAL SPRAY")
+        assert not _dailymed_title_relevant("mometasone", "MOMETASONE FUROATE OINTMENT")
+        dailymed_doc = _dailymed_document(
+            "fluticasone",
+            {
+                "setid": "abc-123",
+                "title": "FLUTICASONE PROPIONATE NASAL SPRAY",
+                "published_date": "Jun 05, 2026",
+                "spl_version": 7,
+            },
+        )
+        assert dailymed_doc["source_key"] == "dailymed:abc-123", dailymed_doc
+        assert dailymed_doc["source_bucket"] == "drug_candidates", dailymed_doc
+        assert dailymed_doc["review_status"] == "needs_review", dailymed_doc
+        assert "鼻喷激素" in dailymed_doc["topic_tags"], dailymed_doc["topic_tags"]
+
+        openalex = _openalex_summary(
+            {
+                "id": "https://openalex.org/W1",
+                "doi": "https://doi.org/10.1000/example",
+                "display_name": "Example Work",
+                "publication_year": 2026,
+                "cited_by_count": 42,
+                "open_access": {"is_oa": True, "oa_status": "gold"},
+                "primary_location": {"source": {"id": "S1", "display_name": "Example Journal", "type": "journal"}},
+            }
+        )
+        assert openalex["doi"] == "10.1000/example", openalex
+        assert openalex["cited_by_count"] == 42, openalex
+        assert openalex["open_access"]["is_oa"], openalex
 
         from fastapi.testclient import TestClient
 
