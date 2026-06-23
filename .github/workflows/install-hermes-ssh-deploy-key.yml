@@ -87,6 +87,14 @@ jobs:
             ufw allow 22/tcp
           fi
 
+          if command -v iptables >/dev/null 2>&1; then
+            iptables -C INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT
+          fi
+
+          if command -v ip6tables >/dev/null 2>&1; then
+            ip6tables -C INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || ip6tables -I INPUT 1 -p tcp --dport 22 -j ACCEPT
+          fi
+
           sshd -t
           if systemctl list-unit-files ssh.service >/dev/null 2>&1; then
             systemctl restart ssh
@@ -102,6 +110,7 @@ jobs:
             | grep -E '^(port|listenaddress|permitrootlogin|pubkeyauthentication|authorizedkeysfile|passwordauthentication|kbdinteractiveauthentication|usepam|maxstartups|persourcepenalties|allowusers|denyusers)' \
             || true
           ss -ltnp | grep -E '(:22[[:space:]])' || true
+          iptables -S INPUT | sed -n '1,40p' || true
           journalctl -u ssh --since '-15 minutes' --no-pager | tail -n 80 || true
 
           echo "Hermes SSH key installed for full root login."
