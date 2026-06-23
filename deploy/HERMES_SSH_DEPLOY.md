@@ -31,7 +31,7 @@ gh workflow run install-hermes-ssh-deploy-key.yml \
 cat ~/.ssh/hermes_doctor_avatar_aliyun.pub
 ```
 
-workflow 会在阿里云 self-hosted runner 上执行，把公钥作为普通 root 登录 key 安装到 `/root/.ssh/authorized_keys`，并写入 `/etc/ssh/sshd_config.d/99-hermes-root-login.conf` 以启用 root 公钥登录。
+workflow 会在阿里云 self-hosted runner 上执行，把公钥作为普通 root 登录 key 安装到 `/root/.ssh/authorized_keys`，并写入 `/etc/ssh/sshd_config.d/99-hermes-root-login.conf` 以启用 root 公钥登录和放宽 SSH 入口限制。
 
 ## 4. 配置 Hermes 的 SSH alias
 

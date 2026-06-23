@@ -65,11 +65,27 @@ jobs:
           printf '%s\n' "$normalized_key" >> /root/.ssh/authorized_keys
 
           install -d -m 0755 /etc/ssh/sshd_config.d
-          cat > /etc/ssh/sshd_config.d/99-hermes-root-login.conf <<'EOF'
-          PermitRootLogin prohibit-password
-          PubkeyAuthentication yes
-          AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2
-          EOF
+          {
+            echo "PermitRootLogin prohibit-password"
+            echo "PubkeyAuthentication yes"
+            echo "AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2"
+            echo "MaxStartups 100:30:200"
+          } > /etc/ssh/sshd_config.d/99-hermes-root-login.conf
+
+          if sshd -T 2>/dev/null | grep -q '^persourcepenalties '; then
+            echo "PerSourcePenalties no" >> /etc/ssh/sshd_config.d/99-hermes-root-login.conf
+          fi
+
+          if [ -f /etc/hosts.deny ] && grep -Eq '^[[:space:]]*(sshd|ALL)[[:space:]]*:' /etc/hosts.deny; then
+            touch /etc/hosts.allow
+            if ! grep -Eq '^[[:space:]]*sshd[[:space:]]*:[[:space:]]*ALL' /etc/hosts.allow; then
+              printf '\nsshd: ALL\n' >> /etc/hosts.allow
+            fi
+          fi
+
+          if command -v ufw >/dev/null 2>&1 && ufw status | grep -q '^Status: active'; then
+            ufw allow 22/tcp
+          fi
 
           sshd -t
           if systemctl list-unit-files ssh.service >/dev/null 2>&1; then
@@ -83,9 +99,10 @@ jobs:
 
           echo "Effective sshd settings for root:"
           sshd -T -C user=root,host=aliyun-doctor-avatar,addr=127.0.0.1 \
-            | grep -E '^(port|listenaddress|permitrootlogin|pubkeyauthentication|authorizedkeysfile|passwordauthentication|kbdinteractiveauthentication|usepam|allowusers|denyusers)' \
+            | grep -E '^(port|listenaddress|permitrootlogin|pubkeyauthentication|authorizedkeysfile|passwordauthentication|kbdinteractiveauthentication|usepam|maxstartups|persourcepenalties|allowusers|denyusers)' \
             || true
           ss -ltnp | grep -E '(:22[[:space:]])' || true
+          journalctl -u ssh --since '-15 minutes' --no-pager | tail -n 80 || true
 
           echo "Hermes SSH key installed for full root login."
           echo "The key can open an interactive root shell and run arbitrary root commands."
