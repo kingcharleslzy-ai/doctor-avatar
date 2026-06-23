@@ -63,8 +63,19 @@ fi
 
 if command -v curl >/dev/null 2>&1; then
   log "Checking local health"
-  curl -fsS --max-time 10 http://127.0.0.1:8000/health
-  printf '\n'
+  for attempt in {1..20}; do
+    if curl -fsS --max-time 10 http://127.0.0.1:8000/health; then
+      printf '\n'
+      break
+    fi
+    if [ "$attempt" -eq 20 ]; then
+      printf '\n' >&2
+      log "Local health check failed after ${attempt} attempts"
+      exit 1
+    fi
+    printf '\n'
+    sleep 2
+  done
 fi
 
 log "Deploy complete: ${GIT_SHORT_SHA}"
