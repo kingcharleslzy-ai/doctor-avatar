@@ -1,0 +1,68 @@
+name: Install Hermes SSH Root Key
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_key:
+        description: "One-line Hermes SSH public key for full root login, for example: cat ~/.ssh/hermes_doctor_avatar_aliyun.pub"
+        required: true
+        type: string
+
+jobs:
+  install-hermes-key:
+    runs-on: self-hosted
+    steps:
+      - name: Sync repository on server
+        run: |
+          cd /root/doctor-avatar
+          git fetch origin
+          git checkout main
+          git reset --hard origin/main
+
+      - name: Install deploy command and authorized key
+        env:
+          HERMES_PUBLIC_KEY: ${{ inputs.public_key }}
+        run: |
+          set -euo pipefail
+
+          cd /root/doctor-avatar
+          install -m 0755 deploy/server/hermes-deploy-command /usr/local/bin/doctor-avatar-hermes-deploy
+
+          key_file="$(mktemp)"
+          filtered_keys="$(mktemp)"
+          trap 'rm -f "$key_file" "$filtered_keys"' EXIT
+
+          printf '%s\n' "$HERMES_PUBLIC_KEY" > "$key_file"
+
+          if [ "$(wc -l < "$key_file")" -ne 1 ]; then
+            echo "Expected a single-line SSH public key." >&2
+            exit 1
+          fi
+
+          key_type="$(awk '{print $1}' "$key_file")"
+          case "$key_type" in
+            ssh-ed25519|ecdsa-sha2-nistp256|ecdsa-sha2-nistp384|ecdsa-sha2-nistp521|ssh-rsa) ;;
+            *)
+              echo "Unsupported SSH public key type: ${key_type}" >&2
+              exit 1
+              ;;
+          esac
+
+          if ! ssh-keygen -lf "$key_file"; then
+            echo "Invalid SSH public key." >&2
+            exit 1
+          fi
+
+          key_blob="$(awk '{print $2}' "$key_file")"
+          normalized_key="$(awk '{comment=$3; if (comment=="") comment="hermes-doctor-avatar-deploy"; print $1 " " $2 " " comment}' "$key_file")"
+          install -d -m 0700 /root/.ssh
+          touch /root/.ssh/authorized_keys
+          chmod 0600 /root/.ssh/authorized_keys
+          chown -R root:root /root/.ssh
+
+          awk -v blob="$key_blob" 'index($0, blob) == 0 { print }' /root/.ssh/authorized_keys > "$filtered_keys"
+          cat "$filtered_keys" > /root/.ssh/authorized_keys
+          printf '%s\n' "$normalized_key" >> /root/.ssh/authorized_keys
+
+          echo "Hermes SSH key installed for full root login."
+          echo "The key can open an interactive root shell and run arbitrary root commands."

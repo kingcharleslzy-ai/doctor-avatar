@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${PATH:-}"
+
+PROJECT_DIR="${PROJECT_DIR:-/root/doctor-avatar}"
+COMPOSE_FILES=(-f docker-compose.prod.yml -f docker-compose.host-proxy.yml)
+
+log() {
+  printf '[hermes-deploy] %s\n' "$*"
+}
+
+cd "$PROJECT_DIR"
+
+log "Syncing main from origin"
+git fetch origin
+git checkout main
+git reset --hard origin/main
+
+GIT_SHA="$(git rev-parse HEAD)"
+GIT_SHORT_SHA="$(git rev-parse --short=7 HEAD)"
+REF_NAME="$(git rev-parse --abbrev-ref HEAD)"
+DEPLOYED_AT="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+log "Writing build metadata for ${GIT_SHORT_SHA}"
+cat > app/build_meta.json <<EOF
+{
+  "version": "0.1.0",
+  "git_sha": "${GIT_SHA}",
+  "git_short_sha": "${GIT_SHORT_SHA}",
+  "ref_name": "${REF_NAME}",
+  "deployed_at": "${DEPLOYED_AT}",
+  "source": "hermes-ssh-deploy"
+}
+EOF
+
+log "Rebuilding app container"
+docker compose "${COMPOSE_FILES[@]}" up -d --build app
+
+if [ -f scripts/sync_memory_snapshot.py ]; then
+  log "Syncing doctor memory snapshot"
+  docker compose "${COMPOSE_FILES[@]}" exec -T app python scripts/sync_memory_snapshot.py --prune-missing
+fi
+
+if [ -f scripts/rhinitis_evidence_snapshot.py ]; then
+  log "Syncing rhinitis evidence snapshot"
+  docker compose "${COMPOSE_FILES[@]}" exec -T app python scripts/rhinitis_evidence_snapshot.py import
+fi
+
+log "Restarting app"
+docker compose "${COMPOSE_FILES[@]}" restart app
+
+if [ -f deploy/nginx/host/000-default-deny.conf ] && [ -f deploy/nginx/host/doctor-avatar.conf ]; then
+  log "Installing host nginx config"
+  install -m 0644 deploy/nginx/host/000-default-deny.conf /etc/nginx/sites-available/000-default-deny
+  install -m 0644 deploy/nginx/host/doctor-avatar.conf /etc/nginx/sites-available/doctor-avatar
+  ln -sfn /etc/nginx/sites-available/000-default-deny /etc/nginx/sites-enabled/000-default-deny
+  ln -sfn /etc/nginx/sites-available/doctor-avatar /etc/nginx/sites-enabled/doctor-avatar
+  rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/biz-data-hub /etc/nginx/sites-enabled/biz-data-hub.bak
+  nginx -t
+  systemctl reload nginx
+fi
+
+if command -v curl >/dev/null 2>&1; then
+  log "Checking local health"
+  curl -fsS --max-time 10 http://127.0.0.1:8000/health
+  printf '\n'
+fi
+
+log "Deploy complete: ${GIT_SHORT_SHA}"
