@@ -1087,7 +1087,7 @@
         <span class="brand-mark">M</span>
         <span class="brand-copy">
           <strong>MedFlow</strong>
-          <span>杭州 MedFlow 智能科技工作室</span>
+          <span>{{ site.legal_name }}</span>
         </span>
       </a>
       <div class="nav-links">
@@ -1375,7 +1375,7 @@
   <footer class="footer">
     <div class="wrap">
       <span>MedFlow</span>
-      <span>耳鼻喉专病 AI / 预问诊 / 医生摘要 / 数字人宣教</span>
+      <span>{{ site.legal_name }} / 耳鼻喉专病 AI / 预问诊 / 医生摘要 / 数字人宣教{% if site.icp_beian_no %} / <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ site.icp_beian_no }}</a>{% endif %}</span>
     </div>
   </footer>
 

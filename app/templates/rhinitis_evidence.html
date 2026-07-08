@@ -853,7 +853,7 @@
         <span class="brand-mark">M</span>
         <span>
           <strong>MedFlow</strong>
-          <span>杭州 MedFlow 智能科技工作室</span>
+          <span>{{ site.legal_name }}</span>
         </span>
       </a>
       <div class="nav-links">
@@ -1034,7 +1034,7 @@
   </aside>
 
   <footer class="footer">
-    <div class="page">MedFlow Rhinitis AI · {% if mode == "review" %}Evidence review{% else %}Evidence search{% endif %}</div>
+    <div class="page">MedFlow Rhinitis AI · {% if mode == "review" %}Evidence review{% else %}Evidence search{% endif %}{% if site.icp_beian_no %} · <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">{{ site.icp_beian_no }}</a>{% endif %}</div>
   </footer>
 
   <script>

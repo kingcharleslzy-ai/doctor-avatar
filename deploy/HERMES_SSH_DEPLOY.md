@@ -35,11 +35,23 @@ workflow 会在阿里云 self-hosted runner 上执行，把公钥作为普通 ro
 
 ## 4. 配置 Hermes 的 SSH alias
 
+当前有两台阿里云服务器：
+
+- `aliyun-doctor-avatar`：马来西亚服务器，保留 `liyong828.com` 数字人页面。
+- `aliyun-qilinshuzhi-cn`：杭州服务器，承接 `qilinshuzhi.com` 完整网站。
+
 把下面内容加到 Hermes 的 `~/.ssh/config`：
 
 ```sshconfig
 Host aliyun-doctor-avatar
   HostName 47.250.168.45
+  User root
+  Port 22
+  IdentityFile ~/.ssh/hermes_doctor_avatar_aliyun
+  IdentitiesOnly yes
+
+Host aliyun-qilinshuzhi-cn
+  HostName 112.124.42.19
   User root
   Port 22
   IdentityFile ~/.ssh/hermes_doctor_avatar_aliyun
@@ -50,11 +62,32 @@ Host aliyun-doctor-avatar
 
 ```bash
 ssh aliyun-doctor-avatar
+ssh aliyun-qilinshuzhi-cn
 ```
 
 登录后就是完整 root 权限。
 
+如果通过阿里云 Workbench 添加登录凭据，页面里的 `SSH密钥认证 > 私钥` 是给 Workbench 自己登录服务器时使用的私钥，不是让你填写公钥的位置。要授权 Hermes 登录，正确做法是先用 Workbench 免密或密码登录服务器，然后把 Hermes 的公钥追加到 root 的 `authorized_keys`：
+
+```bash
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+cat >> /root/.ssh/authorized_keys <<'EOF'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEIcGdNBPRoPhgdulxhcvN552fiNllQS4fT+koC7EOAC hermes-doctor-avatar-aliyun
+EOF
+chmod 600 /root/.ssh/authorized_keys
+chown -R root:root /root/.ssh
+```
+
+验证杭州服务器 root 登录：
+
+```bash
+ssh aliyun-qilinshuzhi-cn 'whoami && hostname && curl -fsS http://127.0.0.1:8000/health'
+```
+
 ## 6. 从 Hermes 一键部署
+
+当前 `scripts/hermes_ssh_deploy.sh` 仍然指向 `aliyun-doctor-avatar`，也就是马来西亚服务器。杭州服务器迁移完成前，不要用这个脚本部署 `qilinshuzhi.com`；应先拆分部署脚本或显式传入目标服务器。
 
 使用本仓库的本地辅助脚本：
 

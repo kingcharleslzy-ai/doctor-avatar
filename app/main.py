@@ -68,6 +68,11 @@ async def lifespan(application):
 
 app = FastAPI(title="Doctor Avatar MVP", version="0.1.0", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+templates.env.globals["site"] = {
+    "brand_name": settings.site_brand_name,
+    "legal_name": settings.site_legal_name,
+    "icp_beian_no": settings.site_icp_beian_no.strip(),
+}
 app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 doctor_profile = load_doctor_profile()
 BUILD_META_PATH = Path(__file__).parent / "build_meta.json"

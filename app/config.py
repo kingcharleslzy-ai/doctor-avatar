@@ -11,6 +11,9 @@ KNOWLEDGE_DIR = BASE_DIR / "knowledge"
 class Settings(BaseSettings):
     app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
     app_port: int = Field(default=8000, alias="APP_PORT")
+    site_brand_name: str = Field(default="MedFlow", alias="SITE_BRAND_NAME")
+    site_legal_name: str = Field(default="杭州富阳启临数智科技工作室", alias="SITE_LEGAL_NAME")
+    site_icp_beian_no: str = Field(default="", alias="SITE_ICP_BEIAN_NO")
 
     doubao_realtime_enabled: bool = Field(default=True, alias="DOUBAO_REALTIME_ENABLED")
     doubao_realtime_ws_url: str = Field(
