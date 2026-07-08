@@ -79,7 +79,7 @@ jobs:
         run: |
           cd /root/doctor-avatar
           install -m 0644 deploy/nginx/host/000-default-deny.conf /etc/nginx/sites-available/000-default-deny
-          install -m 0644 deploy/nginx/host/doctor-avatar.conf /etc/nginx/sites-available/doctor-avatar
+          install -m 0644 deploy/nginx/host/liyong828-digital-human.conf /etc/nginx/sites-available/doctor-avatar
           ln -sfn /etc/nginx/sites-available/000-default-deny /etc/nginx/sites-enabled/000-default-deny
           ln -sfn /etc/nginx/sites-available/doctor-avatar /etc/nginx/sites-enabled/doctor-avatar
           rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/biz-data-hub /etc/nginx/sites-enabled/biz-data-hub.bak
